@@ -50,6 +50,8 @@ const vars = readFileSync(".env.production", "utf8")
   .split(/\r?\n/)
   .map((l) => l.trim())
   .filter((l) => l && !l.startsWith("#") && l.includes("="));
+// Railway injects its own PORT (8080); pin it so it matches the domain target port below.
+if (!vars.some((v) => v.startsWith("PORT="))) vars.push("PORT=3000");
 console.log(`→ Setting ${vars.length} variables…`);
 railway(`variables --service ${SERVICE} --skip-deploys ${vars.map((v) => `--set ${JSON.stringify(v)}`).join(" ")}`);
 
@@ -58,11 +60,11 @@ railway(`up --service ${SERVICE} --detach`);
 
 if (process.env.DOMAIN) {
   console.log(`→ Attaching ${process.env.DOMAIN}… add the DNS record Railway prints below at your registrar.`);
-  railway(`domain ${process.env.DOMAIN} --service ${SERVICE}`);
+  railway(`domain ${process.env.DOMAIN} --service ${SERVICE} --port 3000`);
 } else {
   console.log("→ Generating a railway.app domain…");
   try {
-    railway(`domain --service ${SERVICE}`);
+    railway(`domain --service ${SERVICE} --port 3000`);
   } catch {
     /* already has one */
   }
