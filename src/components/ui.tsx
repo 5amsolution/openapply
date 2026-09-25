@@ -10,18 +10,40 @@ export function cn(...classes: (string | false | null | undefined)[]) {
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const buttonBase =
-  "inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition " +
+  "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold tracking-[-0.01em] transition " +
   "disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-accent-fg hover:opacity-90",
-  secondary: "border border-border bg-surface hover:bg-surface-2",
+  primary: "bg-ink text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:-translate-y-px hover:opacity-95",
+  secondary: "bg-surface shadow-[0_0_0_1.5px_var(--border)] hover:bg-surface-2",
   ghost: "hover:bg-surface-2",
-  danger: "border border-danger/40 text-danger hover:bg-danger-soft",
+  danger: "text-danger shadow-[0_0_0_1.5px_var(--danger-soft)] hover:bg-danger-soft",
 };
 
-export function Button({ variant = "primary", className, ...props }: ComponentProps<"button"> & { variant?: Variant }) {
-  return <button className={cn(buttonBase, variants[variant], className)} {...props} />;
+export function Button({
+  variant = "primary",
+  className,
+  loading,
+  disabled,
+  children,
+  ...props
+}: ComponentProps<"button"> & { variant?: Variant; loading?: boolean }) {
+  return (
+    <button
+      className={cn(buttonBase, variants[variant], className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {loading && (
+        <svg className="h-4 w-4 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      )}
+      {children}
+    </button>
+  );
 }
 
 export function ButtonLink({
@@ -33,11 +55,11 @@ export function ButtonLink({
 }
 
 export function Card({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("rounded-xl border border-border bg-surface", className)} {...props} />;
+  return <div className={cn("rounded-[20px] border border-border/70 bg-surface shadow-[var(--card-shadow)]", className)} {...props} />;
 }
 
 const field =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted/70 " +
+  "w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm placeholder:text-muted/70 " +
   "focus:outline-2 focus:outline-offset-0 focus:outline-accent";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
@@ -73,7 +95,7 @@ const tones: Record<Tone, string> = {
 export function Badge({ tone = "neutral", className, ...props }: ComponentProps<"span"> & { tone?: Tone }) {
   return (
     <span
-      className={cn("inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium", tones[tone], className)}
+      className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", tones[tone], className)}
       {...props}
     />
   );
@@ -93,7 +115,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
@@ -111,5 +133,5 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
 }
 
 export function Notice({ tone = "info", children }: { tone?: Tone; children: ReactNode }) {
-  return <div className={cn("rounded-lg px-4 py-3 text-sm", tones[tone])}>{children}</div>;
+  return <div className={cn("rounded-2xl px-4 py-3 text-sm", tones[tone])}>{children}</div>;
 }

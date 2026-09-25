@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUp, Sparkles } from "lucide-react";
 import { fillProfileFromResumeAction, uploadResumeAction } from "@/app/(app)/actions";
 import { Button, Card, Notice } from "@/components/ui";
+import { ProgressSteps, STEPS } from "@/components/progress";
 
 type Message = { tone: "accent" | "danger" | "info" | "warn"; text: string };
 
 export function ResumeUpload({ filename, aiReady }: { filename: string | null; aiReady: boolean }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
-  const [pending, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
   const [busy, setBusy] = useState<"" | "upload" | "fill">("");
   const [message, setMessage] = useState<Message | null>(null);
+  const pending = busy !== "";
   const [dragging, setDragging] = useState(false);
 
   const aiFailed = (error: string): Message => ({
@@ -105,16 +109,22 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
         />
         <div className="flex flex-wrap gap-2">
           {filename && aiReady && (
-            <Button variant="secondary" onClick={refill} disabled={pending}>
-              <Sparkles size={14} /> {busy === "fill" ? "Reading resume… (up to a minute)" : "Fill profile with AI"}
+            <Button variant="secondary" onClick={refill} disabled={pending} loading={busy === "fill"}>
+              {busy !== "fill" && <Sparkles size={14} />} {busy === "fill" ? "Filling profile…" : "Fill profile with AI"}
             </Button>
           )}
-          <Button onClick={() => input.current?.click()} disabled={pending}>
-            {busy === "upload" ? "Reading resume…" : filename ? "Replace resume" : "Choose file"}
+          <Button onClick={() => input.current?.click()} disabled={pending} loading={busy === "upload"}>
+            {busy === "upload" ? "Uploading…" : filename ? "Replace resume" : "Choose file"}
           </Button>
         </div>
       </div>
-      {message && (
+      <ProgressSteps
+        className="mt-4"
+        active={busy === "fill" || (busy === "upload" && aiReady)}
+        steps={busy === "upload" ? [{ label: "Uploading your resume", after: 0 }, ...STEPS.resume.map((st) => ({ ...st, after: st.after + 2 }))] : STEPS.resume}
+      />
+      {busy === "upload" && !aiReady && <p className="mt-3 text-sm text-muted">Uploading and reading your resume…</p>}
+      {message && !busy && (
         <div className="mt-4">
           <Notice tone={message.tone}>{message.text}</Notice>
         </div>

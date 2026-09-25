@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pause, Pencil, Play, Plus, Trash2, Zap } from "lucide-react";
 import { deleteRuleAction, runRuleNowAction, saveRuleAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
+import { ProgressSteps, STEPS } from "@/components/progress";
 import { timeAgo } from "@/lib/format";
 import type { AutopilotRule } from "@/lib/types";
 
@@ -34,7 +35,9 @@ export function AutopilotManager({
   const [editing, setEditing] = useState<string | "new" | null>(rules.length === 0 ? "new" : null);
   const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
   const [busy, setBusy] = useState("");
-  const [, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
 
   const blank: Draft = {
     name: defaults.keywords || "My search",
@@ -100,6 +103,7 @@ export function AutopilotManager({
               <Button
                 variant="secondary"
                 disabled={!aiReady || !!busy}
+                loading={busy === `run:${rule.id}`}
                 onClick={() =>
                   act(`run:${rule.id}`, async () => {
                     const res = await runRuleNowAction(rule.id);
@@ -109,7 +113,7 @@ export function AutopilotManager({
                   })
                 }
               >
-                <Zap size={14} /> {busy === `run:${rule.id}` ? "Running… (a few minutes)" : "Run now"}
+                {busy !== `run:${rule.id}` && <Zap size={14} />} {busy === `run:${rule.id}` ? "Running…" : "Run now"}
               </Button>
               <Button
                 variant="ghost"
@@ -141,6 +145,7 @@ export function AutopilotManager({
                 <Trash2 size={14} />
               </Button>
             </div>
+            <ProgressSteps className="w-full basis-full" active={busy === `run:${rule.id}`} steps={STEPS.autopilot} />
           </Card>
         ),
       )}

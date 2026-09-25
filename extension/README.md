@@ -21,6 +21,11 @@ and other multi-step forms work page by page: click **Fill this page** on each s
 3. Click **Fill this page**. Filled fields get a green outline; required fields it couldn't answer get an orange one.
 4. Check everything, submit on the site, then click **Mark as applied**.
 
+## Inside OpenApply's apply page
+
+On **Applications → Apply now**, Greenhouse and Lever forms appear embedded next to your answers. Click the extension
+there and it fills the embedded form too (Chrome asks once for permission to access those two form sites).
+
 ## Privacy
 
 The extension talks only to the OpenApply server you configure. It reads form labels on the

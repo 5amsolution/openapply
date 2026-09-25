@@ -9,6 +9,7 @@ import { keywordMatch } from "@/lib/matching";
 import { Button, Card, EmptyState, Input, Notice, PageHeader } from "@/components/ui";
 import { JobCard } from "@/components/job-card";
 import { SourceFilter } from "@/components/source-filter";
+import { ProgressSteps } from "@/components/progress";
 import type { Profile } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Find jobs" };
@@ -134,8 +135,16 @@ async function Results({ userId, q, loc, remote, src }: { userId: string; q: str
 
 function ResultsSkeleton() {
   return (
-    <div className="grid gap-3" aria-busy="true" aria-live="polite">
-      <p className="text-sm text-muted">Searching job boards… this can take up to 20 seconds.</p>
+    <div className="grid gap-3" aria-busy="true">
+      <ProgressSteps
+        active
+        steps={[
+          { label: "Searching Remotive, Himalayas, Jobicy and Remote OK", after: 0 },
+          { label: "Checking company career pages on Greenhouse, Lever and Ashby", after: 3 },
+          { label: "Removing duplicates and ranking the best matches", after: 9 },
+          { label: "Some job boards are slow today — nearly there", after: 18 },
+        ]}
+      />
       {Array.from({ length: 5 }).map((_, i) => (
         <Card key={i} className="h-28 animate-pulse bg-surface-2/60" />
       ))}

@@ -1,6 +1,7 @@
 // OpenApply popup: pick the application for this page and fill the form.
 
 const $ = (id) => document.getElementById(id);
+const EMBED_ORIGINS = ["https://job-boards.greenhouse.io/*", "https://boards.greenhouse.io/*", "https://jobs.lever.co/*"];
 let config = { server: "", token: "" };
 let profilePayload = null;
 let applications = [];
@@ -107,6 +108,12 @@ $("fill").addEventListener("click", async () => {
   $("fill").disabled = true;
   $("result").textContent = "Filling…";
   try {
+    // On OpenApply's own apply page the employer form is an embedded frame from another
+    // site, which needs a one-time permission for that site (asked from this click).
+    if (config.server && tab.url?.startsWith(config.server)) {
+      const granted = await chrome.permissions.request({ origins: EMBED_ORIGINS });
+      if (!granted) throw new Error("permission to fill the embedded form was declined");
+    }
     const data = { ...profilePayload, application: selectedApplication() };
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id, allFrames: true },

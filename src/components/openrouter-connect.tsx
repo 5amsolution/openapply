@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ExternalLink, Sparkles } from "lucide-react";
 import { removeAIKeyAction, setAIModelAction, testAIKeyAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
+import { ProgressSteps, STEPS } from "@/components/progress";
 
 type Model = { id: string; label: string };
 
@@ -31,7 +32,9 @@ export function OpenRouterConnect({
         ? { tone: "danger", text: statusMessage || "Couldn't connect to OpenRouter." }
         : null,
   );
-  const [, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
   const isFree = value === "openrouter/free" || value.endsWith(":free");
 
   const act = (key: string, fn: () => Promise<string>) =>
@@ -66,7 +69,7 @@ export function OpenRouterConnect({
           </div>
           <a
             href="/api/openrouter/connect"
-            className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-fg hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
           >
             Connect with OpenRouter
           </a>
@@ -124,7 +127,7 @@ export function OpenRouterConnect({
           </datalist>
         </div>
         <div className="flex items-end gap-2">
-          <Button type="submit" disabled={!!busy}>
+          <Button type="submit" disabled={!!busy} loading={busy === "model"}>
             {busy === "model" ? "Testing…" : "Save & test"}
           </Button>
           <Button
@@ -159,7 +162,8 @@ export function OpenRouterConnect({
         )}
       </p>
 
-      {message && (
+      <ProgressSteps className="mt-4" active={busy === "model"} steps={STEPS.test} />
+      {message && !busy && (
         <div className="mt-4">
           <Notice tone={message.tone}>{message.text}</Notice>
         </div>

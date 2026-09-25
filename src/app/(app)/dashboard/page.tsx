@@ -9,6 +9,14 @@ import { STATUS_LABELS, timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+const STAT_PASTEL: Record<string, string> = {
+  saved: "pastel-cool",
+  ready: "pastel-lime",
+  applied: "pastel-lavender",
+  interviewing: "pastel-peach",
+  offer: "pastel-pink",
+};
+
 export default async function DashboardPage() {
   const { supabase, user } = await requireUser();
 
@@ -71,9 +79,9 @@ export default async function DashboardPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {(["saved", "ready", "applied", "interviewing", "offer"] as const).map((s) => (
           <Link key={s} href={`/applications?status=${s}`}>
-            <Card className="p-4 transition hover:border-accent/50">
-              <p className="text-2xl font-semibold tabular-nums">{counts.get(s) ?? 0}</p>
-              <p className="text-sm text-muted">{STATUS_LABELS[s]}</p>
+            <Card className={`${STAT_PASTEL[s]} border-white/70 p-5 transition hover:-translate-y-0.5`}>
+              <p className="text-[32px] font-extrabold leading-none tracking-[-0.035em] tabular-nums">{counts.get(s) ?? 0}</p>
+              <p className="mt-2 text-sm font-medium text-fg/70">{STATUS_LABELS[s]}</p>
             </Card>
           </Link>
         ))}

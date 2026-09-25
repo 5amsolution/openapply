@@ -1,40 +1,58 @@
 @import "tailwindcss";
 
+/* Design language from the MotionSites "Task Engine" template: soft grey stage,
+   white rounded cards, ink + lime pill buttons, pastel gradient panels. */
 :root {
-  --bg: #f7f7f5;
+  --bg: #f0f0f0;
   --surface: #ffffff;
-  --surface-2: #f0f0ec;
-  --fg: #16181d;
-  --muted: #5d636e;
-  --border: #e3e3de;
-  --accent: #0d7a5f;
+  --surface-2: #f5f5f2;
+  --fg: #141414;
+  --muted: #5c625d;
+  --border: #e5e5e0;
+  --accent: #4a7430;
   --accent-fg: #ffffff;
-  --accent-soft: #e2f3ec;
-  --warn: #a15c07;
-  --warn-soft: #fbf0dc;
+  --accent-soft: #eaf1d6;
+  --ink: #15201a;
+  --ink-fg: #f3f5b0;
+  --warn: #9a5a06;
+  --warn-soft: #fbefd9;
   --danger: #b42318;
   --danger-soft: #fde8e6;
-  --info: #2556b8;
-  --info-soft: #e6eefc;
+  --info: #3d3a8c;
+  --info-soft: #e6e5f6;
+  --card-shadow: 0 2px 16px rgba(24, 30, 45, 0.05);
+  --p-lime: linear-gradient(168deg, #e2ebc9 0%, #e9f0c4 48%, #f0f4b8 100%);
+  --p-pink: linear-gradient(135deg, #f9d9e9 0%, #fbdfec 55%, #fce6f1 100%);
+  --p-peach: linear-gradient(180deg, #fbf1e6 0%, #f7efe6 100%);
+  --p-lavender: linear-gradient(103deg, #eae9f5 0%, #dcdaf0 60%, #cfcdea 100%);
+  --p-cool: linear-gradient(180deg, #fcfdfd 0%, #eef3f6 55%, #dfe9ee 100%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1113;
-    --surface: #171a1d;
-    --surface-2: #1e2226;
-    --fg: #eceef0;
-    --muted: #9aa1ab;
-    --border: #2a2f35;
-    --accent: #3cc49b;
-    --accent-fg: #06251b;
-    --accent-soft: #123328;
+    --bg: #0e100f;
+    --surface: #171a18;
+    --surface-2: #1f2320;
+    --fg: #eceeea;
+    --muted: #9aa29b;
+    --border: #2a2f2b;
+    --accent: #b5d77f;
+    --accent-fg: #15201a;
+    --accent-soft: #26311b;
+    --ink: #e9f0c4;
+    --ink-fg: #15201a;
     --warn: #f0b35a;
     --warn-soft: #3a2a12;
     --danger: #ff8a7a;
     --danger-soft: #3b1714;
-    --info: #86aaf5;
-    --info-soft: #17243d;
+    --info: #b3b0f5;
+    --info-soft: #25243d;
+    --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+    --p-lime: linear-gradient(168deg, #232b18 0%, #283116 100%);
+    --p-pink: linear-gradient(135deg, #2e1d26 0%, #30202a 100%);
+    --p-peach: linear-gradient(180deg, #2c241c 0%, #29221b 100%);
+    --p-lavender: linear-gradient(103deg, #22213a 0%, #262442 100%);
+    --p-cool: linear-gradient(180deg, #1c2226 0%, #1f272c 100%);
   }
 }
 
@@ -48,15 +66,23 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-soft: var(--accent-soft);
+  --color-ink: var(--ink);
+  --color-ink-fg: var(--ink-fg);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
+
+.pastel-lime { background: var(--p-lime); }
+.pastel-pink { background: var(--p-pink); }
+.pastel-peach { background: var(--p-peach); }
+.pastel-lavender { background: var(--p-lavender); }
+.pastel-cool { background: var(--p-cool); }
 
 body {
   background: var(--bg);
@@ -70,4 +96,9 @@ body {
 .prose-job {
   white-space: pre-line;
   line-height: 1.65;
+}
+
+@keyframes oa-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }

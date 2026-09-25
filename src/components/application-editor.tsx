@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Download, ExternalLink, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/app/(app)/actions";
 import { Badge, Button, Card, Notice, ScoreBadge, Textarea } from "@/components/ui";
 import { StatusSelect } from "@/components/status-select";
+import { ProgressSteps, STEPS } from "@/components/progress";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Application, Job } from "@/lib/types";
 
@@ -37,7 +38,9 @@ export function ApplicationEditor({
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [savedAt, setSavedAt] = useState<number | null>(null);
-  const [, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
 
   const dirty =
     coverLetter !== (app.cover_letter ?? "") ||
@@ -145,9 +148,10 @@ export function ApplicationEditor({
           <Card className="p-6 text-center">
             <p className="font-medium">No application written yet</p>
             <p className="mt-1 text-sm text-muted">Generate a tailored cover letter, resume summary and screening answers.</p>
-            <Button className="mt-4" onClick={regenerate} disabled={!aiReady || !!busy}>
-              <Sparkles size={16} /> {busy === "draft" ? "Writing… (~30s)" : "Write application"}
+            <Button className="mt-4" onClick={regenerate} disabled={!aiReady || !!busy} loading={busy === "draft"}>
+              {busy !== "draft" && <Sparkles size={16} />} {busy === "draft" ? "Writing your application…" : "Write application"}
             </Button>
+            <ProgressSteps className="mx-auto mt-4 max-w-md text-left" active={busy === "draft"} steps={STEPS.draft} />
             {!aiReady && (
               <p className="mt-3 text-sm text-muted">
                 <Link href="/settings" className="underline">
@@ -217,9 +221,10 @@ export function ApplicationEditor({
                     value={newQuestions}
                     onChange={(e) => setNewQuestions(e.target.value)}
                   />
-                  <Button variant="secondary" className="mt-2" onClick={askAI} disabled={!aiReady || !newQuestions.trim() || !!busy}>
-                    <Plus size={14} /> {busy === "answers" ? "Answering…" : "Answer with AI"}
+                  <Button variant="secondary" className="mt-2" onClick={askAI} disabled={!aiReady || !newQuestions.trim() || !!busy} loading={busy === "answers"}>
+                    {busy !== "answers" && <Plus size={14} />} {busy === "answers" ? "Answering…" : "Answer with AI"}
                   </Button>
+                  <ProgressSteps className="mt-3" active={busy === "answers"} steps={STEPS.answers} />
                 </div>
               </div>
             </Section>
@@ -237,7 +242,7 @@ export function ApplicationEditor({
             <p className="mb-1.5 text-sm font-medium">Status</p>
             <StatusSelect key={app.status} id={app.id} status={app.status} />
           </div>
-          <Button onClick={save} disabled={!dirty || !!busy}>
+          <Button onClick={save} disabled={!dirty || !!busy} loading={busy === "save"}>
             {busy === "save" ? "Saving…" : dirty ? "Save changes" : savedAt ? "Saved" : "No changes"}
           </Button>
           {error && <Notice tone="danger">{error}</Notice>}
@@ -245,18 +250,22 @@ export function ApplicationEditor({
 
         <Card className="grid gap-2 p-5">
           <p className="text-sm font-medium">Apply</p>
-          <ol className="mb-1 grid gap-1 text-sm text-muted">
-            <li>1. Open the application page.</li>
-            <li>2. Click the OpenApply extension to autofill, or copy each section.</li>
-            <li>3. Review and submit, then mark as applied.</li>
-          </ol>
+          <p className="mb-1 text-sm text-muted">
+            Apply without leaving OpenApply: the employer&apos;s form on one side, your answers ready to copy on the other.
+          </p>
+          <Link
+            href={`/applications/${app.id}/apply`}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-3.5 py-2 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
+          >
+            Apply now
+          </Link>
           <a
             href={job.apply_url || job.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm hover:bg-surface-2"
           >
-            Open application page <ExternalLink size={14} />
+            Open employer page <ExternalLink size={14} />
           </a>
           {resumeFilename && (
             <Button variant="secondary" onClick={downloadResume} disabled={!!busy}>
@@ -271,10 +280,11 @@ export function ApplicationEditor({
 
         <Card className="grid gap-2 p-5">
           {hasDraft && (
-            <Button variant="secondary" onClick={regenerate} disabled={!aiReady || !!busy}>
-              <RefreshCw size={14} /> {busy === "draft" ? "Rewriting…" : "Rewrite with AI"}
+            <Button variant="secondary" onClick={regenerate} disabled={!aiReady || !!busy} loading={busy === "draft"}>
+              {busy !== "draft" && <RefreshCw size={14} />} {busy === "draft" ? "Rewriting…" : "Rewrite with AI"}
             </Button>
           )}
+          {hasDraft && <ProgressSteps active={busy === "draft"} steps={STEPS.draft.slice(1)} />}
           <Button variant="danger" onClick={remove} disabled={!!busy}>
             <Trash2 size={14} /> Delete
           </Button>

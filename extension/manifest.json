@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenApply Autofill",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fill job application forms with your OpenApply profile and the tailored answers written for that job. You always review and submit.",
   "action": {
     "default_title": "OpenApply",

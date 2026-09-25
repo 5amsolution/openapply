@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, KeyRound } from "lucide-react";
 import { removeAIKeyAction, saveAISettingsAction, testAIKeyAction } from "@/app/(app)/actions";
 import { Button, Input, Label, Notice, Select } from "@/components/ui";
+import { ProgressSteps, STEPS } from "@/components/progress";
 import type { ProviderId } from "@/lib/ai/providers";
 
 type ProviderOption = { id: ProviderId; label: string; keyUrl: string; baseUrl: string; models: { id: string; label: string }[] };
@@ -25,7 +26,9 @@ export function AISettingsForm({
   const [limit, setLimit] = useState(current?.monthly_token_limit ? String(current.monthly_token_limit) : "");
   const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
   const [busy, setBusy] = useState("");
-  const [, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
 
   const sameProvider = current?.provider === provider;
 
@@ -142,13 +145,14 @@ export function AISettingsForm({
           </Label>
           <Input id="ai-limit" type="number" min={0} step={10000} value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="e.g. 2000000" />
         </div>
-        {message && (
+        <ProgressSteps className="md:col-span-2" active={busy === "save" || busy === "test"} steps={STEPS.test} />
+        {message && !busy && (
           <div className="md:col-span-2">
             <Notice tone={message.tone}>{message.text}</Notice>
           </div>
         )}
         <div className="flex flex-wrap gap-2 md:col-span-2">
-          <Button type="submit" disabled={!!busy}>
+          <Button type="submit" disabled={!!busy} loading={busy === "save"}>
             {busy === "save" ? "Saving & testing…" : "Save and test"}
           </Button>
           {current && (
@@ -157,6 +161,7 @@ export function AISettingsForm({
                 type="button"
                 variant="secondary"
                 disabled={!!busy}
+                loading={busy === "test"}
                 onClick={() =>
                   act("test", async () => {
                     const r = await testAIKeyAction();

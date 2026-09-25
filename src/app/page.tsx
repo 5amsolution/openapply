@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import { Bot, FileText, KeyRound, Puzzle, Search, ShieldCheck } from "lucide-react";
 import { LandingMosaic } from "@/components/landing-mosaic";
 import "./landing.css";
@@ -7,8 +6,6 @@ import { GithubIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { ButtonLink, Card } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
-
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-jakarta" });
 
 const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/openapply/openapply";
 
@@ -19,7 +16,7 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className={`${jakarta.variable} flex min-h-screen flex-col`}>
+    <div className="flex min-h-screen flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
         <Logo />
         <nav className="flex items-center gap-2">

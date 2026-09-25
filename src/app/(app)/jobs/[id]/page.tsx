@@ -73,7 +73,7 @@ export default async function JobPage(props: PageProps<"/jobs/[id]">) {
                 href={j.apply_url || j.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded-full bg-ink px-3.5 py-2 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
               >
                 Open application page <ExternalLink size={14} />
               </a>
@@ -81,7 +81,7 @@ export default async function JobPage(props: PageProps<"/jobs/[id]">) {
                 href={j.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm hover:bg-surface-2"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm hover:bg-surface-2"
               >
                 View on {sourceLabel(j.source)} <ExternalLink size={14} />
               </a>

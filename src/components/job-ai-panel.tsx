@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Target } from "lucide-react";
 import { analyzeJobAction, draftApplicationAction, saveJobAction } from "@/app/(app)/actions";
 import { Button, Card, Notice, ScoreBadge } from "@/components/ui";
+import { ProgressSteps, STEPS } from "@/components/progress";
 import { STATUS_LABELS } from "@/lib/format";
 import type { Application } from "@/lib/types";
 import type { KeywordMatch } from "@/lib/matching";
@@ -27,7 +28,9 @@ export function JobAIPanel({
   const [app, setApp] = useState(application);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<"" | "analyze" | "draft" | "save">("");
-  const [, start] = useTransition();
+  // Run async work outside a transition so "busy" state renders immediately
+  // (state set inside startTransition only shows once the whole action finishes).
+  const start = (fn: () => Promise<void>) => void fn();
 
   const run = (kind: "analyze" | "draft" | "save") =>
     start(async () => {
@@ -109,25 +112,34 @@ export function JobAIPanel({
         {app?.cover_letter ? (
           <Link
             href={`/applications/${app.id}`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg hover:opacity-90"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-3.5 py-2 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
           >
             Open application ({STATUS_LABELS[app.status]})
           </Link>
+        ) : null}
+        {app?.cover_letter ? (
+          <Link
+            href={`/applications/${app.id}/apply`}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-medium hover:bg-surface-2"
+          >
+            Apply now
+          </Link>
         ) : (
-          <Button onClick={() => run("draft")} disabled={!aiReady || !hasResume || !!busy}>
-            <Sparkles size={16} />
-            {busy === "draft" ? "Writing application… (~30s)" : "Write application"}
+          <Button onClick={() => run("draft")} disabled={!aiReady || !hasResume || !!busy} loading={busy === "draft"}>
+            {busy !== "draft" && <Sparkles size={16} />}
+            {busy === "draft" ? "Writing your application…" : "Write application"}
           </Button>
         )}
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={() => run("analyze")} disabled={!aiReady || !hasResume || !!busy}>
+          <Button variant="secondary" onClick={() => run("analyze")} disabled={!aiReady || !hasResume || !!busy} loading={busy === "analyze"}>
             {busy === "analyze" ? "Scoring…" : aiScored ? "Re-score" : "AI fit score"}
           </Button>
-          <Button variant="secondary" onClick={() => run("save")} disabled={!!app || !!busy}>
+          <Button variant="secondary" onClick={() => run("save")} disabled={!!app || !!busy} loading={busy === "save"}>
             {app ? "Saved" : busy === "save" ? "Saving…" : "Save job"}
           </Button>
         </div>
-        {error && <Notice tone="danger">{error}</Notice>}
+        <ProgressSteps active={busy === "draft" || busy === "analyze"} steps={busy === "draft" ? STEPS.draft : STEPS.score} />
+        {error && !busy && <Notice tone="danger">{error}</Notice>}
       </div>
     </Card>
   );

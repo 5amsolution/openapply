@@ -25,8 +25,8 @@ export function NavLinks() {
             key={href}
             href={href}
             className={cn(
-              "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition",
-              active ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-surface-2 hover:text-fg",
+              "flex shrink-0 items-center gap-2.5 rounded-full px-3.5 py-2 text-sm transition",
+              active ? "pastel-lime font-semibold text-fg shadow-[0_0_0_1.5px_rgba(255,255,255,0.8)]" : "text-muted hover:bg-surface-2 hover:text-fg",
             )}
           >
             <Icon size={16} />
