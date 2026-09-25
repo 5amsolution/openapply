@@ -88,8 +88,14 @@ async function main() {
 
   console.log("→ Applying database migrations…");
   const env = { ...process.env, SUPABASE_ACCESS_TOKEN: token };
-  execSync(`npx supabase link --project-ref ${ref} --password "${dbPass}"`, { stdio: "inherit", env });
-  execSync(`npx supabase db push --password "${dbPass}" --include-all --yes`, { stdio: "inherit", env });
+  try {
+    execSync(`npx supabase link --project-ref ${ref} --password "${dbPass}"`, { stdio: "inherit", env });
+    execSync(`npx supabase db push --password "${dbPass}" --include-all --yes`, { stdio: "inherit", env });
+  } catch {
+    // Some access tokens can't use the CLI link endpoint; apply through the Management API instead.
+    console.log("  CLI push unavailable — applying migrations through the Management API…");
+    await applyViaApi(ref);
+  }
 
   console.log("→ Configuring auth URLs…");
   await api(`/projects/${ref}/config/auth`, {
@@ -102,10 +108,13 @@ async function main() {
     }),
   });
 
-  const keys = await api(`/projects/${ref}/api-keys?reveal=true`);
-  const anon = keys.find((k) => k.name === "anon")?.api_key;
-  const service = keys.find((k) => k.name === "service_role")?.api_key;
-  if (!anon || !service) fail("Could not read the project's API keys.");
+  // Scoped tokens may not be allowed to read keys; then the user pastes them from the dashboard.
+  const keys = await api(`/projects/${ref}/api-keys?reveal=true`).catch(() => []);
+  const anon = keys.find((k) => k.name === "anon")?.api_key || "PASTE_PUBLISHABLE_KEY";
+  const service = keys.find((k) => k.name === "service_role")?.api_key || "PASTE_SECRET_KEY";
+  if (anon.startsWith("PASTE")) {
+    console.log(`  Couldn't read API keys with this token — copy them from https://supabase.com/dashboard/project/${ref}/settings/api-keys into .env.production`);
+  }
 
   const existing = existsSync(".env.production") ? readFileSync(".env.production", "utf8") : "";
   const keep = (name, fallback) => existing.match(new RegExp(`^${name}=(.*)$`, "m"))?.[1] || fallback;
@@ -122,6 +131,26 @@ async function main() {
   console.log(`\n✓ Supabase is ready: https://supabase.com/dashboard/project/${ref}`);
   console.log("✓ Wrote .env.production — these are the variables for Railway.");
   console.log("  ENCRYPTION_KEY protects every user's AI key: back it up and never change it.\n");
+}
+
+/** Runs pending supabase/migrations/*.sql files and records them the same way the CLI does. */
+async function applyViaApi(ref) {
+  const { readdirSync } = await import("node:fs");
+  const query = (sql) => api(`/projects/${ref}/database/query`, { method: "POST", body: JSON.stringify({ query: sql }) });
+  await query(
+    "create schema if not exists supabase_migrations; " +
+      "create table if not exists supabase_migrations.schema_migrations (version text primary key, statements text[], name text);",
+  );
+  const applied = new Set((await query("select version from supabase_migrations.schema_migrations")).map((r) => r.version));
+  const files = readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql")).sort();
+  for (const file of files) {
+    const [version, ...rest] = file.replace(/\.sql$/, "").split("_");
+    if (applied.has(version)) continue;
+    const sql = readFileSync(`supabase/migrations/${file}`, "utf8");
+    const name = rest.join("_").replace(/'/g, "''");
+    await query(`${sql}\n;insert into supabase_migrations.schema_migrations (version, name) values ('${version}', '${name}');`);
+    console.log(`  applied ${file}`);
+  }
 }
 
 main().catch((err) => fail(err.message));
