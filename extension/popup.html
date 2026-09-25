@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>OpenApply</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <strong>OpenApply</strong>
+      <button id="toggle-settings" class="link" type="button">Settings</button>
+    </header>
+
+    <section id="settings" hidden>
+      <label>
+        Server URL
+        <input id="server" type="url" placeholder="https://your-openapply-domain.com" />
+      </label>
+      <label>
+        Extension token
+        <input id="token" type="password" placeholder="oa_…" />
+      </label>
+      <p class="muted">Create a token in OpenApply → Settings → Autofill browser extension.</p>
+      <button id="save-settings" type="button">Save</button>
+    </section>
+
+    <section id="main">
+      <p id="status" class="muted">Loading…</p>
+
+      <div id="picker" hidden>
+        <label>
+          Application to use
+          <select id="application"></select>
+        </label>
+      </div>
+
+      <div id="actions" hidden>
+        <button id="fill" type="button">Fill this page</button>
+        <button id="copy-letter" type="button" class="secondary">Copy cover letter</button>
+        <button id="mark-applied" type="button" class="secondary">Mark as applied</button>
+      </div>
+
+      <p id="result" class="muted"></p>
+    </section>
+
+    <footer class="muted">Review every field before you submit. OpenApply never submits for you.</footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

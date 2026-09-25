@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "OpenApply Autofill",
+  "version": "1.0.0",
+  "description": "Fill job application forms with your OpenApply profile and the tailored answers written for that job. You always review and submit.",
+  "action": {
+    "default_title": "OpenApply",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "minimum_chrome_version": "110"
+}
