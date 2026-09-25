@@ -22,7 +22,12 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
 
   const sources = enabledSources().filter((s) => !q.sources?.length || q.sources.includes(s.id));
   // The shared cache is queried while the live sources are still answering.
-  const cachedPromise = searchCachedJobs(q, limit);
+  const t0 = Date.now();
+  const cachedPromise = searchCachedJobs(q, limit).then((r) => {
+    tCache = Date.now() - t0;
+    return r;
+  });
+  let tCache = 0;
 
   const settled = await Promise.all(
     sources.map(async (s) => {
@@ -35,12 +40,17 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
     }),
   );
 
+  const tSources = Date.now() - t0;
   let live = settled.flatMap((r) => r.jobs).filter((j) => j.url && j.title);
   if (q.remoteOnly) live = live.filter((j) => j.remote);
   if (q.location) live = live.filter((j) => matchesLocation(j, q.location!));
   live = dedupe(live);
 
+  const t1 = Date.now();
   const [stored, cached] = await Promise.all([upsertJobs(live), cachedPromise]);
+  console.info(
+    `[search] "${keywords}" sources ${tSources}ms (${settled.map((r) => `${r.id}:${r.jobs.length}`).join(" ")}) · save ${live.length} rows ${Date.now() - t1}ms · cache ${tCache}ms`,
+  );
 
   const byId = new Map<string, Job>();
   for (const j of [...stored, ...cached]) byId.set(j.id, j);
