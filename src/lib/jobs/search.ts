@@ -44,7 +44,8 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   let live = settled.flatMap((r) => r.jobs).filter((j) => j.url && j.title);
   if (q.remoteOnly) live = live.filter((j) => j.remote);
   if (q.location) live = live.filter((j) => matchesLocation(j, q.location!));
-  live = dedupe(live);
+  // Only the best-ranked postings can make it onto the page, so only those get saved.
+  live = rank(dedupe(live), keywords).slice(0, limit * 2);
 
   const t1 = Date.now();
   const [stored, cached] = await Promise.all([upsertJobs(live), cachedPromise]);
@@ -84,31 +85,57 @@ export async function searchCachedJobs(q: SearchQuery & { sources?: string[] }, 
   return jobs.slice(0, limit);
 }
 
+const REFRESH_AFTER_MS = 24 * 3_600_000;
+
 /**
- * Saves postings and returns them with their database ids. Only the ids come
- * back over the wire — we already hold the full rows in memory.
+ * Saves postings and returns them with their database ids. Postings already
+ * stored are reused as-is; only new ones are written before we answer, and
+ * day-old ones are refreshed in the background.
  */
 export async function upsertJobs(jobs: JobInput[]): Promise<Job[]> {
   if (jobs.length === 0) return [];
   const admin = createAdminClient();
-  const fetchedAt = new Date().toISOString();
-  const rows = jobs.map((j) => ({ ...j, description: j.description.slice(0, 60_000), fetched_at: fetchedAt }));
-  const chunks: (typeof rows)[] = [];
-  for (let i = 0; i < rows.length; i += 200) chunks.push(rows.slice(i, i + 200));
+  const key = (j: { source: string; external_id: string }) => `${j.source}|${j.external_id}`;
+  const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
-  const results = await Promise.all(
-    chunks.map((chunk) =>
-      admin.from("jobs").upsert(chunk, { onConflict: "source,external_id" }).select("id, source, external_id"),
+  // What do we already have?
+  const known = new Map<string, { id: string; fetched_at: string }>();
+  const lookups = await Promise.all(
+    chunk(jobs, 100).map((part) =>
+      admin
+        .from("jobs")
+        .select("id, source, external_id, fetched_at")
+        .in("external_id", part.map((j) => j.external_id)),
     ),
   );
-  const ids = new Map<string, string>();
-  for (const { data, error } of results) {
+  for (const { data } of lookups) for (const r of data ?? []) known.set(key(r), { id: r.id, fetched_at: r.fetched_at });
+
+  const fetchedAt = new Date().toISOString();
+  const toRow = (j: JobInput) => ({ ...j, description: j.description.slice(0, 60_000), fetched_at: fetchedAt });
+  const fresh = jobs.filter((j) => !known.has(key(j)));
+  const stale = jobs.filter((j) => {
+    const k = known.get(key(j));
+    return k && Date.now() - new Date(k.fetched_at).getTime() > REFRESH_AFTER_MS;
+  });
+
+  const write = (rows: JobInput[]) =>
+    Promise.all(
+      chunk(rows.map(toRow), 100).map((part) =>
+        admin.from("jobs").upsert(part, { onConflict: "source,external_id" }).select("id, source, external_id"),
+      ),
+    );
+
+  // New postings need ids before we can link to them, so wait for those.
+  for (const { data, error } of await write(fresh)) {
     if (error) console.error("upsertJobs", error.message);
-    for (const r of data ?? []) ids.set(`${r.source}|${r.external_id}`, r.id);
+    for (const r of data ?? []) known.set(key(r), { id: r.id, fetched_at: fetchedAt });
   }
-  return rows.flatMap((r) => {
-    const id = ids.get(`${r.source}|${r.external_id}`);
-    return id ? [{ ...r, id } as Job] : [];
+  // Old copies get refreshed without holding up the search.
+  if (stale.length) void write(stale).catch((err) => console.error("refresh jobs", err));
+
+  return jobs.flatMap((j) => {
+    const k = known.get(key(j));
+    return k ? [{ ...j, id: k.id, fetched_at: k.fetched_at } as Job] : [];
   });
 }
 
@@ -131,9 +158,9 @@ function norm(s: string): string {
 }
 
 /** Title matches first, then freshness. */
-function rank(jobs: Job[], keywords: string): Job[] {
+function rank<T extends Pick<Job, "title" | "posted_at">>(jobs: T[], keywords: string): T[] {
   const qt = tokens(keywords);
-  const score = (j: Job) => {
+  const score = (j: T) => {
     const title = j.title.toLowerCase();
     const titleHits = qt.filter((t) => title.includes(t)).length;
     const age = j.posted_at ? (Date.now() - new Date(j.posted_at).getTime()) / 86_400_000 : 60;
