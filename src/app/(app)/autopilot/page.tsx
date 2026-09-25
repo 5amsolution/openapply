@@ -29,7 +29,7 @@ export default async function AutopilotPage() {
       <div className="mb-6 grid gap-3">
         {!aiReady && (
           <Notice tone="warn">
-            Autopilot uses your AI key to score and write. <Link href="/settings" className="underline">Add a key</Link> to turn it on.
+            Autopilot needs AI to score and write. <Link href="/settings" className="underline">Turn on AI for free</Link> to start it.
           </Notice>
         )}
         {!profile?.resume_text && (

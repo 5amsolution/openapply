@@ -23,6 +23,8 @@ export const serverEnv = {
   usajobsKey: () => process.env.USAJOBS_API_KEY || "",
   usajobsEmail: () => process.env.USAJOBS_EMAIL || "",
   jsearchKey: () => process.env.RAPIDAPI_JSEARCH_KEY || "",
+  // Free RapidAPI plan is ~200 requests/month; leave headroom for tests.
+  jsearchMonthlyLimit: () => Number(process.env.JSEARCH_MONTHLY_LIMIT) || 180,
   // Company career boards scanned by the Greenhouse / Lever / Ashby sources
   greenhouseBoards: () => list(process.env.GREENHOUSE_BOARDS),
   leverCompanies: () => list(process.env.LEVER_COMPANIES),

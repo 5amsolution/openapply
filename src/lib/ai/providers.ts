@@ -16,6 +16,17 @@ export interface ProviderInfo {
   models: { id: string; label: string }[];
 }
 
+/**
+ * Free OpenRouter models that support JSON output, best first. A free model
+ * falls back to the next ones automatically when it is busy or removed.
+ */
+export const FREE_OPENROUTER_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "google/gemma-4-26b-a4b-it:free",
+];
+export const DEFAULT_OPENROUTER_MODEL = FREE_OPENROUTER_MODELS[0];
+
 export const PROVIDERS: ProviderInfo[] = [
   {
     id: "anthropic",
@@ -54,8 +65,10 @@ export const PROVIDERS: ProviderInfo[] = [
     keyUrl: "https://openrouter.ai/keys",
     baseUrl: "https://openrouter.ai/api/v1",
     models: [
-      { id: "anthropic/claude-sonnet-5", label: "Claude Sonnet 5 via OpenRouter" },
-      { id: "openai/gpt-5-mini", label: "GPT-5 mini via OpenRouter" },
+      ...FREE_OPENROUTER_MODELS.map((id) => ({ id, label: `${id.replace(/:free$/, "")} — free` })),
+      { id: "anthropic/claude-sonnet-5", label: "Claude Sonnet 5 (paid, best writing)" },
+      { id: "anthropic/claude-haiku-4-5", label: "Claude Haiku 4.5 (paid, cheap)" },
+      { id: "openai/gpt-5-mini", label: "GPT-5 mini (paid, cheap)" },
     ],
   },
   {
@@ -183,10 +196,13 @@ async function openAICompatibleObject<T extends z.ZodType>(
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${config.apiKey}`,
-      ...(config.provider === "openrouter" ? { "x-title": "OpenApply" } : {}),
+      ...(config.provider === "openrouter"
+        ? { "x-title": "OpenApply", "http-referer": process.env.NEXT_PUBLIC_SITE_URL || "https://github.com/MuhammadAbdullah80/openapply" }
+        : {}),
     },
     body: JSON.stringify({
       model: config.model,
+      ...(config.provider === "openrouter" ? openRouterRouting(config.model) : {}),
       max_completion_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
@@ -200,7 +216,15 @@ async function openAICompatibleObject<T extends z.ZodType>(
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     if (res.status === 401) throw new AIError("Your API key was rejected. Check it in Settings.", 401);
-    if (res.status === 429) throw new AIError("Provider rate limit or credit limit reached.", 429);
+    if (res.status === 429) {
+      throw new AIError(
+        config.provider === "openrouter" && config.model.endsWith(":free")
+          ? "You've hit OpenRouter's free limit (50 requests a day, or 1,000 after a one-time $10 credit purchase). Try again tomorrow or pick a paid model."
+          : "Provider rate limit or credit limit reached.",
+        429,
+      );
+    }
+    if (res.status === 402) throw new AIError("Your OpenRouter account is out of credits. Add credits or switch to a free model.", 402);
     throw new AIError(`AI provider error ${res.status}: ${body.slice(0, 300)}`, res.status);
   }
 
@@ -268,4 +292,11 @@ function isPrivateAddress(ip: string): boolean {
   }
   const v6 = ip.toLowerCase();
   return v6 === "::" || v6 === "::1" || v6.startsWith("fc") || v6.startsWith("fd") || v6.startsWith("fe80");
+}
+
+/** OpenRouter extras: automatic fallback between free models, and only providers that honor JSON mode. */
+function openRouterRouting(model: string) {
+  if (!model.endsWith(":free")) return { provider: { require_parameters: true } };
+  const fallbacks = FREE_OPENROUTER_MODELS.filter((m) => m !== model).slice(0, 2);
+  return { models: [model, ...fallbacks], provider: { require_parameters: true } };
 }

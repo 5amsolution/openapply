@@ -24,7 +24,7 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
       setMessage(
         res.data.parsedWithAI
           ? { tone: "accent", text: "Resume read. Your profile below was filled in — check it over and save." }
-          : { tone: "info", text: "Resume uploaded. Add an AI key in Settings to auto-fill your whole profile from it." },
+          : { tone: "info", text: "Resume uploaded. Turn on AI in Settings (free) to auto-fill your whole profile from it." },
       );
       router.refresh();
     });
@@ -55,7 +55,7 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
               PDF, DOCX or TXT, up to 10 MB.{" "}
               {aiReady ? "The AI will fill in your profile." : (
                 <>
-                  <Link href="/settings" className="underline">Add an AI key</Link> to auto-fill your profile.
+                  <Link href="/settings" className="underline">Turn on AI (free)</Link> to auto-fill your profile.
                 </>
               )}
             </p>

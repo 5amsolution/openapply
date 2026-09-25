@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: { default: "OpenApply — free AI job search and applications", template: "%s · OpenApply" },
   description:
-    "Free, open-source job search across dozens of boards, with AI that scores every job against your resume and writes tailored applications. Bring your own AI key.",
+    "Free, open-source job search across dozens of boards, with AI that scores every job against your resume and writes tailored applications. Free AI via your own OpenRouter account.",
   openGraph: {
     title: "OpenApply",
-    description: "Free, open-source AI job search and applications. Bring your own AI key.",
+    description: "Free, open-source AI job search and applications.",
     type: "website",
   },
 };

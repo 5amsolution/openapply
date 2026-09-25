@@ -22,7 +22,7 @@ export class TokenLimitError extends Error {
 export async function getAISettingsPublic(userId: string) {
   const { data } = await createAdminClient()
     .from("ai_settings")
-    .select("provider, model, base_url, api_key_hint, monthly_token_limit, updated_at")
+    .select("provider, model, base_url, api_key_hint, monthly_token_limit, connected_via, updated_at")
     .eq("user_id", userId)
     .maybeSingle();
   return data as Omit<AISettingsRow, "user_id" | "api_key_enc"> | null;

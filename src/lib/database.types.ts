@@ -58,6 +58,7 @@ export type Database = {
           api_key_enc: string | null
           api_key_hint: string | null
           base_url: string | null
+          connected_via: string
           model: string
           monthly_token_limit: number | null
           provider: string
@@ -68,6 +69,7 @@ export type Database = {
           api_key_enc?: string | null
           api_key_hint?: string | null
           base_url?: string | null
+          connected_via?: string
           model: string
           monthly_token_limit?: number | null
           provider: string
@@ -78,6 +80,7 @@ export type Database = {
           api_key_enc?: string | null
           api_key_hint?: string | null
           base_url?: string | null
+          connected_via?: string
           model?: string
           monthly_token_limit?: number | null
           provider?: string
@@ -116,6 +119,42 @@ export type Database = {
           output_tokens?: number
           provider?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      api_cache: {
+        Row: {
+          expires_at: string
+          key: string
+          payload: Json
+        }
+        Insert: {
+          expires_at: string
+          key: string
+          payload: Json
+        }
+        Update: {
+          expires_at?: string
+          key?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      api_quota: {
+        Row: {
+          period: string
+          source: string
+          used: number
+        }
+        Insert: {
+          period: string
+          source: string
+          used?: number
+        }
+        Update: {
+          period?: string
+          source?: string
+          used?: number
         }
         Relationships: []
       }
@@ -433,6 +472,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_api_quota: {
+        Args: { p_limit: number; p_period: string; p_source: string }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       tags_to_text: { Args: { tags: string[] }; Returns: string }

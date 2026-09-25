@@ -1,5 +1,6 @@
 import "server-only";
 import { serverEnv } from "@/lib/env";
+import { cacheGet, cacheSet, consumeQuota } from "@/lib/api-cache";
 import type { JobInput } from "@/lib/types";
 import {
   fetchJSON,
@@ -20,6 +21,8 @@ export interface SearchQuery {
   keywords: string;
   location?: string;
   remoteOnly?: boolean;
+  /** Background runs (autopilot) set this so metered sources only answer from cache. */
+  cacheOnly?: boolean;
 }
 
 export interface JobSource {
@@ -636,15 +639,24 @@ const jsearch: JobSource = {
         job_google_link?: string;
       }[];
     };
+    // The free plan is ~200 requests/month for the whole deployment, so every
+    // query is cached for everyone and spending is capped per month.
     const query = [q.keywords, q.location ? `in ${q.location}` : ""].filter(Boolean).join(" ");
-    const params = new URLSearchParams({ query, page: "1", num_pages: "2" });
-    if (q.remoteOnly) params.set("work_from_home", "true");
-    const data = await fetchJSON<S>(
-      `https://jsearch.p.rapidapi.com/search?${params}`,
-      { headers: { "x-rapidapi-key": serverEnv.jsearchKey(), "x-rapidapi-host": "jsearch.p.rapidapi.com" } },
-      20_000,
-    );
-    return data.data.map((j) => ({
+    const cacheKey = `jsearch:${query.toLowerCase().replace(/s+/g, " ").trim()}|${q.remoteOnly ? "remote" : "any"}`;
+    let data = await cacheGet<S>(cacheKey);
+    if (!data) {
+      if (q.cacheOnly) return [];
+      if (!(await consumeQuota("jsearch", serverEnv.jsearchMonthlyLimit()))) throw new Error("monthly JSearch quota used up");
+      const params = new URLSearchParams({ query, page: "1", num_pages: "1", date_posted: "month" });
+      if (q.remoteOnly) params.set("work_from_home", "true");
+      data = await fetchJSON<S>(
+        `https://jsearch.p.rapidapi.com/search?${params}`,
+        { headers: { "x-rapidapi-key": serverEnv.jsearchKey(), "x-rapidapi-host": "jsearch.p.rapidapi.com" } },
+        20_000,
+      );
+      await cacheSet(cacheKey, data, 24 * 3_600_000);
+    }
+    return (data.data ?? []).map((j) => ({
       ...base,
       source: "jsearch",
       external_id: j.job_id,
@@ -659,7 +671,7 @@ const jsearch: JobSource = {
       salary_currency: j.job_salary_currency || null,
       salary_period: j.job_salary_period?.toLowerCase() || null,
       description: j.job_description,
-      url: j.job_apply_link || j.job_google_link || "",
+      url: j.job_google_link || j.job_apply_link || "",
       apply_url: j.job_apply_link,
       tags: j.job_publisher ? [`via ${j.job_publisher}`] : [],
       posted_at: toISO(j.job_posted_at_datetime_utc),

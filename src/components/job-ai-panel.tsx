@@ -99,9 +99,9 @@ export function JobAIPanel({
         )}
         {!aiReady && (
           <Notice>
-            AI features use your own key.{" "}
+            AI is free to turn on.{" "}
             <Link href="/settings" className="underline">
-              Add one in Settings
+              Connect in Settings
             </Link>
             .
           </Notice>

@@ -4,15 +4,20 @@
 every posting against your resume, and get a tailored cover letter, resume summary and screening answers for each
 one. A browser extension fills the application form, and you review it and click submit.
 
-Everyone brings their own AI key (Claude, GPT, Gemini, OpenRouter, Groq or any OpenAI-compatible server), so the
-hosted app costs nothing to run per user, and users pay their AI provider directly for what they use.
+AI is free for users: they click **Connect with OpenRouter**, approve OpenApply on OpenRouter's site (no key to copy
+or paste), and use free models, about 50 AI actions a day, or 1,000 after a one-time $10 credit purchase. Each user
+connects their own account, so they can set a spending limit or revoke access there anytime, and the hosted app
+never pays for anyone's AI. Anyone who prefers can instead paste their own Anthropic, OpenAI, Gemini, Groq or
+OpenAI-compatible key under Settings → Advanced.
 
 ## Features
 
 - **One search, many boards.** Remotive, Himalayas, Jobicy, Remote OK, Arbeitnow, plus the public Greenhouse, Lever
   and Ashby career boards of well-known companies. Optional free-key sources: Adzuna (local jobs in 19 countries),
   USAJOBS, and JSearch (aggregates LinkedIn, Indeed and Glassdoor listings). Results are cached and deduplicated in a
-  shared jobs table.
+  shared jobs table. JSearch's free plan is about 200 requests a month for the whole deployment, so its results are
+  cached for 24 hours for everyone, spending is capped by `JSEARCH_MONTHLY_LIMIT`, and autopilot only reuses cached
+  JSearch results.
 - **Resume → profile.** Upload a PDF, DOCX or TXT resume. The AI extracts a structured, editable profile. Prompts
   forbid inventing experience.
 - **Fit scoring.** A free keyword estimate on every result, plus an AI score with strengths, gaps and dealbreakers.
@@ -23,7 +28,9 @@ hosted app costs nothing to run per user, and users pay their AI provider direct
 - **Tracker.** A board with Saved → Ready → Applied → Interviewing → Offer / Rejected columns, plus notes.
 - **Autofill extension.** Fills Greenhouse, Lever, Ashby, SmartRecruiters, Workday (page by page) and most plain
   forms, and attaches your resume. It never submits.
-- **Privacy and cost controls.** API keys are encrypted with AES-256-GCM and only used server-side. Per-user usage
+- **Free AI via OpenRouter.** One-click OAuth (PKCE) connection to the user's own OpenRouter account, free models by
+  default, with automatic fallback to other free models when one is busy.
+- **Privacy and cost controls.** Keys are encrypted with AES-256-GCM and only used server-side. Per-user usage
   tracking, an optional monthly token cap, and account deletion.
 
 ### Why it doesn't auto-submit

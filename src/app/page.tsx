@@ -37,7 +37,7 @@ export default async function Home() {
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pt-24">
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Free forever · Open source · Bring your own AI key
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Free forever · Open source · Free AI included
           </p>
           <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
             Let AI do the tedious part of the job hunt.
@@ -80,8 +80,8 @@ export default async function Home() {
             },
             {
               icon: KeyRound,
-              title: "Your key, your cost",
-              body: "Use Claude, GPT, Gemini, OpenRouter, Groq or a local model. Keys are encrypted at rest and you can set a monthly token cap.",
+              title: "Free AI, your control",
+              body: "Connect your own OpenRouter account in one click and use free models — no key to copy, no card. Want Claude or GPT? Switch models and set your own spending limit.",
             },
             {
               icon: ShieldCheck,

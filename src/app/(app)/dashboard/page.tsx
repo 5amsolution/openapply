@@ -32,7 +32,7 @@ export default async function DashboardPage() {
 
   const steps = [
     { done: !!profile?.resume_path, label: "Upload your resume", href: "/profile" },
-    { done: aiReady, label: "Add your AI key", href: "/settings" },
+    { done: aiReady, label: "Turn on AI (free)", href: "/settings" },
     { done: (counts.size ?? 0) > 0, label: "Search and save a job", href: "/jobs" },
     { done: (ruleCount ?? 0) > 0, label: "Turn on autopilot", href: "/autopilot" },
     { done: (tokenCount ?? 0) > 0, label: "Connect the autofill extension", href: "/settings#extension" },

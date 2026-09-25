@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAISettingsPublic } from "@/lib/ai/settings";
-import { PROVIDERS } from "@/lib/ai/providers";
+import { PROVIDERS, providerInfo } from "@/lib/ai/providers";
+import { OpenRouterConnect } from "@/components/openrouter-connect";
 import { Card, PageHeader } from "@/components/ui";
 import { AISettingsForm } from "@/components/ai-settings-form";
 import { ExtensionTokens } from "@/components/extension-tokens";
@@ -10,7 +11,8 @@ import { DangerZone } from "@/components/danger-zone";
 
 export const metadata: Metadata = { title: "Settings" };
 
-export default async function SettingsPage() {
+export default async function SettingsPage(props: PageProps<"/settings">) {
+  const sp = await props.searchParams;
   const { supabase, user } = await requireUser();
   const monthStart = new Date();
   monthStart.setUTCDate(1);
@@ -45,10 +47,26 @@ export default async function SettingsPage() {
       <PageHeader title="Settings" />
 
       <div className="grid gap-6">
-        <AISettingsForm
-          providers={PROVIDERS.map((p) => ({ id: p.id, label: p.label, keyUrl: p.keyUrl, baseUrl: p.baseUrl ?? "", models: p.models }))}
-          current={ai}
+        <OpenRouterConnect
+          connected={ai?.connected_via === "oauth" && ai.provider === "openrouter"}
+          model={ai?.provider === "openrouter" ? ai.model : null}
+          models={providerInfo("openrouter")?.models ?? []}
+          status={typeof sp.openrouter === "string" ? sp.openrouter : undefined}
+          statusMessage={typeof sp.message === "string" ? sp.message : undefined}
         />
+
+        <details className="group rounded-xl border border-border bg-surface" open={!!ai && ai.connected_via !== "oauth"}>
+          <summary className="cursor-pointer px-5 py-4 text-sm font-medium">
+            Advanced: use your own API key instead
+            <span className="ml-2 font-normal text-muted">Anthropic, OpenAI, Gemini, Groq, or a custom server</span>
+          </summary>
+          <div className="border-t border-border">
+            <AISettingsForm
+              providers={PROVIDERS.map((p) => ({ id: p.id, label: p.label, keyUrl: p.keyUrl, baseUrl: p.baseUrl ?? "", models: p.models }))}
+              current={ai?.connected_via === "oauth" ? null : ai}
+            />
+          </div>
+        </details>
 
         <Card className="p-5">
           <h2 className="font-medium">AI usage this month</h2>

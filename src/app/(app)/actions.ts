@@ -266,10 +266,26 @@ export async function saveAISettingsAction(input: z.infer<typeof AISettingsInput
       model: v.model,
       base_url: v.baseUrl || null,
       monthly_token_limit: v.monthlyTokenLimit || null,
-      ...(v.apiKey ? { api_key_enc: encrypt(v.apiKey), api_key_hint: keyHint(v.apiKey) } : {}),
+      ...(v.apiKey ? { api_key_enc: encrypt(v.apiKey), api_key_hint: keyHint(v.apiKey), connected_via: "manual" } : {}),
     };
     const { error } = await admin.from("ai_settings").upsert(row, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
+    revalidatePath("/settings");
+    return null;
+  });
+}
+
+/** Changes only the model (e.g. for OpenRouter-connected users, who never see their key). */
+export async function setAIModelAction(model: string): Promise<ActionResult> {
+  return attempt(async () => {
+    const { user } = await requireUser();
+    const m = z.string().trim().min(1).max(200).parse(model);
+    const { error, count } = await createAdminClient()
+      .from("ai_settings")
+      .update({ model: m }, { count: "exact" })
+      .eq("user_id", user.id);
+    if (error) throw new Error(error.message);
+    if (!count) throw new Error("Connect an AI provider first.");
     revalidatePath("/settings");
     return null;
   });

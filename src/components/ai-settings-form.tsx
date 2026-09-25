@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, KeyRound } from "lucide-react";
 import { removeAIKeyAction, saveAISettingsAction, testAIKeyAction } from "@/app/(app)/actions";
-import { Button, Card, Input, Label, Notice, Select } from "@/components/ui";
+import { Button, Input, Label, Notice, Select } from "@/components/ui";
 import type { ProviderId } from "@/lib/ai/providers";
 
 type ProviderOption = { id: ProviderId; label: string; keyUrl: string; baseUrl: string; models: { id: string; label: string }[] };
@@ -60,7 +60,7 @@ export function AISettingsForm({
     });
 
   return (
-    <Card className="p-5">
+    <div className="p-5">
       <div className="mb-1 flex items-center gap-2">
         <KeyRound size={16} className="text-accent" />
         <h2 className="font-medium">Your AI provider</h2>
@@ -185,6 +185,6 @@ export function AISettingsForm({
           )}
         </div>
       </form>
-    </Card>
+    </div>
   );
 }

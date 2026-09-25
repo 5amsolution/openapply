@@ -145,5 +145,6 @@ export interface AISettingsRow {
   api_key_enc: string | null;
   api_key_hint: string | null;
   monthly_token_limit: number | null;
+  connected_via: "manual" | "oauth";
   updated_at: string;
 }

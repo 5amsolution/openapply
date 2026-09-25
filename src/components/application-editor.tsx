@@ -151,7 +151,7 @@ export function ApplicationEditor({
             {!aiReady && (
               <p className="mt-3 text-sm text-muted">
                 <Link href="/settings" className="underline">
-                  Add your AI key
+                  Turn on AI (free)
                 </Link>{" "}
                 to enable this.
               </p>
