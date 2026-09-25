@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ExternalLink, Sparkles } from "lucide-react";
+import { Check, CheckCircle2, ExternalLink, Sparkles } from "lucide-react";
 import { removeAIKeyAction, setAIModelAction, testAIKeyAction } from "@/app/(app)/actions";
-import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
+import { Badge, Button, Card, IconTile, Input, Label, Notice, buttonClass } from "@/components/ui";
 import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 
 type Model = { id: string; label: string };
@@ -25,9 +25,9 @@ export function OpenRouterConnect({
   const router = useRouter();
   const [value, setValue] = useState(model ?? models[0]?.id ?? "");
   const [busy, setBusy] = useState("");
-  const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(
+  const [message, setMessage] = useState<{ tone: "success" | "danger"; text: string } | null>(
     status === "connected"
-      ? { tone: "accent", text: "Connected! You're using a free model — no card needed." }
+      ? { tone: "success", text: "Connected! You're using a free model — no card needed." }
       : status === "error"
         ? { tone: "danger", text: statusMessage || "Couldn't connect to OpenRouter." }
         : null,
@@ -42,7 +42,7 @@ export function OpenRouterConnect({
       setBusy(key);
       setMessage(null);
       try {
-        setMessage({ tone: "accent", text: await fn() });
+        setMessage({ tone: "success", text: await fn() });
         router.refresh();
       } catch (e) {
         setMessage({ tone: "danger", text: friendlyError(e) });
@@ -53,29 +53,34 @@ export function OpenRouterConnect({
 
   if (!connected) {
     return (
-      <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <Card className="overflow-hidden">
+        <div className="grid gap-6 p-5 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="chip-icon pastel-lime"><Sparkles size={16} /></span>
-              <h2 className="font-bold tracking-[-0.02em]">Turn on AI — free</h2>
-              <Badge tone="accent">Recommended</Badge>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <IconTile tone="primary">
+                <Sparkles size={18} />
+              </IconTile>
+              <h3 className="text-lg font-bold tracking-tight text-fg">Turn on AI — free</h3>
+              <Badge tone="success">Recommended</Badge>
             </div>
-            <p className="mt-2 text-sm text-muted">
-              Connect your own OpenRouter account. You approve OpenApply on OpenRouter&apos;s site — you never copy or paste a
-              key — and can set a spending limit or disconnect there at any time. Free models cost nothing: about 50 AI
-              actions a day, or 1,000 a day after a one-time $10 credit purchase.
+            <p className="mt-3 text-[15px] leading-relaxed text-muted">
+              Connect your own OpenRouter account. You approve OpenApply on OpenRouter&apos;s site — nothing to copy or paste — and
+              free models cost nothing: about 50 AI actions a day, or 1,000 a day after a one-time $10 credit purchase.
             </p>
+            <ul className="mt-4 grid gap-2 text-sm text-fg sm:grid-cols-3">
+              {["No card needed", "No keys to copy", "Disconnect any time"].map((t) => (
+                <li key={t} className="flex items-center gap-2 font-medium">
+                  <Check size={16} aria-hidden="true" className="shrink-0 text-success" /> {t}
+                </li>
+              ))}
+            </ul>
           </div>
-          <a
-            href="/api/openrouter/connect"
-            className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
-          >
-            Connect with OpenRouter
+          <a href="/api/openrouter/connect" className={buttonClass("primary", "lg")}>
+            <Sparkles size={17} aria-hidden="true" /> Connect with OpenRouter
           </a>
         </div>
         {message && (
-          <div className="mt-4">
+          <div className="px-5 pb-5 sm:px-6 sm:pb-6">
             <Notice tone={message.tone}>{message.text}</Notice>
           </div>
         )}
@@ -84,24 +89,29 @@ export function OpenRouterConnect({
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="chip-icon pastel-lime"><CheckCircle2 size={18} className="text-accent" /></span>
-          <h2 className="font-bold tracking-[-0.02em]">Connected to OpenRouter</h2>
+        <div className="flex items-center gap-3">
+          <IconTile tone="success">
+            <CheckCircle2 size={19} />
+          </IconTile>
+          <div>
+            <h3 className="text-base font-bold tracking-tight text-fg">Connected to OpenRouter</h3>
+            <p className="text-sm text-muted">AI is on — fit scores and applications are ready to go.</p>
+          </div>
         </div>
         <a
           href="https://openrouter.ai/settings/keys"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg"
+          className={buttonClass("ghost", "sm")}
         >
-          Spending limit & key settings <ExternalLink size={12} />
+          Spending limit & key settings <ExternalLink size={14} aria-hidden="true" />
         </a>
       </div>
 
       <form
-        className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]"
+        className="mt-5 grid gap-3 md:grid-cols-[1fr_auto]"
         onSubmit={(e) => {
           e.preventDefault();
           act("model", async () => {
@@ -147,12 +157,12 @@ export function OpenRouterConnect({
         </div>
       </form>
 
-      <p className="mt-3 text-xs text-muted">
+      <p className="mt-4 text-[13px] leading-relaxed text-muted">
         {isFree ? (
           <>
             Free models are rate-limited (about 50 requests a day) and write less polished letters than paid ones. Some free
             providers may log prompts, and your resume is part of them — control this in{" "}
-            <a href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer" className="underline">
+            <a href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary-text underline underline-offset-2">
               OpenRouter privacy settings
             </a>
             . If a free model is busy, OpenApply automatically falls back to another free one.

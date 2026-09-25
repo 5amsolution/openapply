@@ -26,8 +26,8 @@ export function SaveJobButton({ jobId }: { jobId: string }) {
   };
 
   return (
-    <Button variant="secondary" className="px-3 py-1 text-xs" disabled={saved} loading={busy} onClick={save}>
-      {!busy && (saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />)}
+    <Button variant={saved ? "soft" : "secondary"} size="sm" aria-disabled={saved || undefined} loading={busy} onClick={() => !saved && void save()}>
+      {!busy && (saved ? <BookmarkCheck size={15} aria-hidden="true" /> : <Bookmark size={15} aria-hidden="true" />)}
       {saved ? "Saved" : "Save"}
     </Button>
   );

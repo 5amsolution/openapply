@@ -1,19 +1,20 @@
 :root {
+  color-scheme: light dark;
   --bg: #ffffff;
-  --fg: #16181d;
-  --muted: #5d636e;
-  --border: #e3e3de;
-  --accent: #0d7a5f;
+  --fg: #101828;
+  --muted: #475467;
+  --border: #cdd2de;
+  --accent: #4f46e5;
   --accent-fg: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #171a1d;
-    --fg: #eceef0;
-    --muted: #9aa1ab;
-    --border: #2a2f35;
-    --accent: #3cc49b;
-    --accent-fg: #06251b;
+    --bg: #121725;
+    --fg: #eef1f8;
+    --muted: #aab3c7;
+    --border: #343c55;
+    --accent: #5b54f0;
+    --accent-fg: #ffffff;
   }
 }
 * {
@@ -23,7 +24,7 @@ body {
   width: 340px;
   margin: 0;
   padding: 14px;
-  font: 13px/1.45 system-ui, sans-serif;
+  font: 13px/1.5 "Plus Jakarta Sans", system-ui, sans-serif;
   background: var(--bg);
   color: var(--fg);
 }
@@ -45,17 +46,17 @@ label {
 input,
 select {
   width: 100%;
-  padding: 7px 9px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--bg);
   color: var(--fg);
   font: inherit;
 }
 button {
-  padding: 8px 12px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--accent);
   color: var(--accent-fg);
   font: inherit;
@@ -75,8 +76,15 @@ button.link {
   font-weight: 400;
 }
 button:disabled {
-  opacity: 0.5;
+  background: var(--border);
+  color: var(--muted);
   cursor: default;
+}
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 #actions {
   display: grid;
@@ -88,5 +96,5 @@ button:disabled {
 }
 footer {
   margin-top: 14px;
-  font-size: 11px;
+  font-size: 12px;
 }

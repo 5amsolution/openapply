@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Download, ExternalLink, PartyPopper, Puzzle } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, FileText, Lock, PartyPopper, Puzzle, ShieldCheck } from "lucide-react";
 import { resumeDownloadUrlAction, updateApplicationAction } from "@/app/(app)/actions";
-import { Badge, Button, Card, Notice, cn } from "@/components/ui";
+import { Button, ButtonLink, Card, IconTile, Notice, buttonClass, cn } from "@/components/ui";
 import { Spinner, friendlyError } from "@/components/progress";
+import { celebrate } from "@/lib/celebrate";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Application, Job } from "@/lib/types";
 
@@ -67,6 +68,7 @@ export function ApplyWorkspace({
       setBusy("");
       if (!res.ok) return setError(res.error);
       setApplied(true);
+      celebrate();
       router.refresh();
     });
 
@@ -91,101 +93,107 @@ export function ApplyWorkspace({
     ["Notice period", profile.notice_period],
     ["Work authorization", profile.work_authorization],
   ];
+  const filled = details.filter(([, v]) => v);
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
       {/* Employer form */}
-      <Card className="flex min-h-[70vh] flex-col overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate font-medium">
-              {job.title} · {job.company}
-            </p>
-            <p className="text-xs text-muted">
-              {embedUrl ? `The employer's own application form (${sourceLabel(job.source)}) — you submit it directly to them.` : `Listing from ${sourceLabel(job.source)}`}
-            </p>
+      <Card className="flex min-h-[72vh] flex-col overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-2 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <IconTile tone="success" size="sm">
+              <Lock size={15} />
+            </IconTile>
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-bold text-fg">
+                {job.title} · {job.company}
+              </h1>
+              <p className="truncate text-xs text-muted">
+                {embedUrl ? `The employer's own form on ${sourceLabel(job.source)} — you submit it directly to them` : `Listing from ${sourceLabel(job.source)}`}
+              </p>
+            </div>
           </div>
-          <a
-            href={externalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
-          >
-            Open in new tab <ExternalLink size={14} />
+          <a href={externalUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary", "sm")}>
+            Open in new tab <ExternalLink size={14} aria-hidden="true" />
           </a>
         </div>
 
         {embedUrl ? (
           <div className="relative flex-1">
             {!frameLoaded && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface text-sm text-muted">
-                <Spinner className="h-6 w-6 text-accent" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface text-sm font-medium text-muted">
+                <Spinner className="h-6 w-6 text-primary-text" />
                 Loading the employer&apos;s application form…
               </div>
             )}
             <iframe
               ref={frame}
               title={`Application form for ${job.title} at ${job.company}`}
-              className="h-full min-h-[70vh] w-full bg-white"
+              className="h-full min-h-[72vh] w-full bg-white"
               onLoad={() => setFrameLoaded(true)}
               allow="clipboard-write"
               referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <p className="max-w-md text-sm text-muted">
-              {sourceLabel(job.source)} doesn&apos;t allow its application form to be shown inside other sites, so it opens in a new
-              tab. Keep this page open next to it and copy each section across — or use the autofill extension to do it in one
-              click.
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-14 text-center">
+            <IconTile tone="primary" size="lg">
+              <ExternalLink size={22} />
+            </IconTile>
+            <h2 className="text-lg font-bold tracking-tight">This form opens on the employer&apos;s site</h2>
+            <p className="max-w-md text-[15px] leading-relaxed text-muted">
+              {sourceLabel(job.source)} doesn&apos;t allow its application form inside other sites. Open it in a new tab, keep this
+              page beside it and copy each section across — or let the autofill extension do it in one click.
             </p>
-            <a
-              href={externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-ink-fg shadow-[0_6px_16px_rgba(21,32,26,0.16)] hover:opacity-95"
-            >
-              Open the application form <ExternalLink size={14} />
+            <a href={externalUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("primary", "lg")}>
+              Open the application form <ExternalLink size={16} aria-hidden="true" />
             </a>
           </div>
         )}
       </Card>
 
       {/* Helper panel */}
-      <div className="grid content-start gap-4 xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:overflow-y-auto">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-4 xl:sticky xl:top-8 xl:max-h-[calc(100dvh-4rem)] xl:overflow-y-auto xl:pr-1 xl:[scrollbar-width:thin]">
         {applied ? (
-          <Notice tone="accent">
-            <span className="inline-flex items-center gap-2 font-medium">
-              <PartyPopper size={16} /> Marked as applied — good luck!
-            </span>{" "}
-            <Link href="/jobs" className="underline">
-              Find the next one
-            </Link>
-          </Notice>
+          <Card className="border-transparent bg-success-soft p-5 text-success-soft-fg animate-[oa-pop_420ms_var(--ease-out)]">
+            <div className="flex items-start gap-3">
+              <PartyPopper size={22} aria-hidden="true" className="shrink-0" />
+              <div>
+                <p className="font-bold">Marked as applied — good luck!</p>
+                <p className="mt-1 text-sm">Every application is a step closer. Want to keep the momentum going?</p>
+                <ButtonLink href="/jobs" variant="secondary" size="sm" className="mt-3">
+                  Find the next one
+                </ButtonLink>
+              </div>
+            </div>
+          </Card>
         ) : (
-          <Card className="grid gap-2 p-4">
-            <p className="text-sm font-medium">How to apply</p>
-            <ol className="grid gap-1 text-sm text-muted">
-              <li>1. Fill the form using the copy buttons below.</li>
-              <li>2. Attach your resume and review everything.</li>
-              <li>3. Submit, then mark it as applied here.</li>
+          <Card className="p-5">
+            <h2 className="text-base font-bold tracking-tight text-fg">How to apply</h2>
+            <ol className="mt-3 grid gap-3 text-sm">
+              {["Fill the form using the copy buttons below.", "Attach your resume and review everything.", "Submit, then mark it as applied here."].map((t, i) => (
+                <li key={t} className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary-soft-fg">{i + 1}</span>
+                  <span className="pt-0.5 text-fg">{t}</span>
+                </li>
+              ))}
             </ol>
-            <Button onClick={markApplied} loading={busy === "applied"} className="mt-1">
-              <Check size={14} /> I submitted it — mark as applied
+            <Button onClick={markApplied} loading={busy === "applied"} className="mt-4 w-full">
+              {busy !== "applied" && <Check size={16} aria-hidden="true" />} I submitted it — mark as applied
             </Button>
           </Card>
         )}
         {error && <Notice tone="danger">{error}</Notice>}
 
-        <Card className="grid gap-2 p-4">
-          <p className="text-sm font-medium">Resume</p>
+        <Card className="p-5">
+          <h2 className="mb-3 text-sm font-bold text-fg">Resume</h2>
           {resumeFilename ? (
-            <Button variant="secondary" onClick={downloadResume} loading={busy === "resume"}>
-              {busy !== "resume" && <Download size={14} />} Download {resumeFilename}
+            <Button variant="secondary" onClick={downloadResume} loading={busy === "resume"} className="w-full min-w-0">
+              {busy !== "resume" && <Download size={16} aria-hidden="true" />} <span className="truncate">Download {resumeFilename}</span>
             </Button>
           ) : (
             <p className="text-sm text-muted">
-              <Link href="/profile" className="underline">
+              <Link href="/profile" className="font-semibold text-primary-text underline underline-offset-2">
                 Upload your resume
               </Link>{" "}
               to attach it here.
@@ -193,32 +201,32 @@ export function ApplyWorkspace({
           )}
         </Card>
 
-        <Card className="p-4">
-          <p className="mb-2 text-sm font-medium">Your details</p>
-          <div className="grid gap-1.5">
-            {details
-              .filter(([, v]) => v)
-              .map(([label, value]) => (
+        {filled.length > 0 && (
+          <Card className="p-5">
+            <h2 className="mb-2 text-sm font-bold text-fg">Your details</h2>
+            <div className="-mx-2 grid grid-cols-[minmax(0,1fr)] gap-0.5">
+              {filled.map(([label, value]) => (
                 <CopyRow key={label} label={label} value={value!} />
               ))}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        )}
 
         {application.cover_letter ? (
           <>
             <CopyBlock title="Cover letter" text={application.cover_letter} />
             {application.tailored_summary && <CopyBlock title="Summary" text={application.tailored_summary} />}
             {application.answers.length > 0 && (
-              <Card className="p-4">
-                <p className="mb-2 text-sm font-medium">Screening answers</p>
-                <div className="grid gap-3">
+              <Card className="p-5">
+                <h2 className="mb-3 text-sm font-bold text-fg">Screening answers</h2>
+                <div className="grid gap-2.5">
                   {application.answers.map((a) => (
-                    <div key={a.question} className="rounded-lg bg-surface-2 p-3">
+                    <div key={a.question} className="rounded-xl bg-surface-2 p-3">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-medium">{a.question}</p>
-                        <CopyButton text={a.answer} />
+                        <p className="pt-1.5 text-[13px] font-semibold text-fg">{a.question}</p>
+                        <CopyButton text={a.answer} what="answer" />
                       </div>
-                      <p className="mt-1 line-clamp-4 text-sm text-muted">{a.answer}</p>
+                      <p className="mt-1 line-clamp-4 text-sm leading-relaxed text-muted">{a.answer}</p>
                     </div>
                   ))}
                 </div>
@@ -226,27 +234,26 @@ export function ApplyWorkspace({
             )}
           </>
         ) : (
-          <Notice>
-            No tailored cover letter yet.{" "}
-            <Link href={`/applications/${application.id}`} className="underline">
-              Write one with AI
-            </Link>{" "}
-            first for the best result.
+          <Notice tone="primary">
+            No tailored cover letter yet. <Link href={`/applications/${application.id}`}>Write one with AI</Link> first for the
+            best result.
           </Notice>
         )}
 
-        <Card className="flex gap-3 p-4 text-sm text-muted">
-          <Puzzle size={16} className="mt-0.5 shrink-0 text-accent" />
-          <p>
-            The OpenApply browser extension can fill this form for you in one click.{" "}
-            <Link href="/settings#extension" className="underline">
+        <Card className="flex gap-3 p-4">
+          <IconTile tone="violet" size="sm">
+            <Puzzle size={15} />
+          </IconTile>
+          <p className="text-sm leading-relaxed text-muted">
+            The OpenApply browser extension can fill this form in one click.{" "}
+            <Link href="/settings#extension" className="font-semibold text-primary-text underline underline-offset-2">
               Set it up
             </Link>
-            .
           </p>
         </Card>
-        <p className="text-xs text-muted">
-          <Badge>{sourceLabel(job.source)}</Badge> OpenApply never submits for you — the employer receives exactly what you send.
+        <p className="flex gap-2 px-1 text-xs leading-relaxed text-muted">
+          <ShieldCheck size={15} aria-hidden="true" className="shrink-0 text-success" />
+          OpenApply never submits for you — the employer receives exactly what you send.
         </p>
       </div>
     </div>
@@ -255,37 +262,39 @@ export function ApplyWorkspace({
 
 function CopyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-surface-2">
+    <div className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2">
       <div className="min-w-0">
-        <p className="text-xs text-muted">{label}</p>
-        <p className="truncate text-sm">{value}</p>
+        <p className="text-xs font-medium text-muted">{label}</p>
+        <p className="truncate text-sm font-medium text-fg">{value}</p>
       </div>
-      <CopyButton text={value} />
+      <CopyButton text={value} what={label} />
     </div>
   );
 }
 
 function CopyBlock({ title, text }: { title: string; text: string }) {
   return (
-    <Card className="p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-medium">{title}</p>
-        <CopyButton text={text} label />
+    <Card className="p-5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-fg">
+          <FileText size={16} aria-hidden="true" className="text-primary-text" /> {title}
+        </h2>
+        <CopyButton text={text} what={title} label />
       </div>
-      <p className="line-clamp-6 whitespace-pre-line text-sm text-muted">{text}</p>
+      <p className="line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-muted">{text}</p>
     </Card>
   );
 }
 
-function CopyButton({ text, label }: { text: string; label?: boolean }) {
+function CopyButton({ text, label, what }: { text: string; label?: boolean; what: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       type="button"
-      aria-label={copied ? "Copied" : "Copy"}
+      aria-label={label ? undefined : copied ? "Copied" : `Copy ${what.toLowerCase()}`}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs transition",
-        copied ? "bg-accent-soft text-accent" : "text-muted hover:bg-surface-2 hover:text-fg",
+        buttonClass(label ? "secondary" : "ghost", label ? "sm" : "icon-sm"),
+        copied && "border-transparent bg-success-soft text-success-soft-fg hover:bg-success-soft hover:text-success-soft-fg",
       )}
       onClick={async () => {
         await navigator.clipboard.writeText(text);
@@ -293,7 +302,7 @@ function CopyButton({ text, label }: { text: string; label?: boolean }) {
         setTimeout(() => setCopied(false), 1500);
       }}
     >
-      {copied ? <Check size={14} /> : <Copy size={14} />}
+      {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
       {label && (copied ? "Copied" : "Copy")}
     </button>
   );

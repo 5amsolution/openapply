@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, KeyRound } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 import { removeAIKeyAction, saveAISettingsAction, testAIKeyAction } from "@/app/(app)/actions";
 import { Button, Input, Label, Notice, Select } from "@/components/ui";
 import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
@@ -24,7 +24,7 @@ export function AISettingsForm({
   const [baseUrl, setBaseUrl] = useState(current?.base_url ?? "");
   const [apiKey, setApiKey] = useState("");
   const [limit, setLimit] = useState(current?.monthly_token_limit ? String(current.monthly_token_limit) : "");
-  const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
   const [busy, setBusy] = useState("");
   // Run async work outside a transition so "busy" state renders immediately
   // (state set inside startTransition only shows once the whole action finishes).
@@ -37,7 +37,7 @@ export function AISettingsForm({
       setBusy(key);
       setMessage(null);
       try {
-        setMessage({ tone: "accent", text: await fn() });
+        setMessage({ tone: "success", text: await fn() });
         router.refresh();
       } catch (e) {
         setMessage({ tone: "danger", text: friendlyError(e) });
@@ -63,18 +63,15 @@ export function AISettingsForm({
     });
 
   return (
-    <div className="p-5">
-      <div className="mb-1 flex items-center gap-2">
-        <span className="chip-icon pastel-cool"><KeyRound size={16} /></span>
-        <h2 className="font-bold tracking-[-0.02em]">Your AI provider</h2>
-      </div>
-      <p className="mb-4 text-sm text-muted">
-        OpenApply is free — AI calls go to your own account with your provider. Your key is encrypted (AES-256-GCM) and only
-        used server-side for your requests.
+    <div className="p-5 sm:p-6">
+      <p className="mb-5 flex gap-2.5 rounded-xl bg-surface-2 px-4 py-3 text-sm leading-relaxed text-muted">
+        <ShieldCheck size={18} aria-hidden="true" className="mt-px shrink-0 text-success" />
+        AI calls go to your own account with your provider. Your key is encrypted (AES-256-GCM) and only used on our server for
+        your own requests.
       </p>
 
       <form
-        className="grid gap-4 md:grid-cols-2"
+        className="grid gap-5 md:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault();
           save();
@@ -126,8 +123,8 @@ export function AISettingsForm({
             placeholder={provider === "custom" ? "Optional for local servers" : "Paste your key"}
           />
           {info.keyUrl && (
-            <a href={info.keyUrl} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted hover:text-fg">
-              Get a {info.label} key <ExternalLink size={12} />
+            <a href={info.keyUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-primary-text hover:underline">
+              Get a {info.label} key <ExternalLink size={13} aria-hidden="true" />
             </a>
           )}
         </div>

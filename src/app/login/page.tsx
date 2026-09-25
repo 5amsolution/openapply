@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import { redirect } from "next/navigation";
+import { Bot, Check, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./login-form";
-import "./login.css";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-const t = (delay: number, d?: number, from?: string) =>
-  ({ "--delay": `${delay}ms`, ...(d ? { "--d": `${d}ms` } : {}), ...(from ? { "--from": from } : {}) }) as CSSProperties;
+const BENEFITS = [
+  { icon: Search, title: "Every job board in one search", body: "Remote boards and top company career pages, scored against your resume." },
+  { icon: Sparkles, title: "Applications written for you", body: "A tailored cover letter and answers for each job — never invented." },
+  { icon: Bot, title: "Autopilot while you sleep", body: "New matches arrive each morning, ready for you to review and send." },
+];
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const params = await props.searchParams;
@@ -21,57 +23,64 @@ export default async function LoginPage(props: PageProps<"/login">) {
   if (user) redirect(next);
 
   return (
-    <div className="auth">
-      <section className="auth-panel" aria-hidden="false">
-        <div className="auth-logo">
-          <Logo />
+    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      {/* Brand panel */}
+      <section
+        className="relative hidden overflow-hidden p-10 text-white lg:flex lg:flex-col xl:p-14"
+        style={{ background: "var(--brand-deep)" }}
+        aria-label="About OpenApply"
+      >
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-[#8b5cf6] opacity-25 blur-3xl" />
+          <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#ec4899] opacity-20 blur-3xl" />
+          <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-[#6366f1] opacity-30 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" />
         </div>
-        <div className="auth-art" aria-hidden="true">
-          <div className="auth-toast e" style={t(180, 620, "10px")}>
-            <svg width="28" height="28" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="12" fill="#0d0d0d" />
-              <path d="M12 5.2c.5 3.2 1.6 4.3 4.8 4.8-3.2.5-4.3 1.6-4.8 4.8-.5-3.2-1.6-4.3-4.8-4.8 3.2-.5 4.3-1.6 4.8-4.8Z" fill="#fff" />
-            </svg>
-            <div>
-              <b>3 applications ready!</b>
-              <span>Written overnight by Autopilot</span>
-            </div>
-          </div>
-          <div className="auth-card-float e" style={t(300, 700, "12px")}>
-            <p className="n">23</p>
-            <p className="l">applications written this week</p>
-            <div className="auth-bars">
-              {[18, 30, 42, 50, 58, 64, 70].map((h, i) => (
-                <i key={i} style={{ height: `${h}px` }} />
-              ))}
-            </div>
-          </div>
-          <div className="auth-chips e" style={t(420, 620)}>
-            {["Remotive", "Greenhouse", "Lever", "Himalayas", "Ashby"].map((s) => (
-              <span key={s}>{s}</span>
-            ))}
-          </div>
+
+        <div className="relative">
+          <Logo invert />
         </div>
-        <div className="auth-hero">
-          <div className="auth-badge e e-soft" style={t(120, 480)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" fill="#fff" />
-            </svg>
-            Free for every job seeker
-          </div>
-          <p className="auth-hl">
-            <span className="e-hl" style={{ display: "block", ...t(240) }}>
-              Your next job,
-            </span>
-            <span className="e-hl" style={{ display: "block", ...t(330) }}>
-              on autopilot.
-            </span>
+
+        <div className="relative my-auto max-w-md py-12">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold text-[#e0e7ff] ring-1 ring-white/15">
+            <ShieldCheck size={15} aria-hidden="true" /> Free for every job seeker
           </p>
+          <p className="mt-6 text-[44px] font-extrabold leading-[1.05] tracking-[-0.035em]">
+            Your next job,{" "}
+            <span className="font-serif text-[1.1em] font-normal italic tracking-normal text-[#c7d2fe]">found for you.</span>
+          </p>
+          <ul className="mt-10 grid gap-6">
+            {BENEFITS.map((b) => (
+              <li key={b.title} className="flex gap-4">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/15" aria-hidden="true">
+                  <b.icon size={18} />
+                </span>
+                <div>
+                  <p className="font-bold">{b.title}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-[#e0e7ff]">{b.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="relative flex items-center gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm animate-[oa-float_6s_ease-in-out_infinite]">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#4338ca]" aria-hidden="true">
+            <Check size={20} strokeWidth={3} />
+          </span>
+          <div>
+            <p className="font-bold">3 applications ready this morning</p>
+            <p className="text-sm text-[#e0e7ff]">Written overnight by Autopilot · 92% best fit</p>
+          </div>
         </div>
       </section>
 
-      <section className="auth-pane">
-        <div className="auth-card e" style={t(40, 820, "12px")}>
+      {/* Form */}
+      <main id="main" className="page-glow flex flex-col px-5 py-6 sm:px-10">
+        <div className="lg:hidden">
+          <Logo />
+        </div>
+        <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-10">
           <LoginForm
             initialMode={params.mode === "signup" ? "signup" : "signin"}
             next={next}
@@ -80,7 +89,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
             githubEnabled={process.env.NEXT_PUBLIC_GITHUB_AUTH === "true"}
           />
         </div>
-      </section>
+      </main>
     </div>
   );
 }

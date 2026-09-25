@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AlertCircle, Bot, CheckCircle2, Clock3, FileText, Hand, Loader, Search, Target } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
 import { closeInterruptedRuns } from "@/lib/autopilot";
 import { enabledSources } from "@/lib/jobs/sources";
 import { getUserSourceKeyInfo } from "@/lib/source-keys";
-import { Card, Notice, PageHeader } from "@/components/ui";
+import { Card, IconTile, Notice, PageHeader, SectionTitle, type Tone } from "@/components/ui";
 import { AutopilotManager } from "@/components/autopilot-manager";
 import { timeAgo } from "@/lib/format";
 import type { AutopilotRule } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Autopilot" };
+
+const HOW: { icon: React.ReactNode; tone: Tone; title: string; body: string }[] = [
+  { icon: <Search size={18} />, tone: "primary", title: "Searches every day", body: "Checks all your job sources for new postings." },
+  { icon: <Target size={18} />, tone: "violet", title: "Scores each match", body: "The AI compares every new job with your profile." },
+  { icon: <FileText size={18} />, tone: "pink", title: "Writes applications", body: "The best matches get a tailored cover letter and answers." },
+  { icon: <Hand size={18} />, tone: "success", title: "You review and send", body: "About a minute each — you always press submit." },
+];
 
 export default async function AutopilotPage() {
   const { supabase, user } = await requireUser();
@@ -26,28 +34,54 @@ export default async function AutopilotPage() {
   return (
     <>
       <PageHeader
-        tint="lime"
-        eyebrow={<>⚡ Runs every day</>}
+        icon={<Bot size={22} />}
+        tone="violet"
+        eyebrow={
+          <>
+            <Clock3 size={14} aria-hidden="true" /> Runs every day
+          </>
+        }
         title="Autopilot"
-        description="Saved searches that run every day. New matches above your score threshold get a full application written and land in “Ready to apply”."
+        description="Saved searches that run every day. New matches above your score threshold get a full application written, ready for you in “Ready to apply”."
       />
 
-      <div className="mb-6 grid gap-3">
-        {!aiReady && (
-          <Notice tone="warn">
-            Autopilot needs AI to score and write. <Link href="/settings" className="underline">Turn on AI for free</Link> to start it.
-          </Notice>
-        )}
-        {!profile?.resume_text && (
-          <Notice tone="warn">
-            <Link href="/profile" className="underline">Upload your resume</Link> so autopilot knows what to look for.
-          </Notice>
-        )}
-        <Notice>
-          Autopilot never submits applications on its own — job sites prohibit bots and most forms need a human check. It does
-          everything up to the submit button so applying takes about a minute per job.
-        </Notice>
-      </div>
+      {(!aiReady || !profile?.resume_text) && (
+        <div className="mb-6 grid gap-3">
+          {!aiReady && (
+            <Notice tone="warn">
+              Autopilot needs AI to score and write. <Link href="/settings">Turn on AI for free</Link> to start it.
+            </Notice>
+          )}
+          {!profile?.resume_text && (
+            <Notice tone="warn">
+              <Link href="/profile">Upload your resume</Link> so autopilot knows what to look for.
+            </Notice>
+          )}
+        </div>
+      )}
+
+      <section aria-labelledby="how-autopilot" className="mb-8">
+        <h2 id="how-autopilot" className="sr-only">
+          How autopilot works
+        </h2>
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {HOW.map((h, i) => (
+            <li key={h.title} className="flex gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs">
+              <IconTile tone={h.tone}>{h.icon}</IconTile>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-fg">
+                  <span className="text-subtle">{i + 1}.</span> {h.title}
+                </p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{h.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-[13px] leading-relaxed text-muted">
+          Autopilot never submits applications on its own — job sites prohibit bots, and most forms need a human check. It does
+          everything up to the submit button.
+        </p>
+      </section>
 
       <AutopilotManager
         rules={(rules ?? []) as AutopilotRule[]}
@@ -63,37 +97,48 @@ export default async function AutopilotPage() {
         )}
       />
 
-      <Card className="mt-8 p-5">
-        <h2 className="mb-3 font-medium">Recent runs</h2>
+      <Card className="mt-8 p-5 sm:p-6">
+        <SectionTitle icon={<Clock3 size={18} />} tone="neutral" title="Recent runs" hint="The last 15 times autopilot went looking." />
         {(runs ?? []).length === 0 ? (
-          <p className="text-sm text-muted">No runs yet. Runs happen once a day, or click “Run now”.</p>
+          <p className="rounded-xl bg-surface-2 px-4 py-6 text-center text-sm text-muted">No runs yet. Runs happen once a day, or click “Run now”.</p>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="text-muted">
-              <tr>
-                <th className="pb-2 font-normal">When</th>
-                <th className="pb-2 font-normal">Search</th>
-                <th className="pb-2 text-right font-normal">New jobs</th>
-                <th className="pb-2 text-right font-normal">Scored</th>
-                <th className="pb-2 text-right font-normal">Drafted</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {runs!.map((r) => (
-                <tr key={r.id}>
-                  <td className="py-2 text-muted">{timeAgo(r.started_at)}</td>
-                  <td className="py-2">
-                    {(rules ?? []).find((x) => x.id === r.rule_id)?.name ?? "—"}
-                    {r.error && <p className="text-xs text-danger">{r.error}</p>}
-                    {!r.finished_at && <p className="text-xs text-muted">Running…</p>}
-                  </td>
-                  <td className="py-2 text-right tabular-nums">{r.jobs_found}</td>
-                  <td className="py-2 text-right tabular-nums">{r.jobs_scored}</td>
-                  <td className="py-2 text-right tabular-nums">{r.drafts_created}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul className="divide-y divide-border">
+            {runs!.map((r) => {
+              const name = (rules ?? []).find((x) => x.id === r.rule_id)?.name ?? "Deleted search";
+              return (
+                <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+                  <span className="shrink-0" role="img" aria-label={r.error ? "Failed" : !r.finished_at ? "Running" : "Finished"}>
+                    {r.error ? (
+                      <AlertCircle size={20} className="text-danger" aria-hidden="true" />
+                    ) : !r.finished_at ? (
+                      <Loader size={20} className="animate-spin text-primary-text" aria-hidden="true" />
+                    ) : (
+                      <CheckCircle2 size={20} className="text-success" aria-hidden="true" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-fg">{name}</p>
+                    <p className={r.error ? "text-[13px] text-danger" : "text-[13px] text-muted"}>
+                      {r.error ?? (!r.finished_at ? "Running now…" : timeAgo(r.started_at))}
+                      {r.error || !r.finished_at ? ` · ${timeAgo(r.started_at)}` : ""}
+                    </p>
+                  </div>
+                  <dl className="flex gap-4 text-right text-[13px]">
+                    {[
+                      ["New jobs", r.jobs_found],
+                      ["Scored", r.jobs_scored],
+                      ["Written", r.drafts_created],
+                    ].map(([label, n]) => (
+                      <div key={label as string}>
+                        <dt className="text-muted">{label}</dt>
+                        <dd className="font-bold tabular-nums text-fg">{n}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </Card>
     </>

@@ -22,8 +22,8 @@ export default async function ApplicationPage(props: PageProps<"/applications/[i
 
   return (
     <>
-      <Link href="/applications" className="mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-fg">
-        <ArrowLeft size={14} /> All applications
+      <Link href="/applications" className="mb-5 inline-flex h-9 items-center gap-1.5 rounded-lg pr-2 text-sm font-semibold text-muted transition-colors hover:text-fg">
+        <ArrowLeft size={16} aria-hidden="true" /> All applications
       </Link>
       <ApplicationEditor
         application={app}

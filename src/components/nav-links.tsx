@@ -5,65 +5,96 @@ import { usePathname } from "next/navigation";
 import { Bot, Kanban, LayoutDashboard, Search, Settings, UserRound } from "lucide-react";
 import { cn } from "@/components/ui";
 
-const LINKS = [
+const MAIN = [
   { href: "/dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard },
   { href: "/jobs", label: "Find jobs", short: "Jobs", icon: Search },
   { href: "/applications", label: "Applications", short: "Applied", icon: Kanban },
   { href: "/autopilot", label: "Autopilot", short: "Autopilot", icon: Bot },
+];
+const ACCOUNT = [
   { href: "/profile", label: "Profile & resume", short: "Profile", icon: UserRound },
   { href: "/settings", label: "Settings", short: "Settings", icon: Settings },
 ];
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
-/** Sidebar navigation (tablet and desktop). */
-export function NavLinks() {
-  const pathname = usePathname();
+type Badges = Partial<Record<string, number>>;
+
+function CountBadge({ n, label }: { n: number; label: string }) {
   return (
-    <nav className="hidden flex-col gap-1 px-3 md:flex" aria-label="Main">
-      {LINKS.map(({ href, label, icon: Icon }) => {
-        const active = isActive(pathname, href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2.5 rounded-full px-3.5 py-2 text-sm transition duration-200",
-              active ? "pastel-lime font-semibold text-fg shadow-[0_0_0_1.5px_rgba(255,255,255,0.8)]" : "text-muted hover:translate-x-1 hover:bg-surface-2 hover:text-fg",
-            )}
-          >
-            <Icon size={16} />
-            {label}
-          </Link>
-        );
-      })}
+    <>
+      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-fg" aria-hidden="true">
+        {n > 99 ? "99+" : n}
+      </span>
+      <span className="sr-only">, {label}</span>
+    </>
+  );
+}
+
+/** Sidebar navigation (tablet and desktop). */
+export function NavLinks({ badges = {} }: { badges?: Badges }) {
+  const pathname = usePathname();
+  const item = ({ href, label, icon: Icon }: (typeof MAIN)[number]) => {
+    const active = isActive(pathname, href);
+    const n = badges[href] ?? 0;
+    return (
+      <Link
+        key={href}
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "group flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-150",
+          active ? "bg-primary-soft font-semibold text-primary-soft-fg" : "font-medium text-muted hover:bg-surface-2 hover:text-fg",
+        )}
+      >
+        <Icon size={18} aria-hidden="true" className={cn("shrink-0 transition-transform duration-200 group-hover:scale-110", active && "text-primary-text")} />
+        {label}
+        {n > 0 && <CountBadge n={n} label={`${n} ready to apply`} />}
+      </Link>
+    );
+  };
+
+  return (
+    <nav className="grid gap-5 px-3" aria-label="Main">
+      <div className="grid gap-1">{MAIN.map(item)}</div>
+      <div className="grid gap-1">
+        <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-subtle">You</p>
+        {ACCOUNT.map(item)}
+      </div>
     </nav>
   );
 }
 
-/** Bottom tab bar (phones). Settings lives in the top bar's avatar button. */
-export function BottomTabs() {
+/** Bottom tab bar (phones). Settings lives behind the avatar in the top bar. */
+export function BottomTabs({ badges = {} }: { badges?: Badges }) {
   const pathname = usePathname();
+  const tabs = [...MAIN, ACCOUNT[0]];
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       aria-label="Main"
     >
       <ul className="grid grid-cols-5">
-        {LINKS.slice(0, 5).map(({ href, short, icon: Icon }) => {
+        {tabs.map(({ href, short, icon: Icon }) => {
           const active = isActive(pathname, href);
+          const n = badges[href] ?? 0;
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={cn("flex flex-col items-center gap-1 py-2 text-[11px] font-medium", active ? "text-fg" : "text-muted")}
+                className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-xs", active ? "font-semibold text-primary-text" : "font-medium text-muted")}
               >
-                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition", active && "pastel-lime")}>
-                  <Icon size={18} />
+                <span className={cn("relative flex h-7 w-14 items-center justify-center rounded-full transition-colors duration-200", active && "bg-primary-soft")}>
+                  <Icon size={19} aria-hidden="true" />
+                  {n > 0 && (
+                    <span className="absolute -top-1 right-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-fg" aria-hidden="true">
+                      {n > 9 ? "9+" : n}
+                    </span>
+                  )}
                 </span>
                 {short}
+                {n > 0 && <span className="sr-only">, {n} ready to apply</span>}
               </Link>
             </li>
           );

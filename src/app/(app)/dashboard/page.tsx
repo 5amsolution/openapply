@@ -1,24 +1,41 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Bookmark, Bot, CheckCircle2, CircleCheckBig, Kanban, Send, Sparkles, Trophy, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Bookmark,
+  Bot,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  FileUp,
+  Hand,
+  Lock,
+  Search,
+  Send,
+  Sparkles,
+  Trophy,
+  Users,
+  Wand2,
+} from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Badge, ButtonLink, Card, ScoreBadge, SectionTitle, cn } from "@/components/ui";
+import { Badge, ButtonLink, Card, IconTile, ScoreBadge, SectionTitle, cn, type Tone } from "@/components/ui";
 import { CompanyLogo } from "@/components/company-logo";
 import { STATUS_LABELS, timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-const STATS = [
-  { key: "saved", tint: "pastel-cool", icon: Bookmark },
-  { key: "ready", tint: "pastel-lime", icon: Sparkles },
-  { key: "applied", tint: "pastel-lavender", icon: Send },
-  { key: "interviewing", tint: "pastel-peach", icon: Users },
-  { key: "offer", tint: "pastel-pink", icon: Trophy },
-] as const;
+const PIPELINE: { key: string; tone: Tone; icon: typeof Bookmark }[] = [
+  { key: "saved", tone: "neutral", icon: Bookmark },
+  { key: "ready", tone: "primary", icon: Sparkles },
+  { key: "applied", tone: "info", icon: Send },
+  { key: "interviewing", tone: "warn", icon: Users },
+  { key: "offer", tone: "success", icon: Trophy },
+];
 
-const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY = 86_400_000;
 
 export default async function DashboardPage() {
   const { supabase, user } = await requireUser();
@@ -27,7 +44,7 @@ export default async function DashboardPage() {
     supabase.from("profiles").select("full_name, resume_path, skills").eq("id", user.id).single(),
     supabase
       .from("applications")
-      .select("id, status, match_score, updated_at, created_at, origin, job:jobs(title, company, company_logo)")
+      .select("id, status, match_score, updated_at, created_at, applied_at, origin, job:jobs(title, company, company_logo)")
       .order("updated_at", { ascending: false })
       .limit(300),
     supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(4),
@@ -41,267 +58,381 @@ export default async function DashboardPage() {
   const counts = new Map<string, number>();
   for (const a of list) counts.set(a.status, (counts.get(a.status) ?? 0) + 1);
   const ready = list.filter((a) => a.status === "ready").slice(0, 5);
-  const firstName = profile?.full_name?.split(" ")[0];
+  const readyCount = counts.get("ready") ?? 0;
+  const offers = counts.get("offer") ?? 0;
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0];
+  const rules = ruleCount ?? 0;
 
-  // Applications added per day over the last 7 days (today last).
+  // Activity over the last 7 days (today last).
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const now = today.getTime() + DAY;
   const week = Array.from({ length: 7 }, (_, i) => {
-    const day = new Date(today.getTime() - (6 - i) * 86_400_000);
-    const next = day.getTime() + 86_400_000;
+    const start = today.getTime() - (6 - i) * DAY;
     const n = list.filter((a) => {
       const t = new Date(a.created_at).getTime();
-      return t >= day.getTime() && t < next;
+      return t >= start && t < start + DAY;
     }).length;
-    return { label: DAYS[day.getDay()], n };
+    return { label: DAYS[new Date(start).getDay()], n };
   });
   const weekTotal = week.reduce((s, d) => s + d.n, 0);
   const weekMax = Math.max(1, ...week.map((d) => d.n));
+  const appliedThisWeek = list.filter((a) => a.applied_at && now - new Date(a.applied_at).getTime() < 7 * DAY).length;
 
   const steps = [
     { done: !!profile?.resume_path, label: "Upload your resume", href: "/profile" },
     { done: aiReady, label: "Turn on AI (free)", href: "/settings" },
-    { done: counts.size > 0, label: "Search and save a job", href: "/jobs" },
-    { done: (ruleCount ?? 0) > 0, label: "Turn on autopilot", href: "/autopilot" },
+    { done: counts.size > 0, label: "Save your first job", href: "/jobs" },
+    { done: rules > 0, label: "Turn on autopilot", href: "/autopilot" },
     { done: (tokenCount ?? 0) > 0, label: "Connect the autofill extension", href: "/settings#extension" },
   ];
-  const remaining = steps.filter((s) => !s.done);
+  const stepsDone = steps.filter((s) => s.done).length;
   const firstRun = list.length === 0;
   const lastRun = runs?.[0];
 
   const core = [
-    { n: 1, done: steps[0].done, title: "Upload your resume", body: "The AI reads it and fills in your profile — it never adds experience you don't have.", href: "/profile", cta: "Upload resume", tint: "pastel-pink" },
-    { n: 2, done: steps[1].done, title: "Turn on free AI", body: "Connect your OpenRouter account in one click. Free models, no card, your own spending controls.", href: "/settings", cta: "Connect AI", tint: "pastel-lime" },
-    { n: 3, done: steps[2].done, title: "Find your first job", body: "Search every board at once, then let the AI score your fit and write the application.", href: "/jobs", cta: "Search jobs", tint: "pastel-lavender" },
+    {
+      done: steps[0].done,
+      icon: FileUp,
+      tone: "pink" as Tone,
+      title: "Upload your resume",
+      body: "The AI reads it and fills in your profile — it never adds experience you don't have.",
+      href: "/profile",
+      cta: "Upload resume",
+    },
+    {
+      done: steps[1].done,
+      icon: Wand2,
+      tone: "primary" as Tone,
+      title: "Turn on free AI",
+      body: "Connect your OpenRouter account in one click. Free models, no card, your own spending controls.",
+      href: "/settings",
+      cta: "Connect AI",
+    },
+    {
+      done: steps[2].done,
+      icon: Search,
+      tone: "info" as Tone,
+      title: "Find your first job",
+      body: "Search every board at once, then let the AI score your fit and write the application.",
+      href: "/jobs",
+      cta: "Search jobs",
+    },
   ];
+  const coreDone = core.filter((c) => c.done).length;
   const nextStep = core.find((c) => !c.done);
+
+  const subline = firstRun
+    ? "Three quick steps and the AI starts writing tailored applications for you — all free."
+    : offers
+      ? `You have ${offers === 1 ? "an offer" : `${offers} offers`} on the table — congratulations!`
+      : readyCount
+        ? `${readyCount} application${readyCount === 1 ? " is" : "s are"} ready to send. Each one takes about a minute.`
+        : appliedThisWeek
+          ? `You've sent ${appliedThisWeek} application${appliedThisWeek === 1 ? "" : "s"} this week. Keep the momentum going!`
+          : "Search every board at once, or let autopilot bring new matches to you each morning.";
 
   return (
     <>
-      {/* Hero row: greeting + this week */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-12">
-        <section className="bento pastel-lime relative overflow-hidden p-7 md:p-8 lg:col-span-8">
-          <div className="grid-dots pointer-events-none absolute inset-0" aria-hidden="true" />
-          <div className="relative">
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-surface/80 px-3 py-1 text-xs font-semibold shadow-[0_0_0_1.5px_rgba(255,255,255,0.8)]">
-              <Sparkles size={12} className="text-accent" /> {firstRun ? "Welcome to OpenApply" : "Your job search today"}
-            </p>
-            <h1 className="text-[32px] font-extrabold leading-[1.1] tracking-[-0.035em] text-[#15201a] md:text-[42px] dark:text-fg">
-              <span className="text-[#5f8b3e] dark:text-accent">{firstName ? `Hi ${firstName},` : "Hi there,"}</span>
-              <br />
-              {firstRun
-                ? "let's land your next job."
-                : ready.length
-                  ? `${counts.get("ready")} application${counts.get("ready") === 1 ? " is" : "s are"} ready to send.`
-                  : "let's find your next role."}
-            </h1>
-            <p className="mt-3 max-w-lg text-[15px] text-[#1e2a1b]/75 dark:text-muted">
-              {firstRun
-                ? "Three quick steps and the AI starts writing tailored applications for you — all free."
-                : ready.length
-                  ? "Each one has a tailored cover letter and answers. Open it, review, and apply in about a minute."
-                  : "Search every board at once, or let autopilot bring new matches to you each morning."}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {ready.length ? (
-                <ButtonLink href="/applications?status=ready">
-                  Review ready applications <ArrowRight size={16} />
-                </ButtonLink>
-              ) : (
-                <ButtonLink href={firstRun && nextStep ? nextStep.href : "/jobs"}>
-                  {firstRun && nextStep ? nextStep.cta : "Find jobs"} <ArrowRight size={16} />
-                </ButtonLink>
-              )}
-              <ButtonLink href="/autopilot" variant="secondary">
-                <Bot size={16} /> Autopilot
-              </ButtonLink>
-            </div>
-          </div>
-          {lastRun && !lastRun.error && lastRun.drafts_created > 0 && (
-            <div className="relative mt-6 inline-flex max-w-full items-center gap-3 rounded-2xl bg-[linear-gradient(105deg,#ffffff_34%,#fdeee5_78%,#fce8dd_100%)] px-4 py-3 text-[#0d0d0d] shadow-[0_8px_22px_rgba(64,74,44,0.12)] lg:absolute lg:bottom-7 lg:right-7 lg:mt-0 lg:rotate-[-2deg]">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0d0d0d] text-white">
-                <Sparkles size={14} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-extrabold tracking-tight">
-                  {lastRun.drafts_created} application{lastRun.drafts_created === 1 ? "" : "s"} ready!
-                </p>
-                <p className="truncate text-xs text-[#3b3b3b]">Written by Autopilot · {timeAgo(lastRun.finished_at ?? lastRun.started_at)}</p>
-              </div>
-            </div>
+      {/* Greeting */}
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-5">
+        <div className="min-w-0">
+          <p className="mb-1.5 text-sm font-semibold text-muted">{firstRun ? "Welcome to OpenApply" : "Your job search today"}</p>
+          <h1 className="text-[30px] font-extrabold leading-[1.1] tracking-[-0.03em] text-fg md:text-[38px]">
+            {firstRun ? (firstName ? "Hi" : "Hi there") : "Welcome back"}
+            {firstName ? (
+              <>
+                , <span className="font-serif text-[1.12em] font-normal italic tracking-normal text-primary-text">{firstName}</span>
+              </>
+            ) : null}
+          </h1>
+          <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted">{subline}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {readyCount ? (
+            <ButtonLink href="/applications?status=ready" size="lg">
+              Review ready applications <ArrowRight size={17} aria-hidden="true" />
+            </ButtonLink>
+          ) : (
+            <ButtonLink href={firstRun && nextStep ? nextStep.href : "/jobs"} size="lg">
+              {firstRun && nextStep ? nextStep.cta : "Find jobs"} <ArrowRight size={17} aria-hidden="true" />
+            </ButtonLink>
           )}
-        </section>
+          <ButtonLink href="/autopilot" variant="secondary" size="lg">
+            <Bot size={17} aria-hidden="true" /> Autopilot
+          </ButtonLink>
+        </div>
+      </header>
 
-        <section className="bento pastel-peach flex flex-col p-6 lg:col-span-4" aria-label="Applications this week">
-          <span className="self-start rounded-full bg-[linear-gradient(100deg,#fff_18%,#fdeadb_100%)] px-3.5 py-1 text-xs font-bold text-[#111]">This week</span>
-          <p className="mt-4 text-[40px] font-extrabold leading-none tracking-[-0.035em]">{weekTotal}</p>
-          <p className="mt-1 text-sm text-fg/70">job{weekTotal === 1 ? "" : "s"} added to your pipeline</p>
-          <div className="mt-auto flex h-36 items-end gap-2 pt-6" role="img" aria-label={`Per day: ${week.map((d) => `${d.label} ${d.n}`).join(", ")}`}>
-            {week.map((d, i) => {
-              const last = i === week.length - 1;
-              return (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                  <div
-                    className={cn(
-                      "w-full rounded-lg pt-1 text-center text-[11px] font-semibold transition-all duration-700",
-                      last ? "bg-[linear-gradient(180deg,#f2b705_0%,#a8a422_52%,#3d7a3e_100%)] text-white shadow-[0_4px_12px_rgba(150,120,20,0.2)]" : "bg-[#e9e3da] text-[#a1978a] dark:bg-white/10",
-                    )}
-                    style={{ height: `${Math.max(18, (d.n / weekMax) * 104)}px` }}
-                  >
-                    {d.n || ""}
-                  </div>
-                  <span className="text-[10px] font-medium tracking-wider text-muted">{d.label}</span>
-                </div>
-              );
-            })}
+      {lastRun && !lastRun.error && lastRun.finished_at && lastRun.drafts_created > 0 && (
+        <Link href="/applications?status=ready" className="lift mb-6 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 shadow-xs">
+          <IconTile tone="violet">
+            <Sparkles size={18} />
+          </IconTile>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-fg">
+              Autopilot wrote {lastRun.drafts_created} application{lastRun.drafts_created === 1 ? "" : "s"} for you
+            </p>
+            <p className="text-sm text-muted">
+              {timeAgo(lastRun.finished_at)} · {lastRun.jobs_found} new jobs checked, {lastRun.jobs_scored} scored
+            </p>
           </div>
-        </section>
-      </div>
+          <span className="hidden text-sm font-semibold text-primary-text sm:inline">Review</span>
+          <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-muted" />
+        </Link>
+      )}
 
-      {/* First run: guided steps */}
       {firstRun ? (
-        <section className="mb-6" aria-labelledby="start">
-          <h2 id="start" className="mb-1 text-lg font-extrabold tracking-tight">
-            Let&apos;s get you your first application
-          </h2>
-          <p className="mb-4 text-sm text-muted">Three steps, about five minutes. Everything here is free.</p>
-          <ol className="grid gap-4 md:grid-cols-3">
-            {core.map((c) => (
-              <li key={c.n} className={cn("bento lift group relative flex flex-col p-6", c.tint)}>
-                <div className="flex items-center justify-between">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-sm font-extrabold shadow-sm">
-                    {c.done ? <CheckCircle2 size={18} className="text-accent" /> : c.n}
-                  </span>
-                  {c.done && <span className="rounded-full bg-surface/80 px-2.5 py-0.5 text-xs font-semibold text-accent">Done</span>}
+        <>
+          <section aria-labelledby="start" className="mb-8">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 id="start" className="text-xl font-bold tracking-tight text-fg">
+                  Let&apos;s get you your first application
+                </h2>
+                <p className="mt-0.5 text-sm text-muted">Three steps, about five minutes. Everything here is free.</p>
+              </div>
+              <p className="text-sm font-semibold text-fg">{coreDone} of 3 done</p>
+            </div>
+            <div className="mb-5 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#4f46e5,#8b5cf6)] transition-[width] duration-700"
+                style={{ width: `${Math.max(4, (coreDone / 3) * 100)}%` }}
+              />
+            </div>
+            <ol className="grid gap-4 md:grid-cols-3">
+              {core.map((c, i) => {
+                const isNext = nextStep === c;
+                return (
+                  <li
+                    key={c.title}
+                    className={cn(
+                      "relative flex flex-col rounded-2xl border bg-surface p-6 shadow-xs",
+                      isNext ? "border-primary shadow-md ring-4 ring-ring" : "border-border",
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <IconTile tone={c.done ? "success" : c.tone} size="lg">
+                        {c.done ? <CheckCircle2 size={22} /> : <c.icon size={22} />}
+                      </IconTile>
+                      <span className={cn("text-sm font-bold", c.done ? "text-success" : "text-subtle")}>{c.done ? "Done" : `Step ${i + 1}`}</span>
+                    </div>
+                    <h3 className="mt-5 text-lg font-bold tracking-tight text-fg">{c.title}</h3>
+                    <p className="mt-1 flex-1 text-sm leading-relaxed text-muted">{c.body}</p>
+                    <div className="mt-5">
+                      {c.done ? (
+                        <Link href={c.href} className="inline-flex h-9 items-center gap-1 text-sm font-semibold text-primary-text hover:underline">
+                          Review <ChevronRight size={15} aria-hidden="true" />
+                        </Link>
+                      ) : (
+                        <ButtonLink href={c.href} variant={isNext ? "primary" : "secondary"}>
+                          {c.cta} <ArrowRight size={16} aria-hidden="true" />
+                        </ButtonLink>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+
+          <section aria-label="Good to know" className="grid gap-3 sm:grid-cols-3">
+            {[
+              { icon: Sparkles, tone: "violet" as Tone, title: "Free for everyone", body: "No subscription. Your AI runs on your own free OpenRouter account." },
+              { icon: Hand, tone: "success" as Tone, title: "You stay in control", body: "Nothing is ever submitted for you — you review and send every application." },
+              { icon: Lock, tone: "info" as Tone, title: "Private by default", body: "Your resume and keys are encrypted, and you can delete everything any time." },
+            ].map((g) => (
+              <div key={g.title} className="flex gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs">
+                <IconTile tone={g.tone} size="sm">
+                  <g.icon size={16} />
+                </IconTile>
+                <div>
+                  <p className="text-sm font-bold text-fg">{g.title}</p>
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{g.body}</p>
                 </div>
-                <h3 className="mt-5 text-lg font-extrabold tracking-tight">{c.title}</h3>
-                <p className="mt-1 flex-1 text-sm text-fg/70">{c.body}</p>
-                <div className="mt-5">
-                  {c.done ? (
-                    <Link href={c.href} className="text-sm font-semibold underline underline-offset-2">
-                      Review
-                    </Link>
-                  ) : (
-                    <ButtonLink href={c.href} variant={nextStep === c ? "primary" : "secondary"}>
-                      {c.cta}
-                    </ButtonLink>
-                  )}
-                </div>
-              </li>
+              </div>
             ))}
-          </ol>
-        </section>
+          </section>
+        </>
       ) : (
         <>
-          {/* Pipeline tiles */}
-          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {STATS.map(({ key, tint, icon: Icon }) => (
-              <Link key={key} href={`/applications?status=${key}`} className={cn("bento lift group p-5", tint)}>
+          {/* Pipeline */}
+          <section aria-label="Your pipeline" className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {PIPELINE.map(({ key, tone, icon: Icon }) => (
+              <Link key={key} href={`/applications?status=${key}`} className="lift group rounded-2xl border border-border bg-surface p-4 shadow-xs sm:p-5">
                 <div className="flex items-center justify-between">
-                  <span className="chip-icon bg-surface/80">
+                  <IconTile tone={tone} size="sm">
                     <Icon size={16} />
-                  </span>
-                  <ArrowRight size={14} className="text-fg/40 transition group-hover:translate-x-0.5 group-hover:text-fg" />
+                  </IconTile>
+                  <ArrowRight size={16} aria-hidden="true" className="text-subtle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-fg" />
                 </div>
-                <p className="mt-4 text-[34px] font-extrabold leading-none tracking-[-0.035em] tabular-nums">{counts.get(key) ?? 0}</p>
-                <p className="mt-1.5 text-sm font-medium text-fg/70">{STATUS_LABELS[key]}</p>
+                <p className="mt-4 text-[32px] font-extrabold leading-none tracking-[-0.03em] tabular-nums text-fg">{counts.get(key) ?? 0}</p>
+                <p className="mt-1.5 text-sm font-medium text-muted">{STATUS_LABELS[key]}</p>
               </Link>
             ))}
-          </div>
+          </section>
 
-          {remaining.length > 0 && (
-            <Card className="mb-4 p-5">
-              <SectionTitle
-                icon={<CircleCheckBig size={16} />}
-                tint="lavender"
-                title="Finish setting up"
-                hint={`${steps.length - remaining.length} of ${steps.length} done`}
-              />
-              <div className="flex flex-wrap gap-2">
-                {remaining.map((s) => (
-                  <Link key={s.label} href={s.href} className="lift rounded-full bg-surface-2 px-3.5 py-2 text-sm font-medium hover:bg-accent-soft">
-                    {s.label} →
-                  </Link>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          <div className="grid gap-4 lg:grid-cols-12">
-            <Card className="p-6 lg:col-span-8">
-              <SectionTitle
-                icon={<Kanban size={16} />}
-                tint="lime"
-                title="Ready to apply"
-                hint="Tailored and waiting for your review"
-                action={
-                  <Link href="/applications?status=ready" className="text-sm font-semibold text-muted hover:text-fg">
-                    View all →
-                  </Link>
-                }
-              />
-              {ready.length === 0 ? (
-                <div className="rounded-2xl bg-surface-2 px-6 py-10 text-center">
-                  <p className="font-semibold">Nothing waiting right now</p>
-                  <p className="mt-1 text-sm text-muted">Open a job and click Write application — or let autopilot find some.</p>
-                  <div className="mt-4 flex justify-center gap-2">
-                    <ButtonLink href="/jobs">Find jobs</ButtonLink>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 lg:col-span-2">
+              <Card className="p-5 sm:p-6">
+                <SectionTitle
+                  icon={<Sparkles size={18} />}
+                  title="Ready to apply"
+                  hint="Tailored and waiting for your review"
+                  action={
+                    <Link href="/applications?status=ready" className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary-text hover:bg-primary-soft">
+                      View all <ChevronRight size={15} aria-hidden="true" />
+                    </Link>
+                  }
+                />
+                {ready.length === 0 ? (
+                  <div className="rounded-xl bg-surface-2 px-6 py-10 text-center">
+                    <p className="font-semibold text-fg">Nothing waiting right now</p>
+                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted">Open a job and click Write application — or let autopilot find some for you.</p>
+                    <div className="mt-4 flex justify-center gap-2">
+                      <ButtonLink href="/jobs">Find jobs</ButtonLink>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <ul className="grid gap-2">
-                  {ready.map((a) => (
-                    <li key={a.id}>
-                      <Link href={`/applications/${a.id}`} className="lift group flex items-center gap-3 rounded-2xl bg-surface-2/60 p-3 hover:bg-surface">
-                        <CompanyLogo src={a.job?.company_logo ?? null} company={a.job?.company ?? "?"} size={40} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold group-hover:text-accent">{a.job?.title}</p>
-                          <p className="truncate text-sm text-muted">{a.job?.company}</p>
-                        </div>
-                        {a.origin === "autopilot" && <Badge tone="info">Autopilot</Badge>}
-                        <ScoreBadge score={a.match_score} />
-                        <ArrowRight size={16} className="text-muted transition group-hover:translate-x-0.5 group-hover:text-fg" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-
-            <section className="bento relative overflow-hidden bg-[#15201a] p-6 text-[#f3f5b0] lg:col-span-4 dark:border-white/10 dark:bg-[#1c2a1f]">
-              <div className="flex items-center justify-between">
-                <span className="chip-icon bg-white/10">
-                  <Bot size={16} />
-                </span>
-                <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", (ruleCount ?? 0) > 0 ? "bg-[#e9f0c4] text-[#15201a]" : "bg-white/10")}>
-                  {(ruleCount ?? 0) > 0 ? `${ruleCount} active` : "Off"}
-                </span>
-              </div>
-              <h2 className="mt-5 text-xl font-extrabold tracking-tight">Autopilot</h2>
-              <p className="mt-1 text-sm opacity-75">
-                {(ruleCount ?? 0) > 0 ? "Finds, scores and writes applications for you every morning." : "Save a search and it runs every day — new matches arrive ready to send."}
-              </p>
-              <ul className="mt-5 grid gap-2 text-sm">
-                {(runs ?? []).length === 0 ? (
-                  <li className="rounded-xl bg-white/5 px-3 py-2.5 opacity-75">No runs yet.</li>
                 ) : (
-                  runs!.slice(0, 3).map((r) => (
-                    <li key={r.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2.5">
-                      <span className="truncate">
-                        {r.error ? <span className="text-[#ffb4a8]">{r.error}</span> : !r.finished_at ? "Running now…" : `${r.drafts_created} written · ${r.jobs_scored} scored`}
-                      </span>
-                      <span className="shrink-0 text-xs opacity-60">{timeAgo(r.started_at)}</span>
-                    </li>
-                  ))
+                  <ul className="grid grid-cols-[minmax(0,1fr)] gap-1.5">
+                    {ready.map((a) => (
+                      <li key={a.id}>
+                        <Link
+                          href={`/applications/${a.id}`}
+                          className="group flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-colors hover:border-border hover:bg-surface-2"
+                        >
+                          <CompanyLogo src={a.job?.company_logo ?? null} company={a.job?.company ?? "?"} size={42} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold text-fg group-hover:text-primary-text">{a.job?.title}</p>
+                            <p className="truncate text-sm text-muted">{a.job?.company}</p>
+                          </div>
+                          {a.origin === "autopilot" && (
+                            <Badge tone="violet" className="hidden sm:inline-flex">
+                              <Bot size={12} aria-hidden="true" /> Autopilot
+                            </Badge>
+                          )}
+                          <ScoreBadge score={a.match_score} />
+                          <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-subtle transition-transform group-hover:translate-x-0.5" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </ul>
-              <Link
-                href="/autopilot"
-                className="sheen mt-5 inline-flex items-center gap-2 rounded-full bg-[#e9f0c4] px-4 py-2 text-sm font-semibold text-[#15201a] transition hover:-translate-y-0.5"
+              </Card>
+
+              {stepsDone < steps.length && (
+                <Card className="p-5 sm:p-6">
+                  <SectionTitle
+                    icon={<CheckCircle2 size={18} />}
+                    tone="success"
+                    title="Finish setting up"
+                    hint={`${stepsDone} of ${steps.length} done — each one makes OpenApply work harder for you`}
+                  />
+                  <div className="mb-4 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+                    <div className="h-full rounded-full bg-success" style={{ width: `${(stepsDone / steps.length) * 100}%` }} />
+                  </div>
+                  <ul className="grid grid-cols-[minmax(0,1fr)] gap-1 sm:grid-cols-2">
+                    {steps.map((s) => (
+                      <li key={s.label}>
+                        {s.done ? (
+                          <span className="flex h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted">
+                            <CheckCircle2 size={18} aria-hidden="true" className="shrink-0 text-success" />
+                            <span className="line-through decoration-border-strong">{s.label}</span>
+                            <span className="sr-only">(done)</span>
+                          </span>
+                        ) : (
+                          <Link
+                            href={s.href}
+                            className="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-fg transition-colors hover:bg-primary-soft hover:text-primary-soft-fg"
+                          >
+                            <Circle size={18} aria-hidden="true" className="shrink-0 text-subtle" />
+                            <span className="flex-1">{s.label}</span>
+                            <ChevronRight size={16} aria-hidden="true" className="text-subtle transition-transform group-hover:translate-x-0.5" />
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+            </div>
+
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5">
+              {/* This week */}
+              <Card className="p-5 sm:p-6">
+                <h2 className="text-sm font-bold text-fg">This week</h2>
+                <div className="mt-3 flex items-end gap-3">
+                  <p className="text-[40px] font-extrabold leading-none tracking-[-0.03em] tabular-nums text-fg">{weekTotal}</p>
+                  <p className="pb-1 text-sm text-muted">job{weekTotal === 1 ? "" : "s"} added to your pipeline</p>
+                </div>
+                <div className="mt-6 flex h-32 items-end gap-2" role="img" aria-label={`Jobs added per day: ${week.map((d) => `${d.label} ${d.n}`).join(", ")}`}>
+                  {week.map((d, i) => {
+                    const last = i === week.length - 1;
+                    return (
+                      <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" aria-hidden="true">
+                        <span className="text-xs font-semibold tabular-nums text-muted">{d.n || ""}</span>
+                        <div
+                          className={cn(
+                            "w-full rounded-lg transition-[height] duration-700",
+                            last ? "bg-[linear-gradient(180deg,#8b5cf6,#4f46e5)]" : d.n ? "bg-primary-soft-hover" : "bg-surface-3",
+                          )}
+                          style={{ height: `${Math.max(8, (d.n / weekMax) * 84)}px` }}
+                        />
+                        <span className={cn("text-xs", last ? "font-bold text-fg" : "text-muted")}>{last ? "Today" : d.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {appliedThisWeek > 0 && (
+                  <p className="mt-4 flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-sm font-semibold text-success-soft-fg">
+                    <Send size={15} aria-hidden="true" /> {appliedThisWeek} sent this week — nice work
+                  </p>
+                )}
+              </Card>
+
+              {/* Autopilot */}
+              <section
+                className="relative overflow-hidden rounded-2xl p-6 text-white shadow-md"
+                style={{ background: "var(--brand-deep)" }}
+                aria-labelledby="autopilot-card"
               >
-                {(ruleCount ?? 0) > 0 ? "Manage autopilot" : "Turn on autopilot"} <ArrowRight size={15} />
-              </Link>
-            </section>
+                <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#8b5cf6] opacity-30 blur-3xl" aria-hidden="true" />
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15" aria-hidden="true">
+                      <Bot size={19} />
+                    </span>
+                    <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-bold">{rules > 0 ? `${rules} active` : "Off"}</span>
+                  </div>
+                  <h2 id="autopilot-card" className="mt-5 text-xl font-bold tracking-tight">
+                    Autopilot
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-[#e0e7ff]">
+                    {rules > 0 ? "Finds, scores and writes applications for you every day." : "Save a search and it runs every day — new matches arrive ready to send."}
+                  </p>
+                  <ul className="mt-5 grid gap-2 text-sm">
+                    {(runs ?? []).length === 0 ? (
+                      <li className="rounded-xl bg-white/10 px-3 py-2.5 text-[#e0e7ff]">No runs yet.</li>
+                    ) : (
+                      runs!.slice(0, 3).map((r) => (
+                        <li key={r.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2.5">
+                          <span className="truncate">
+                            {r.error ? <span className="text-[#fecaca]">{r.error}</span> : !r.finished_at ? "Running now…" : `${r.drafts_created} written · ${r.jobs_scored} scored`}
+                          </span>
+                          <span className="shrink-0 text-xs text-[#c7d2fe]">{timeAgo(r.started_at)}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                  <Link
+                    href="/autopilot"
+                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#312e81] shadow-sm transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    {rules > 0 ? "Manage autopilot" : "Turn on autopilot"} <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                </div>
+              </section>
+            </div>
           </div>
         </>
       )}

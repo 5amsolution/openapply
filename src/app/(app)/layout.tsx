@@ -1,70 +1,63 @@
 import Link from "next/link";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { Logo } from "@/components/logo";
 import { BottomTabs, NavLinks } from "@/components/nav-links";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "@/components/toast";
+import { Avatar, buttonClass } from "@/components/ui";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { supabase, user } = await requireUser();
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  const [{ data: profile }, { count: ready }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "ready"),
+  ]);
   const name = profile?.full_name?.trim() || user.email?.split("@")[0] || "You";
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("");
-
-  const avatar = (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-ink-fg" aria-hidden="true">
-      {initials}
-    </span>
-  );
+  const badges = { "/applications": ready ?? 0 };
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="min-h-dvh md:flex">
       {/* Phone top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md md:hidden">
         <Logo href="/dashboard" />
-        <Link href="/settings" className="flex items-center gap-2 rounded-full p-0.5" aria-label="Settings and account">
-          {avatar}
+        <Link href="/settings" className="rounded-full" aria-label="Settings and account">
+          <Avatar name={name} size={34} />
         </Link>
       </header>
 
       {/* Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
-        <div className="px-5 py-5">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
+        <div className="flex h-16 items-center px-5">
           <Logo href="/dashboard" />
         </div>
-        <NavLinks />
-        <div className="mt-auto border-t border-border p-3">
-          <div className="flex items-center gap-2.5 rounded-2xl px-2 py-2">
-            {avatar}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{name}</p>
-              <p className="truncate text-xs text-muted" title={user.email ?? ""}>
-                {user.email}
-              </p>
-            </div>
-          </div>
-          <div className="mt-1 grid grid-cols-2 gap-1">
-            <Link href="/settings" className="flex items-center justify-center gap-1.5 rounded-full py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-fg">
-              <Settings size={13} /> Settings
+        <div className="flex-1 overflow-y-auto py-3">
+          <NavLinks badges={badges} />
+        </div>
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 border-t border-border p-3">
+          <ThemeToggle className="w-full" />
+          <div className="flex items-center gap-3 rounded-xl px-1.5 py-1">
+            <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg" title="Your profile">
+              <Avatar name={name} />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-fg">{name}</span>
+                <span className="block truncate text-xs text-muted">{user.email}</span>
+              </span>
             </Link>
             <form action="/auth/signout" method="post">
-              <button className="flex w-full items-center justify-center gap-1.5 rounded-full py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-fg" type="submit">
-                <LogOut size={13} /> Sign out
+              <button type="submit" className={buttonClass("ghost", "icon-sm")} aria-label="Sign out" title="Sign out">
+                <LogOut size={17} aria-hidden="true" />
               </button>
             </form>
           </div>
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 px-4 pb-28 pt-5 md:px-10 md:py-9">
-        <div className="stagger mx-auto max-w-6xl">{children}</div>
+      <main id="main" className="page-glow min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 md:px-8 md:pb-14 md:pt-8 lg:px-10">
+        <div className="stagger mx-auto w-full max-w-6xl">{children}</div>
       </main>
 
-      <BottomTabs />
+      <BottomTabs badges={badges} />
       <Toaster />
     </div>
   );

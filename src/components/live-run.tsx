@@ -56,28 +56,32 @@ export function LiveRun({ runId, onDone }: { runId: string; onDone: (status: Run
         : `Scored ${status.jobsScored} of the best matches — writing applications for the strongest…`;
 
   return (
-    <div className="w-full basis-full rounded-2xl border border-accent/25 bg-accent-soft/50 px-4 py-3 text-sm" role="status" aria-live="polite">
-      <div className="flex items-center gap-2 font-medium">
-        <Spinner className="text-accent" /> {phase}
+    <div className="mt-4 w-full overflow-hidden rounded-xl border border-border bg-surface-2 text-sm" role="status" aria-live="polite">
+      <div className="h-1 overflow-hidden bg-surface-3" aria-hidden="true">
+        <div className="h-full w-1/3 animate-[oa-slide_1.4s_ease-in-out_infinite] rounded-full bg-primary" />
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-        {[
-          ["New jobs found", status?.jobsFound ?? 0],
-          ["Scored by AI", status?.jobsScored ?? 0],
-          ["Applications written", status?.draftsCreated ?? 0],
-        ].map(([label, n]) => (
-          <div key={label as string} className="rounded-xl bg-surface/70 px-2 py-2">
-            <p className="text-xl font-extrabold tabular-nums">{n}</p>
-            <p className="text-xs text-muted">{label}</p>
-          </div>
-        ))}
+      <div className="p-4">
+        <div className="flex items-center gap-2.5 font-semibold text-fg">
+          <Spinner className="text-primary-text" /> {phase}
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {[
+            ["New jobs found", status?.jobsFound ?? 0],
+            ["Scored by AI", status?.jobsScored ?? 0],
+            ["Applications written", status?.draftsCreated ?? 0],
+          ].map(([label, n]) => (
+            <div key={label as string} className="rounded-xl border border-border bg-surface px-2 py-2.5">
+              <p className="text-2xl font-extrabold tabular-nums text-fg">{n}</p>
+              <p className="text-xs font-medium text-muted">{label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted tabular-nums">
+          {mins > 0 ? `${mins}m ` : ""}
+          {elapsed % 60}s running · this keeps going on the server even if you leave — free AI models can take a few minutes
+        </p>
+        {problem && <p className="mt-1 text-xs font-medium text-danger">{problem}</p>}
       </div>
-      <p className="mt-2 text-xs text-muted tabular-nums">
-        {mins > 0 ? `${mins}m ` : ""}
-        {elapsed % 60}s running · this keeps going on the server even if you leave this page — free AI models can take several
-        minutes
-      </p>
-      {problem && <p className="mt-1 text-xs text-danger">{problem}</p>}
     </div>
   );
 }

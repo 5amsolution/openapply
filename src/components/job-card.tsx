@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { MapPin, Wallet } from "lucide-react";
-import { Badge, Card, ScoreBadge } from "@/components/ui";
+import { Clock, MapPin, Wallet } from "lucide-react";
+import { Badge, Card, STATUS_TONE, ScoreBadge } from "@/components/ui";
 import { CompanyLogo } from "@/components/company-logo";
 import { SaveJobButton } from "@/components/save-job-button";
 import { formatSalary, STATUS_LABELS, timeAgo } from "@/lib/format";
@@ -26,44 +26,52 @@ export function JobCard({
 }) {
   const salary = formatSalary(job);
   const via = job.tags.find((t) => t.startsWith("via "));
+  const location = job.location && job.location.length > 48 ? job.location.slice(0, 48) + "…" : job.location;
+
   return (
-    <Card interactive className="group relative flex gap-4 p-4">
-      <CompanyLogo src={job.company_logo} company={job.company} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <Link href={`/jobs/${job.id}`} className="font-semibold leading-snug after:absolute after:inset-0 after:content-[''] group-hover:text-accent">
-              {job.title}
-            </Link>
-            <p className="truncate text-sm text-muted">{job.company}</p>
-          </div>
-          <div className="relative z-10 flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
-            <ScoreBadge score={score} />
-            {status ? (
-              <Link href={`/applications/${applicationId}`}>
-                <Badge tone="accent">{STATUS_LABELS[status]}</Badge>
+    <Card interactive className="group relative p-4 sm:p-5">
+      <div className="flex gap-4">
+        <CompanyLogo src={job.company_logo} company={job.company} size={48} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <Link
+                href={`/jobs/${job.id}`}
+                className="text-base font-bold leading-snug tracking-[-0.01em] text-fg transition-colors after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-primary-text"
+              >
+                {job.title}
               </Link>
-            ) : (
-              <SaveJobButton jobId={job.id} />
-            )}
+              <p className="mt-0.5 truncate text-sm font-medium text-muted">{job.company}</p>
+            </div>
+            <div className="relative z-10 flex shrink-0 items-center gap-2">
+              <ScoreBadge score={score} />
+              {status ? (
+                <Link href={`/applications/${applicationId}`} className="rounded-full">
+                  <Badge tone={STATUS_TONE[status] ?? "primary"}>{STATUS_LABELS[status]}</Badge>
+                </Link>
+              ) : (
+                <SaveJobButton jobId={job.id} />
+              )}
+            </div>
           </div>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:text-sm">
-          {job.location && (
-            <span className="inline-flex max-w-full items-center gap-1 truncate">
-              <MapPin size={13} /> {job.location.length > 48 ? job.location.slice(0, 48) + "…" : job.location}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-muted">
+            {location && (
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <MapPin size={14} aria-hidden="true" className="shrink-0" /> {location}
+              </span>
+            )}
+            {job.remote && <Badge tone="info">Remote</Badge>}
+            {salary && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-fg">
+                <Wallet size={14} aria-hidden="true" className="text-muted" /> {salary}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5">
+              <Clock size={14} aria-hidden="true" className="shrink-0" />
+              {via ? via.replace("via ", "") : sourceLabel(job.source)}
+              {job.posted_at ? ` · ${timeAgo(job.posted_at)}` : ""}
             </span>
-          )}
-          {job.remote && <Badge tone="info">Remote</Badge>}
-          {salary && (
-            <span className="inline-flex items-center gap-1 font-medium text-fg">
-              <Wallet size={13} /> {salary}
-            </span>
-          )}
-          <span>
-            {via ? via.replace("via ", "") : sourceLabel(job.source)}
-            {job.posted_at ? ` · ${timeAgo(job.posted_at)}` : ""}
-          </span>
+          </div>
         </div>
       </div>
     </Card>

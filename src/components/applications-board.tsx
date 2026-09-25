@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GripVertical } from "lucide-react";
+import { Bot, GripVertical } from "lucide-react";
 import { updateApplicationAction } from "@/app/(app)/actions";
-import { Badge, ScoreBadge, cn } from "@/components/ui";
+import { Badge, STATUS_DOT, ScoreBadge, cn } from "@/components/ui";
 import { CompanyLogo } from "@/components/company-logo";
 import { StatusSelect } from "@/components/status-select";
 import { friendlyError } from "@/components/progress";
 import { toast } from "@/components/toast";
+import { celebrate } from "@/lib/celebrate";
 import { STATUS_LABELS, timeAgo } from "@/lib/format";
 import type { ApplicationStatus } from "@/lib/types";
 
@@ -23,14 +24,13 @@ export type BoardItem = {
   job: { title: string; company: string; company_logo: string | null } | null;
 };
 
-const TINT: Record<string, string> = {
-  saved: "pastel-cool",
-  ready: "pastel-lime",
-  applied: "pastel-lavender",
-  interviewing: "pastel-peach",
-  offer: "pastel-pink",
-  rejected: "bg-surface-2",
-  archived: "bg-surface-2",
+const EMPTY_HINT: Partial<Record<ApplicationStatus, string>> = {
+  saved: "Save jobs from search to keep them here",
+  ready: "Applications the AI has written land here",
+  applied: "Drag a card here once you've sent it",
+  interviewing: "Your interviews will show up here",
+  offer: "Where the good news goes",
+  rejected: "Nothing here — and that's fine",
 };
 
 /** Kanban board: drag cards between columns (desktop) or use the status menu (touch). */
@@ -48,7 +48,12 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
     try {
       const res = await updateApplicationAction(id, { status: to });
       if (!res.ok) throw new Error(res.error);
-      toast(`${item.job?.title ?? "Application"} → ${STATUS_LABELS[to]}`);
+      if (to === "offer" || to === "interviewing") {
+        celebrate();
+        toast(to === "offer" ? "An offer — congratulations!" : "An interview — nice work!", { tone: "celebrate" });
+      } else {
+        toast(`${item.job?.title ?? "Application"} → ${STATUS_LABELS[to]}`);
+      }
       router.refresh();
     } catch (e) {
       setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: from } : i)));
@@ -56,24 +61,20 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
     }
   };
 
+  const single = columns.length === 1;
+
   return (
-    <div
-      className={cn(
-        "-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 md:mx-0 md:px-0",
-        columns.length > 1 ? "md:grid md:snap-none md:overflow-visible" : "",
-      )}
-      style={columns.length > 1 ? { gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` } : undefined}
-    >
+    <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:thin] md:mx-0 md:snap-none md:px-0">
       {columns.map((status) => {
         const list = items.filter((i) => i.status === status);
+        const isOver = over === status;
         return (
           <section
             key={status}
             className={cn(
-              "flex w-[80vw] max-w-[320px] shrink-0 snap-start flex-col rounded-[20px] p-2 transition md:w-auto md:max-w-none",
-              TINT[status],
-              over === status && "ring-2 ring-accent ring-offset-2 ring-offset-bg",
-              columns.length === 1 && "w-full max-w-none",
+              "flex w-[82vw] max-w-[290px] shrink-0 snap-start flex-col rounded-2xl border border-border bg-surface-2 p-2 transition-[box-shadow,background-color] duration-150 md:w-[262px]",
+              isOver && "bg-primary-soft ring-2 ring-primary",
+              single && "w-full max-w-none md:w-full",
             )}
             onDragOver={(e) => {
               e.preventDefault();
@@ -89,11 +90,12 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
             }}
             aria-label={`${STATUS_LABELS[status]} (${list.length})`}
           >
-            <h2 className="flex items-center justify-between px-2 pb-2 pt-1 text-sm font-semibold">
+            <h2 className="flex items-center gap-2 px-2 pb-2.5 pt-1.5 text-sm font-bold text-fg">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: STATUS_DOT[status] }} aria-hidden="true" />
               {STATUS_LABELS[status]}
-              <span className="rounded-full bg-surface/80 px-2 py-0.5 text-xs text-muted">{list.length}</span>
+              <span className="ml-auto rounded-full bg-surface px-2 py-0.5 text-xs font-semibold tabular-nums text-muted">{list.length}</span>
             </h2>
-            <div className="grid min-h-24 content-start gap-2">
+            <div className={cn("grid min-h-28 grid-cols-[minmax(0,1fr)] content-start gap-2", single && "sm:grid-cols-2 xl:grid-cols-3")}>
               {list.map((a) => (
                 <article
                   key={a.id}
@@ -104,31 +106,35 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
                     setOver(null);
                   }}
                   className={cn(
-                    "group rounded-2xl bg-surface p-3 shadow-[var(--card-shadow)] transition md:cursor-grab md:active:cursor-grabbing",
-                    dragId === a.id && "opacity-50",
+                    "group relative rounded-xl border border-border bg-surface p-3 shadow-xs transition-[transform,box-shadow,border-color,opacity] duration-150 hover:border-border-strong hover:shadow-md md:cursor-grab md:active:cursor-grabbing",
+                    dragId === a.id && "rotate-1 opacity-60",
                   )}
                 >
-                  <div className="flex items-start gap-2">
-                    <CompanyLogo src={a.job?.company_logo ?? null} company={a.job?.company ?? "?"} size={30} />
-                    <Link href={`/applications/${a.id}`} className="min-w-0 flex-1 hover:text-accent">
-                      <p className="line-clamp-2 text-sm font-semibold leading-snug">{a.job?.title}</p>
-                      <p className="truncate text-xs text-muted">{a.job?.company}</p>
+                  <div className="flex items-start gap-2.5">
+                    <CompanyLogo src={a.job?.company_logo ?? null} company={a.job?.company ?? "?"} size={34} />
+                    <Link href={`/applications/${a.id}`} className="min-w-0 flex-1 after:absolute after:inset-0 after:rounded-xl after:content-['']">
+                      <p className="line-clamp-2 text-sm font-semibold leading-snug text-fg group-hover:text-primary-text">{a.job?.title}</p>
+                      <p className="mt-0.5 truncate text-xs font-medium text-muted">{a.job?.company}</p>
                     </Link>
-                    <GripVertical size={14} className="mt-0.5 hidden shrink-0 text-muted/60 md:block" aria-hidden="true" />
+                    <GripVertical size={15} className="mt-0.5 hidden shrink-0 text-subtle md:block" aria-hidden="true" />
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                     <ScoreBadge score={a.match_score} />
-                    {a.origin === "autopilot" && <Badge tone="info">Autopilot</Badge>}
-                    <span className="text-[11px] text-muted">{timeAgo(a.applied_at ?? a.updated_at)}</span>
+                    {a.origin === "autopilot" && (
+                      <Badge tone="violet">
+                        <Bot size={12} aria-hidden="true" /> Autopilot
+                      </Badge>
+                    )}
+                    <span className="ml-auto text-xs text-muted">{timeAgo(a.applied_at ?? a.updated_at)}</span>
                   </div>
-                  <div className="mt-2 md:hidden">
+                  <div className="relative z-10 mt-2.5 md:hidden">
                     <StatusSelect key={a.status} id={a.id} status={a.status} compact />
                   </div>
                 </article>
               ))}
               {list.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-fg/15 px-3 py-6 text-center text-xs text-muted">
-                  {dragId ? "Drop here" : "Nothing here yet"}
+                <p className="rounded-xl border border-dashed border-border-strong px-3 py-6 text-center text-xs leading-relaxed text-muted">
+                  {dragId ? "Drop here" : EMPTY_HINT[status] ?? "Nothing here yet"}
                 </p>
               )}
             </div>

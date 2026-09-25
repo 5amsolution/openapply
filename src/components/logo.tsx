@@ -1,13 +1,31 @@
 import Link from "next/link";
+import { cn } from "@/components/ui";
 
-export function Logo({ href = "/" }: { href?: string }) {
+export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
   return (
-    <Link href={href} className="flex items-center gap-2 font-semibold tracking-tight">
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="2" y="2" width="20" height="20" rx="6" fill="var(--accent)" />
-        <path d="M7.5 12.5l3 3 6-7" fill="none" stroke="var(--accent-fg)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-[10px] bg-[linear-gradient(135deg,#4f46e5_0%,#7c3aed_100%)] shadow-[0_4px_12px_-2px_rgb(79_70_229/0.45)]",
+        className,
+      )}
+      style={{ width: size, height: size }}
+    >
+      <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 24 24" fill="none">
+        <path d="M5.5 12.5l4 4 9-9.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M18.6 1.8l.55 1.5 1.5.55-1.5.55-.55 1.5-.55-1.5-1.5-.55 1.5-.55z" fill="#fff" />
       </svg>
-      OpenApply
+    </span>
+  );
+}
+
+export function Logo({ href = "/", className, invert }: { href?: string; className?: string; invert?: boolean }) {
+  return (
+    <Link href={href} className={cn("inline-flex items-center gap-2.5 rounded-lg text-[17px] font-extrabold tracking-[-0.02em]", className)}>
+      <LogoMark />
+      <span className={invert ? "text-white" : "text-fg"}>
+        Open<span className={invert ? "text-[#c7d2fe]" : "text-primary-text"}>Apply</span>
+      </span>
     </Link>
   );
 }

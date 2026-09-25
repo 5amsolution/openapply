@@ -7,8 +7,8 @@ import { allow } from "@/lib/rate-limit";
 import { enabledSources } from "@/lib/jobs/sources";
 import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { keywordMatch } from "@/lib/matching";
-import { Button, Card, EmptyState, Notice, PageHeader } from "@/components/ui";
-import { MapPin, Search } from "lucide-react";
+import { Button, Card, EmptyState, Input, Notice, PageHeader, Switch } from "@/components/ui";
+import { ChevronDown, Layers, MapPin, Radar, Search, SearchX, Sparkles } from "lucide-react";
 import { JobResults, type ResultItem } from "@/components/job-results";
 import { SourceFilter } from "@/components/source-filter";
 import { ProgressSteps } from "@/components/progress";
@@ -35,89 +35,89 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
     id: s.id,
     label: s.label,
   }));
-  const suggestions = profile?.desired_titles ?? [];
+  const suggestions = profile?.desired_titles?.length ? profile.desired_titles : POPULAR;
 
   return (
     <>
-      <PageHeader tint="lavender" eyebrow={<>🔎 {sources.length} job sources, searched live</>} title="Find jobs" description="One search across remote boards and top company career pages — every job scored against your resume." />
+      <PageHeader
+        icon={<Search size={22} />}
+        eyebrow={
+          <>
+            <Radar size={14} aria-hidden="true" /> {sources.length} job sources, searched live
+          </>
+        }
+        title="Find jobs"
+        description="One search across remote job boards and top company career pages — every result scored against your resume."
+      />
 
-      <section className="bento pastel-lavender mb-6 p-4 md:p-5">
+      <Card className="mb-6 p-3 shadow-sm sm:p-4">
         <form className="grid gap-3" action="/jobs" role="search">
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-surface py-1.5 pl-1.5 pr-4 shadow-[0_4px_14px_rgba(70,66,120,0.1)] transition focus-within:shadow-[0_0_0_3px_rgba(95,139,62,0.35),0_4px_14px_rgba(70,66,120,0.1)]">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2" aria-hidden="true">
-                <Search size={17} />
-              </span>
-              <input
+          <div className="flex flex-col gap-2.5 lg:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <Search size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+              <Input
                 name="q"
                 defaultValue={q}
                 required
-                aria-label="Keywords"
+                aria-label="Job title, skill or company"
                 placeholder="Job title, skill or company — e.g. product designer"
-                className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-muted/80"
+                className="h-12 pl-11 text-base"
               />
             </div>
-            <div className="flex items-center gap-3 rounded-full bg-surface py-1.5 pl-1.5 pr-4 shadow-[0_4px_14px_rgba(70,66,120,0.1)] transition focus-within:shadow-[0_0_0_3px_rgba(95,139,62,0.35),0_4px_14px_rgba(70,66,120,0.1)] lg:w-64">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2" aria-hidden="true">
-                <MapPin size={17} />
-              </span>
-              <input
+            <div className="relative lg:w-64">
+              <MapPin size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+              <Input
                 name="loc"
                 defaultValue={loc || (q ? "" : profile?.desired_locations?.[0] ?? "")}
                 aria-label="Location"
                 placeholder="Location (optional)"
-                className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-muted/80"
+                className="h-12 pl-11 text-base"
               />
             </div>
-            <Button type="submit" className="h-[52px] px-7 text-[15px]">
-              Search
+            <Button type="submit" size="lg" className="lg:px-8">
+              <Search size={17} aria-hidden="true" /> Search
             </Button>
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-2 text-sm">
-            <label className="flex cursor-pointer items-center gap-2 font-medium">
-              <input
-                type="checkbox"
-                name="remote"
-                value="1"
-                defaultChecked={remote || (!q && profile?.remote_preference === "remote")}
-                className="h-4 w-4 accent-[var(--accent)]"
-              />
-              Remote only
-            </label>
-            <details className="group/src">
-              <summary className="cursor-pointer list-none font-medium text-fg/70 hover:text-fg">Sources ({src.length ? src.length : "all"}) ▾</summary>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-1 pt-1">
+            <Switch name="remote" value="1" defaultChecked={remote || (!q && profile?.remote_preference === "remote")} label="Remote only" />
+            <details className="group/src w-full sm:w-auto">
+              <summary className="inline-flex h-9 list-none items-center gap-1.5 rounded-lg text-sm font-semibold text-muted hover:text-fg">
+                <Layers size={15} aria-hidden="true" /> Sources: {src.length ? `${src.length} selected` : "all"}
+                <ChevronDown size={15} aria-hidden="true" className="transition-transform group-open/src:rotate-180" />
+              </summary>
               <SourceFilter sources={sources} selected={src} />
             </details>
-            {!q && suggestions.length > 0 && (
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-fg/60">Try:</span>
-                {suggestions.slice(0, 4).map((t) => (
-                  <Link
-                    key={t}
-                    href={`/jobs?q=${encodeURIComponent(t)}${profile?.remote_preference === "remote" ? "&remote=1" : ""}`}
-                    className="lift rounded-full bg-surface px-3 py-1 text-xs font-semibold"
-                  >
-                    {t}
-                  </Link>
-                ))}
-              </span>
-            )}
           </div>
         </form>
-      </section>
+      </Card>
 
       {q ? (
         <Suspense key={`${q}|${loc}|${remote}|${src.join(",")}`} fallback={<ResultsSkeleton />}>
           <Results userId={user.id} q={q} loc={loc} remote={remote} src={src} />
         </Suspense>
       ) : (
-        <EmptyState title="Search for a role to get started">
-          Results come from public job boards and company career pages. Every job links back to its original posting.
+        <EmptyState
+          icon={<Sparkles size={22} />}
+          title="Search for a role to get started"
+          action={suggestions.slice(0, 5).map((t) => (
+            <Link
+              key={t}
+              href={`/jobs?q=${encodeURIComponent(t)}${profile?.remote_preference === "remote" ? "&remote=1" : ""}`}
+              className="inline-flex h-9 items-center rounded-full border border-border-strong bg-surface px-3.5 text-[13px] font-semibold text-fg transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-soft-fg"
+            >
+              {t}
+            </Link>
+          ))}
+        >
+          Results come from public job boards and company career pages, and every job links back to its original posting.
+          {profile?.desired_titles?.length ? " Try one of your target roles:" : " Popular searches:"}
         </EmptyState>
       )}
     </>
   );
 }
+
+const POPULAR = ["Frontend developer", "Product designer", "Data analyst", "Customer support", "Marketing manager"];
 
 async function Results({ userId, q, loc, remote, src }: { userId: string; q: string; loc: string; remote: boolean; src: string[] }) {
   const { supabase } = await requireUser();
@@ -133,7 +133,7 @@ async function Results({ userId, q, loc, remote, src }: { userId: string; q: str
 
   if (jobs.length === 0) {
     return (
-      <EmptyState title={`No jobs found for “${q}”`}>
+      <EmptyState icon={<SearchX size={22} />} title={`No jobs found for “${q}”`}>
         Try a broader title, remove the location, or turn off “Remote only”.
         {failed.length > 0 && <p className="mt-2">Some sources didn’t respond: {failed.map((f) => f.id).join(", ")}.</p>}
       </EmptyState>
@@ -165,11 +165,7 @@ async function Results({ userId, q, loc, remote, src }: { userId: string; q: str
           {!live && <Notice tone="warn">You searched a lot in the last few minutes, so these results come from our cache.</Notice>}
           {!profile?.skills?.length && (
             <Notice>
-              Fit scores are rough until you{" "}
-              <Link href="/profile" className="underline">
-                add your resume
-              </Link>
-              .
+              Fit scores are rough until you <Link href="/profile">add your resume</Link>.
             </Notice>
           )}
         </>
@@ -191,7 +187,14 @@ function ResultsSkeleton() {
         ]}
       />
       {Array.from({ length: 5 }).map((_, i) => (
-        <Card key={i} className="h-28 animate-pulse bg-surface-2/60" />
+        <Card key={i} className="flex gap-4 p-5">
+          <div className="skeleton h-12 w-12 rounded-xl" />
+          <div className="grid flex-1 content-start gap-2.5">
+            <div className="skeleton h-4 w-2/3 rounded-md" />
+            <div className="skeleton h-3.5 w-1/3 rounded-md" />
+            <div className="skeleton mt-1 h-3 w-1/2 rounded-md" />
+          </div>
+        </Card>
       ))}
     </div>
   );

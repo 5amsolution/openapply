@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pause, Pencil, Play, Plus, Trash2, Zap } from "lucide-react";
+import { Bot, ChevronDown, Clock3, Gauge, Globe, MapPin, Pause, Pencil, Play, Plus, Search, Target, Trash2, Zap } from "lucide-react";
 import { deleteRuleAction, runRuleNowAction, saveRuleAction } from "@/app/(app)/actions";
-import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
+import { Badge, Button, Card, FieldHint, IconTile, Input, Label, Notice, Switch, cn } from "@/components/ui";
 import { friendlyError } from "@/components/progress";
 import { LiveRun } from "@/components/live-run";
+import { toast } from "@/components/toast";
 import { timeAgo } from "@/lib/format";
 import type { AutopilotRule } from "@/lib/types";
 
@@ -36,7 +37,8 @@ export function AutopilotManager({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<string | "new" | null>(rules.length === 0 ? "new" : null);
-  const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [busy, setBusy] = useState("");
   // ruleId → id of the run happening in the background right now
   const [runs, setRuns] = useState<Record<string, string>>(activeRuns);
@@ -61,7 +63,7 @@ export function AutopilotManager({
       setMessage(null);
       try {
         const text = await fn();
-        if (text) setMessage({ tone: "accent", text });
+        if (text) setMessage({ tone: "success", text });
         router.refresh();
       } catch (e) {
         setMessage({ tone: "danger", text: friendlyError(e) });
@@ -72,12 +74,22 @@ export function AutopilotManager({
 
   return (
     <div className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-bold tracking-tight text-fg">Your autopilot searches</h2>
+        {editing !== "new" && (
+          <Button variant="secondary" onClick={() => setEditing("new")}>
+            <Plus size={16} aria-hidden="true" /> New search
+          </Button>
+        )}
+      </div>
+
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
 
       {rules.map((rule) =>
         editing === rule.id ? (
           <RuleForm
             key={rule.id}
+            title={`Edit “${rule.name}”`}
             initial={{ ...rule, exclude_keywords: rule.exclude_keywords.join(", ") }}
             sources={sources}
             busy={busy === "save"}
@@ -92,63 +104,107 @@ export function AutopilotManager({
             }
           />
         ) : (
-          <Card key={rule.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{rule.name}</p>
-                {rule.active ? <Badge tone="accent">Active</Badge> : <Badge>Paused</Badge>}
+          <Card key={rule.id} className="p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                <IconTile tone={rule.active ? "violet" : "neutral"}>
+                  <Bot size={19} />
+                </IconTile>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-base font-bold text-fg">{rule.name}</h3>
+                    {rule.active ? (
+                      <Badge tone="success">
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" /> Active
+                      </Badge>
+                    ) : (
+                      <Badge>Paused</Badge>
+                    )}
+                  </div>
+                  <ul className="mt-2.5 flex flex-wrap gap-1.5" aria-label="Search settings">
+                    <Chip icon={<Search size={13} />}>“{rule.keywords}”</Chip>
+                    {rule.location && <Chip icon={<MapPin size={13} />}>{rule.location}</Chip>}
+                    {rule.remote_only && <Chip icon={<Globe size={13} />}>Remote only</Chip>}
+                    <Chip icon={<Target size={13} />}>Fit {rule.min_score}+</Chip>
+                    <Chip icon={<Gauge size={13} />}>Up to {rule.daily_limit}/day</Chip>
+                    <Chip icon={<Clock3 size={13} />}>{rule.last_run_at ? `Last run ${timeAgo(rule.last_run_at)}` : "Not run yet"}</Chip>
+                  </ul>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-muted">
-                “{rule.keywords}”{rule.location ? ` in ${rule.location}` : ""}
-                {rule.remote_only ? " · remote only" : ""} · score ≥ {rule.min_score} · up to {rule.daily_limit}/day
-                {rule.last_run_at ? ` · last run ${timeAgo(rule.last_run_at)}` : " · not run yet"}
-              </p>
+              <div className="flex flex-wrap items-center gap-1">
+                <Button
+                  variant="soft"
+                  disabled={!aiReady || !!busy || !!runs[rule.id]}
+                  loading={busy === `run:${rule.id}` || !!runs[rule.id]}
+                  onClick={() =>
+                    act(`run:${rule.id}`, async () => {
+                      const res = await runRuleNowAction(rule.id);
+                      if (!res.ok) throw new Error(res.error);
+                      setRuns((prev) => ({ ...prev, [rule.id]: res.data }));
+                    })
+                  }
+                >
+                  {!runs[rule.id] && busy !== `run:${rule.id}` && <Zap size={16} aria-hidden="true" />} {runs[rule.id] ? "Running…" : "Run now"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={!!busy}
+                  aria-label={rule.active ? `Pause ${rule.name}` : `Resume ${rule.name}`}
+                  title={rule.active ? "Pause" : "Resume"}
+                  onClick={() =>
+                    act(`toggle:${rule.id}`, async () => {
+                      const res = await saveRuleAction(rule.id, { ...fromRule(rule), active: !rule.active });
+                      if (!res.ok) throw new Error(res.error);
+                      toast(rule.active ? `${rule.name} paused` : `${rule.name} is running again`);
+                    })
+                  }
+                >
+                  {rule.active ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
+                </Button>
+                <Button variant="ghost" size="icon" aria-label={`Edit ${rule.name}`} title="Edit" onClick={() => setEditing(rule.id)}>
+                  <Pencil size={17} aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-danger-soft hover:text-danger-soft-fg"
+                  aria-label={`Delete ${rule.name}`}
+                  title="Delete"
+                  disabled={!!busy}
+                  onClick={() => setConfirmDelete(rule.id)}
+                >
+                  <Trash2 size={17} aria-hidden="true" />
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                disabled={!aiReady || !!busy || !!runs[rule.id]}
-                loading={busy === `run:${rule.id}` || !!runs[rule.id]}
-                onClick={() =>
-                  act(`run:${rule.id}`, async () => {
-                    const res = await runRuleNowAction(rule.id);
-                    if (!res.ok) throw new Error(res.error);
-                    setRuns((prev) => ({ ...prev, [rule.id]: res.data }));
-                  })
-                }
-              >
-                {!runs[rule.id] && busy !== `run:${rule.id}` && <Zap size={14} />} {runs[rule.id] ? "Running…" : "Run now"}
-              </Button>
-              <Button
-                variant="ghost"
-                disabled={!!busy}
-                title={rule.active ? "Pause" : "Resume"}
-                onClick={() =>
-                  act(`toggle:${rule.id}`, async () => {
-                    const res = await saveRuleAction(rule.id, { ...fromRule(rule), active: !rule.active });
-                    if (!res.ok) throw new Error(res.error);
-                  })
-                }
-              >
-                {rule.active ? <Pause size={14} /> : <Play size={14} />}
-              </Button>
-              <Button variant="ghost" title="Edit" onClick={() => setEditing(rule.id)}>
-                <Pencil size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                title="Delete"
-                disabled={!!busy}
-                onClick={() =>
-                  act(`delete:${rule.id}`, async () => {
-                    const res = await deleteRuleAction(rule.id);
-                    if (!res.ok) throw new Error(res.error);
-                  })
-                }
-              >
-                <Trash2 size={14} />
-              </Button>
-            </div>
+
+            {confirmDelete === rule.id && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-soft-fg">
+                <p className="font-semibold">Delete “{rule.name}”? Applications it already wrote are kept.</p>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="danger-solid"
+                    size="sm"
+                    loading={busy === `delete:${rule.id}`}
+                    onClick={() =>
+                      act(`delete:${rule.id}`, async () => {
+                        const res = await deleteRuleAction(rule.id);
+                        if (!res.ok) throw new Error(res.error);
+                        setConfirmDelete(null);
+                        toast("Search deleted");
+                      })
+                    }
+                  >
+                    Delete search
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {runs[rule.id] && (
               <LiveRun
                 runId={runs[rule.id]}
@@ -162,7 +218,7 @@ export function AutopilotManager({
                     st.error
                       ? { tone: "danger", text: `${rule.name}: ${st.error}` }
                       : {
-                          tone: "accent",
+                          tone: "success",
                           text: `${rule.name}: found ${st.jobsFound} new jobs, scored ${st.jobsScored}, wrote ${st.draftsCreated} application${st.draftsCreated === 1 ? "" : "s"}${st.draftsCreated ? " — they're in Ready to apply." : "."}`,
                         },
                   );
@@ -174,8 +230,9 @@ export function AutopilotManager({
         ),
       )}
 
-      {editing === "new" ? (
+      {editing === "new" && (
         <RuleForm
+          title={rules.length ? "New autopilot search" : "Create your first autopilot search"}
           initial={blank}
           sources={sources}
           busy={busy === "save"}
@@ -189,12 +246,19 @@ export function AutopilotManager({
             })
           }
         />
-      ) : (
-        <Button variant="secondary" className="justify-self-start" onClick={() => setEditing("new")}>
-          <Plus size={14} /> New autopilot search
-        </Button>
       )}
     </div>
+  );
+}
+
+function Chip({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <li className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full bg-surface-2 px-2.5 text-[13px] font-medium text-muted">
+      <span aria-hidden="true" className="shrink-0">
+        {icon}
+      </span>
+      <span className="truncate">{children}</span>
+    </li>
   );
 }
 
@@ -224,12 +288,14 @@ function toInput(d: Draft, active: boolean) {
 }
 
 function RuleForm({
+  title,
   initial,
   sources,
   busy,
   onSave,
   onCancel,
 }: {
+  title: string;
   initial: Draft;
   sources: { id: string; label: string }[];
   busy: boolean;
@@ -238,20 +304,26 @@ function RuleForm({
 }) {
   const [d, setD] = useState<Draft>(initial);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((prev) => ({ ...prev, [k]: v }));
+  const tokens = d.daily_limit * 2 * 3 + d.daily_limit * 6;
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 shadow-md sm:p-6">
+      <div className="mb-6 flex items-center gap-3">
+        <IconTile tone="primary">
+          <Zap size={18} />
+        </IconTile>
+        <div>
+          <h3 className="text-base font-bold text-fg">{title}</h3>
+          <p className="text-sm text-muted">Describe the jobs you want — autopilot checks for new ones every day.</p>
+        </div>
+      </div>
       <form
-        className="grid gap-4 md:grid-cols-2"
+        className="grid gap-5 md:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault();
           onSave(d);
         }}
       >
-        <div>
-          <Label htmlFor="r-name">Name</Label>
-          <Input id="r-name" value={d.name} onChange={(e) => set("name", e.target.value)} required maxLength={80} />
-        </div>
         <div>
           <Label htmlFor="r-kw" hint="what you'd type in a search box">
             Keywords
@@ -265,15 +337,22 @@ function RuleForm({
           <Input id="r-loc" value={d.location} onChange={(e) => set("location", e.target.value)} placeholder="e.g. London, Germany, USA" />
         </div>
         <div>
+          <Label htmlFor="r-name">Name this search</Label>
+          <Input id="r-name" value={d.name} onChange={(e) => set("name", e.target.value)} required maxLength={80} />
+        </div>
+        <div>
           <Label htmlFor="r-ex" hint="comma-separated">
             Skip jobs mentioning
           </Label>
           <Input id="r-ex" value={d.exclude_keywords} onChange={(e) => set("exclude_keywords", e.target.value)} placeholder="e.g. senior staff, crypto, unpaid" />
         </div>
         <div>
-          <Label htmlFor="r-score" hint={`${d.min_score}+`}>
-            Minimum fit score to write an application
-          </Label>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <label htmlFor="r-score" className="text-sm font-semibold text-fg">
+              Only write applications for a fit of
+            </label>
+            <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-sm font-bold tabular-nums text-primary-soft-fg">{d.min_score}+</span>
+          </div>
           <input
             id="r-score"
             type="range"
@@ -282,30 +361,38 @@ function RuleForm({
             step={5}
             value={d.min_score}
             onChange={(e) => set("min_score", Number(e.target.value))}
-            className="w-full accent-[var(--accent)]"
+            className="h-11 w-full"
           />
+          <FieldHint className="mt-0">Higher means fewer, stronger matches.</FieldHint>
         </div>
         <div>
-          <Label htmlFor="r-limit" hint="caps your AI spend">
+          <Label htmlFor="r-limit" hint="caps your AI use">
             Max applications per day
           </Label>
           <Input id="r-limit" type="number" min={1} max={50} value={d.daily_limit} onChange={(e) => set("daily_limit", Number(e.target.value))} />
+          <FieldHint>About {tokens}k AI tokens a day at most.</FieldHint>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={d.remote_only} onChange={(e) => set("remote_only", e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
-          Remote only
-        </label>
-        <details className="md:col-span-2">
-          <summary className="cursor-pointer text-sm text-muted">Sources ({d.sources.length || "all"})</summary>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <Switch checked={d.remote_only} onChange={(e) => set("remote_only", e.target.checked)} label="Remote jobs only" />
+        <details className="group/src md:col-span-2">
+          <summary className="inline-flex h-9 list-none items-center gap-1.5 rounded-lg text-sm font-semibold text-muted hover:text-fg">
+            Job sources: {d.sources.length ? `${d.sources.length} selected` : "all"}
+            <ChevronDown size={15} aria-hidden="true" className="transition-transform group-open/src:rotate-180" />
+          </summary>
+          <div className="mt-3 flex flex-wrap gap-2">
             {sources.map((s) => {
               const on = d.sources.length === 0 || d.sources.includes(s.id);
               return (
-                <label key={s.id} className="flex items-center gap-2 text-sm">
+                <label
+                  key={s.id}
+                  className={cn(
+                    "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary",
+                    on ? "border-transparent bg-primary-soft text-primary-soft-fg" : "border-border-strong bg-surface text-muted hover:text-fg",
+                  )}
+                >
                   <input
                     type="checkbox"
                     checked={on}
-                    className="h-4 w-4 accent-[var(--accent)]"
+                    className="sr-only"
                     onChange={(e) => {
                       const current = d.sources.length ? d.sources : sources.map((x) => x.id);
                       const next = e.target.checked ? [...current, s.id] : current.filter((x) => x !== s.id);
@@ -318,12 +405,8 @@ function RuleForm({
             })}
           </div>
         </details>
-        <p className="text-xs text-muted md:col-span-2">
-          Rough cost per run: scoring ≈ 3k tokens per job, writing ≈ 6k tokens per application. With {d.daily_limit}/day that’s
-          about {Math.round((d.daily_limit * 2 * 3 + d.daily_limit * 6) / 1)}k tokens a day at most.
-        </p>
-        <div className="flex gap-2 md:col-span-2">
-          <Button type="submit" disabled={busy}>
+        <div className="flex flex-wrap gap-2 border-t border-border pt-5 md:col-span-2">
+          <Button type="submit" loading={busy}>
             {busy ? "Saving…" : "Save search"}
           </Button>
           {onCancel && (

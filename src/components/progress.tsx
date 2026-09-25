@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { cn } from "@/components/ui";
+import { CheckCircle2 } from "lucide-react";
+import { SpinnerIcon, cn } from "@/components/ui";
 
 // Feedback for slow AI work. Server actions don't stream progress, so the
 // steps advance on a timer that matches how long each phase usually takes,
@@ -48,12 +49,7 @@ export const STEPS = {
 } satisfies Record<string, Step[]>;
 
 export function Spinner({ className }: { className?: string }) {
-  return (
-    <svg className={cn("h-4 w-4 animate-spin", className)} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
-      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
+  return <SpinnerIcon className={className} />;
 }
 
 function useElapsed(active: boolean) {
@@ -75,39 +71,34 @@ export function ProgressSteps({ steps, active, className }: { steps: Step[]; act
   const elapsed = useElapsed(active);
   if (!active) return null;
   const current = steps.reduce((idx, s, i) => (elapsed >= s.after ? i : idx), 0);
+  const pct = Math.min(95, Math.round(((current + 0.5) / steps.length) * 100));
 
   return (
     <div
-      className={cn("rounded-lg border border-accent/25 bg-accent-soft/50 px-4 py-3 text-sm", className)}
+      className={cn("overflow-hidden rounded-xl border border-border bg-surface-2 text-sm animate-[oa-fade_200ms_ease-out]", className)}
       role="status"
       aria-live="polite"
     >
-      <ul className="grid gap-1.5">
+      <div className="h-1 bg-surface-3" aria-hidden="true">
+        <div className="h-full rounded-r-full bg-primary transition-[width] duration-700 ease-out" style={{ width: `${pct}%` }} />
+      </div>
+      <ul className="grid gap-2 px-4 pb-2 pt-3">
         {steps.map((s, i) => (
-          <li
-            key={s.label}
-            className={cn(
-              "flex items-center gap-2 transition-opacity",
-              i < current && "text-muted",
-              i > current && "opacity-40",
-            )}
-          >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+          <li key={s.label} className={cn("flex items-center gap-2.5", i < current ? "text-muted" : i === current ? "font-semibold text-fg" : "text-subtle")}>
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center">
               {i < current ? (
-                <svg viewBox="0 0 16 16" className="h-4 w-4 text-accent" aria-hidden="true">
-                  <path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <CheckCircle2 size={18} className="text-success" aria-hidden="true" />
               ) : i === current ? (
-                <Spinner className="text-accent" />
+                <SpinnerIcon className="text-primary-text" />
               ) : (
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
               )}
             </span>
-            <span className={cn(i === current && "font-medium")}>{s.label}</span>
+            <span>{s.label}</span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-muted tabular-nums">{elapsed}s elapsed · you can keep this page open while it works</p>
+      <p className="px-4 pb-3 text-xs text-muted tabular-nums">{elapsed}s · you can keep using this page while it works</p>
     </div>
   );
 }
@@ -115,8 +106,8 @@ export function ProgressSteps({ steps, active, className }: { steps: Step[]; act
 /** Slim animated bar for small inline waits. */
 export function ProgressBar({ className }: { className?: string }) {
   return (
-    <div className={cn("h-1 w-full overflow-hidden rounded-full bg-accent/15", className)} role="progressbar" aria-label="Loading">
-      <div className="h-full w-1/3 animate-[oa-slide_1.2s_ease-in-out_infinite] rounded-full bg-accent" />
+    <div className={cn("h-1 w-full overflow-hidden rounded-full bg-surface-3", className)} role="progressbar" aria-label="Loading">
+      <div className="h-full w-1/3 animate-[oa-slide_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
     </div>
   );
 }
