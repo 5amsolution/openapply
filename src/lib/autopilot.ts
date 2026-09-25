@@ -42,6 +42,7 @@ export async function runRule(rule: AutopilotRule): Promise<RunSummary> {
       remoteOnly: rule.remote_only,
       sources: rule.sources.length ? rule.sources : undefined,
       cacheOnly: true,
+      userId: rule.user_id,
     });
 
     const { data: existing } = await admin.from("applications").select("job_id").eq("user_id", rule.user_id);

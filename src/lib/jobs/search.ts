@@ -2,7 +2,9 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enabledSources, type SearchQuery } from "@/lib/jobs/sources";
 import { matchesLocation, tokens } from "@/lib/jobs/util";
+import { getUserSourceKey } from "@/lib/source-keys";
 import type { Job, JobInput } from "@/lib/types";
+import type { TablesInsert } from "@/lib/database.types";
 
 export interface SearchResult {
   jobs: Job[];
@@ -20,7 +22,9 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   const keywords = q.keywords.trim();
   if (!keywords) return { jobs: [], sources: [] };
 
-  const sources = enabledSources().filter((s) => !q.sources?.length || q.sources.includes(s.id));
+  // A signed-in user's own JSearch key (if any) switches that source on just for them.
+  if (q.userId && q.jsearchUserKey === undefined) q = { ...q, jsearchUserKey: await getUserSourceKey(q.userId, "jsearch") };
+  const sources = enabledSources(q).filter((s) => !q.sources?.length || q.sources.includes(s.id));
   // The shared cache is queried while the live sources are still answering.
   const t0 = Date.now();
   const cachedPromise = searchCachedJobs(q, limit).then((r) => {
@@ -48,7 +52,7 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   live = rank(dedupe(live), keywords).slice(0, limit * 2);
 
   const t1 = Date.now();
-  const [stored, cached] = await Promise.all([upsertJobs(live), cachedPromise]);
+  const [stored, cached] = await Promise.all([upsertJobs(live, q.userId), cachedPromise]);
   console.info(
     `[search] "${keywords}" sources ${tSources}ms (${settled.map((r) => `${r.id}:${r.jobs.length}`).join(" ")}) · save ${live.length} rows ${Date.now() - t1}ms · cache ${tCache}ms`,
   );
@@ -75,6 +79,7 @@ export async function searchCachedJobs(q: SearchQuery & { sources?: string[] }, 
     .limit(limit + 40);
   if (q.remoteOnly) query = query.eq("remote", true);
   if (q.sources?.length) query = query.in("source", q.sources);
+  query = q.userId ? query.or(`owner_id.is.null,owner_id.eq.${q.userId}`) : query.is("owner_id", null);
   const { data, error } = await query;
   if (error) {
     console.error("searchCachedJobs", error.message);
@@ -92,35 +97,53 @@ const REFRESH_AFTER_MS = 24 * 3_600_000;
  * stored are reused as-is; only new ones are written before we answer, and
  * day-old ones are refreshed in the background.
  */
-export async function upsertJobs(jobs: JobInput[]): Promise<Job[]> {
+export async function upsertJobs(jobs: JobInput[], userId?: string): Promise<Job[]> {
   if (jobs.length === 0) return [];
   const admin = createAdminClient();
   const key = (j: { source: string; external_id: string }) => `${j.source}|${j.external_id}`;
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
   // What do we already have?
-  const known = new Map<string, { id: string; fetched_at: string }>();
+  const known = new Map<string, { id: string; fetched_at: string; owner_id: string | null }>();
   const lookups = await Promise.all(
     chunk(jobs, 100).map((part) =>
       admin
         .from("jobs")
-        .select("id, source, external_id, fetched_at")
+        .select("id, source, external_id, fetched_at, owner_id")
         .in("external_id", part.map((j) => j.external_id)),
     ),
   );
-  for (const { data } of lookups) for (const r of data ?? []) known.set(key(r), { id: r.id, fetched_at: r.fetched_at });
+  for (const { data } of lookups) {
+    for (const r of data ?? []) known.set(key(r), { id: r.id, fetched_at: r.fetched_at, owner_id: r.owner_id });
+  }
+
+  // Someone else's private posting that this search also found is public data
+  // for both of them now — open it up so the link works for everyone who has it.
+  const toPublish = jobs
+    .map((j) => known.get(key(j)))
+    .filter((k): k is NonNullable<typeof k> => !!k && !!k.owner_id && k.owner_id !== userId);
+  if (toPublish.length) {
+    await admin.from("jobs").update({ owner_id: null }).in("id", toPublish.map((k) => k.id));
+    for (const k of toPublish) k.owner_id = null;
+  }
 
   const fetchedAt = new Date().toISOString();
-  const toRow = (j: JobInput) => ({ ...j, description: j.description.slice(0, 60_000), fetched_at: fetchedAt });
+  const toRow = (j: JobInput) => ({ ...j, owner_id: j.owner_id ?? null, description: j.description.slice(0, 60_000), fetched_at: fetchedAt });
+  // Refreshes must never flip a row's visibility, so they leave owner_id alone.
+  const toRefreshRow = (j: JobInput) => {
+    const { owner_id: _owner, ...rest } = toRow(j);
+    void _owner;
+    return rest;
+  };
   const fresh = jobs.filter((j) => !known.has(key(j)));
   const stale = jobs.filter((j) => {
     const k = known.get(key(j));
     return k && Date.now() - new Date(k.fetched_at).getTime() > REFRESH_AFTER_MS;
   });
 
-  const write = (rows: JobInput[]) =>
+  const write = (rows: JobInput[], shape: (j: JobInput) => TablesInsert<"jobs"> = toRow) =>
     Promise.all(
-      chunk(rows.map(toRow), 100).map((part) =>
+      chunk(rows.map(shape), 100).map((part) =>
         admin.from("jobs").upsert(part, { onConflict: "source,external_id" }).select("id, source, external_id"),
       ),
     );
@@ -128,14 +151,17 @@ export async function upsertJobs(jobs: JobInput[]): Promise<Job[]> {
   // New postings need ids before we can link to them, so wait for those.
   for (const { data, error } of await write(fresh)) {
     if (error) console.error("upsertJobs", error.message);
-    for (const r of data ?? []) known.set(key(r), { id: r.id, fetched_at: fetchedAt });
+    for (const r of data ?? []) {
+      const own = jobs.find((j) => key(j) === key(r))?.owner_id ?? null;
+      known.set(key(r), { id: r.id, fetched_at: fetchedAt, owner_id: own });
+    }
   }
   // Old copies get refreshed without holding up the search.
-  if (stale.length) void write(stale).catch((err) => console.error("refresh jobs", err));
+  if (stale.length) void write(stale, toRefreshRow).catch((err) => console.error("refresh jobs", err));
 
   return jobs.flatMap((j) => {
     const k = known.get(key(j));
-    return k ? [{ ...j, id: k.id, fetched_at: k.fetched_at } as Job] : [];
+    return k ? [{ ...j, id: k.id, fetched_at: k.fetched_at, owner_id: k.owner_id } as Job] : [];
   });
 }
 

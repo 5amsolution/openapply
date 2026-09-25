@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
 import { enabledSources } from "@/lib/jobs/sources";
+import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { Card, Notice, PageHeader } from "@/components/ui";
 import { AutopilotManager } from "@/components/autopilot-manager";
 import { timeAgo } from "@/lib/format";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Autopilot" };
 
 export default async function AutopilotPage() {
   const { supabase, user } = await requireUser();
+  const hasOwnJSearch = !!(await getUserSourceKeyInfo(user.id, "jsearch"));
   const [{ data: rules }, { data: runs }, aiReady, { data: profile }] = await Promise.all([
     supabase.from("autopilot_rules").select("*").order("created_at"),
     supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(15),
@@ -45,7 +47,7 @@ export default async function AutopilotPage() {
 
       <AutopilotManager
         rules={(rules ?? []) as AutopilotRule[]}
-        sources={enabledSources().map((s) => ({ id: s.id, label: s.label }))}
+        sources={enabledSources({ jsearchUserKey: hasOwnJSearch ? { key: "", monthlyLimit: 0 } : null }).map((s) => ({ id: s.id, label: s.label }))}
         defaults={{
           keywords: profile?.desired_titles?.[0] ?? "",
           location: profile?.desired_locations?.[0] ?? "",

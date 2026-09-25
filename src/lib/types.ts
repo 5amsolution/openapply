@@ -67,10 +67,12 @@ export interface Job {
   tags: string[];
   posted_at: string | null;
   fetched_at: string;
+  /** Set when fetched with a user's own API key: only that user can see it. */
+  owner_id: string | null;
 }
 
 /** A job as it comes out of a source adapter, before it has a database id. */
-export type JobInput = Omit<Job, "id" | "fetched_at">;
+export type JobInput = Omit<Job, "id" | "fetched_at" | "owner_id"> & { owner_id?: string | null };
 
 export const APPLICATION_STATUSES = [
   "saved",

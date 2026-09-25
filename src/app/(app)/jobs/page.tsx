@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { searchCachedJobs, searchJobs } from "@/lib/jobs/search";
 import { allow } from "@/lib/rate-limit";
 import { enabledSources } from "@/lib/jobs/sources";
+import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { keywordMatch } from "@/lib/matching";
 import { Button, Card, EmptyState, Input, Notice, PageHeader } from "@/components/ui";
 import { JobCard } from "@/components/job-card";
@@ -28,7 +29,11 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
     .eq("id", user.id)
     .single();
 
-  const sources = enabledSources().map((s) => ({ id: s.id, label: s.label }));
+  const hasOwnJSearch = !!(await getUserSourceKeyInfo(user.id, "jsearch"));
+  const sources = enabledSources({ jsearchUserKey: hasOwnJSearch ? { key: "", monthlyLimit: 0 } : null }).map((s) => ({
+    id: s.id,
+    label: s.label,
+  }));
   const suggestions = profile?.desired_titles ?? [];
 
   return (
@@ -91,7 +96,7 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
 
 async function Results({ userId, q, loc, remote, src }: { userId: string; q: string; loc: string; remote: boolean; src: string[] }) {
   const { supabase } = await requireUser();
-  const query = { keywords: q, location: loc || undefined, remoteOnly: remote, sources: src.length ? src : undefined };
+  const query = { keywords: q, location: loc || undefined, remoteOnly: remote, sources: src.length ? src : undefined, userId };
   const live = allow(`search:${userId}`, 20, 5 * 60_000);
   const [{ jobs, sources }, { data: profile }, { data: apps }] = await Promise.all([
     live ? searchJobs(query) : searchCachedJobs(query, 120).then((jobs) => ({ jobs, sources: [] as { id: string; count: number; error?: string }[] })),

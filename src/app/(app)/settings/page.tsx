@@ -8,6 +8,9 @@ import { Card, PageHeader } from "@/components/ui";
 import { AISettingsForm } from "@/components/ai-settings-form";
 import { ExtensionTokens } from "@/components/extension-tokens";
 import { DangerZone } from "@/components/danger-zone";
+import { JSearchKeyCard } from "@/components/jsearch-key-card";
+import { getUserSourceKeyInfo } from "@/lib/source-keys";
+import { serverEnv } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -18,7 +21,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [ai, { data: usage }, { data: tokens }] = await Promise.all([
+  const [ai, { data: usage }, { data: tokens }, jsearchInfo] = await Promise.all([
     getAISettingsPublic(user.id),
     supabase.from("ai_usage").select("feature, input_tokens, output_tokens").gte("created_at", monthStart.toISOString()),
     createAdminClient()
@@ -26,6 +29,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
       .select("id, label, created_at, last_used_at")
       .eq("user_id", user.id)
       .order("created_at"),
+    getUserSourceKeyInfo(user.id, "jsearch"),
   ]);
 
   const byFeature = new Map<string, { calls: number; tokens: number }>();
@@ -94,6 +98,8 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
             </table>
           )}
         </Card>
+
+        <JSearchKeyCard info={jsearchInfo} siteKeyAvailable={!!serverEnv.jsearchKey()} />
 
         <ExtensionTokens tokens={tokens ?? []} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} />
 

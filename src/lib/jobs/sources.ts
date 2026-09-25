@@ -23,6 +23,10 @@ export interface SearchQuery {
   remoteOnly?: boolean;
   /** Background runs (autopilot) set this so metered sources only answer from cache. */
   cacheOnly?: boolean;
+  /** Signed-in user; lets metered sources use that user's own API key. */
+  userId?: string;
+  /** The user's own JSearch key, if they added one in Settings. */
+  jsearchUserKey?: { key: string; monthlyLimit: number } | null;
 }
 
 export interface JobSource {
@@ -617,6 +621,13 @@ const jsearch: JobSource = {
   remoteOnly: false,
   enabled: () => !!serverEnv.jsearchKey(),
   async search(q) {
+    // A user's own key: their quota, their cache, and results only they can see.
+    // Otherwise the site-wide key: shared cache and a deployment-wide monthly cap.
+    const own = q.jsearchUserKey && q.userId ? q.jsearchUserKey : null;
+    const apiKey = own ? own.key : serverEnv.jsearchKey();
+    if (!apiKey) return [];
+    const bucket = own ? `jsearch:u:${q.userId}` : "jsearch";
+    const monthlyLimit = own ? own.monthlyLimit : serverEnv.jsearchMonthlyLimit();
     type S = {
       data: {
         job_id: string;
@@ -639,19 +650,21 @@ const jsearch: JobSource = {
         job_google_link?: string;
       }[];
     };
-    // The free plan is ~200 requests/month for the whole deployment, so every
-    // query is cached for everyone and spending is capped per month.
+    // Free plans are ~200 requests/month, so every query is cached for a day
+    // and spending is capped per month (per user for their own key).
     const query = [q.keywords, q.location ? `in ${q.location}` : ""].filter(Boolean).join(" ");
-    const cacheKey = `jsearch:${query.toLowerCase().replace(/s+/g, " ").trim()}|${q.remoteOnly ? "remote" : "any"}`;
+    const cacheKey = `${bucket}:${query.toLowerCase().replace(/\s+/g, " ").trim()}|${q.remoteOnly ? "remote" : "any"}`;
     let data = await cacheGet<S>(cacheKey);
     if (!data) {
       if (q.cacheOnly) return [];
-      if (!(await consumeQuota("jsearch", serverEnv.jsearchMonthlyLimit()))) throw new Error("monthly JSearch quota used up");
+      if (!(await consumeQuota(bucket, monthlyLimit))) {
+        throw new Error(own ? "your JSearch key's monthly limit is used up" : "monthly JSearch quota used up");
+      }
       const params = new URLSearchParams({ query, page: "1", num_pages: "1", date_posted: "month" });
       if (q.remoteOnly) params.set("work_from_home", "true");
       data = await fetchJSON<S>(
-        `https://jsearch.p.rapidapi.com/search?${params}`,
-        { headers: { "x-rapidapi-key": serverEnv.jsearchKey(), "x-rapidapi-host": "jsearch.p.rapidapi.com" } },
+        `${serverEnv.jsearchBaseUrl()}/search?${params}`,
+        { headers: { "x-rapidapi-key": apiKey, "x-rapidapi-host": "jsearch.p.rapidapi.com" } },
         20_000,
       );
       await cacheSet(cacheKey, data, 24 * 3_600_000);
@@ -675,6 +688,7 @@ const jsearch: JobSource = {
       apply_url: j.job_apply_link,
       tags: j.job_publisher ? [`via ${j.job_publisher}`] : [],
       posted_at: toISO(j.job_posted_at_datetime_utc),
+      owner_id: own ? q.userId! : null,
     }));
   },
 };
@@ -693,7 +707,8 @@ export const SOURCES: JobSource[] = [
   ashby,
 ];
 
-export function enabledSources(): JobSource[] {
-  return SOURCES.filter((s) => s.enabled());
+/** Sources available for this search (JSearch also turns on when the user has their own key). */
+export function enabledSources(q?: Pick<SearchQuery, "jsearchUserKey">): JobSource[] {
+  return SOURCES.filter((s) => s.enabled() || (s.id === "jsearch" && !!q?.jsearchUserKey));
 }
 
