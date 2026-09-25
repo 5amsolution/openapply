@@ -21,6 +21,8 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   if (!keywords) return { jobs: [], sources: [] };
 
   const sources = enabledSources().filter((s) => !q.sources?.length || q.sources.includes(s.id));
+  // The shared cache is queried while the live sources are still answering.
+  const cachedPromise = searchCachedJobs(q, limit);
 
   const settled = await Promise.all(
     sources.map(async (s) => {
@@ -38,8 +40,7 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   if (q.location) live = live.filter((j) => matchesLocation(j, q.location!));
   live = dedupe(live);
 
-  const stored = await upsertJobs(live);
-  const cached = await searchCachedJobs(q, limit);
+  const [stored, cached] = await Promise.all([upsertJobs(live), cachedPromise]);
 
   const byId = new Map<string, Job>();
   for (const j of [...stored, ...cached]) byId.set(j.id, j);
@@ -60,7 +61,7 @@ export async function searchCachedJobs(q: SearchQuery & { sources?: string[] }, 
     .textSearch("search", q.keywords, { type: "websearch", config: "english" })
     .gte("fetched_at", new Date(Date.now() - 45 * 86_400_000).toISOString())
     .order("posted_at", { ascending: false, nullsFirst: false })
-    .limit(limit * 2);
+    .limit(limit + 40);
   if (q.remoteOnly) query = query.eq("remote", true);
   if (q.sources?.length) query = query.in("source", q.sources);
   const { data, error } = await query;
@@ -73,20 +74,32 @@ export async function searchCachedJobs(q: SearchQuery & { sources?: string[] }, 
   return jobs.slice(0, limit);
 }
 
+/**
+ * Saves postings and returns them with their database ids. Only the ids come
+ * back over the wire — we already hold the full rows in memory.
+ */
 export async function upsertJobs(jobs: JobInput[]): Promise<Job[]> {
   if (jobs.length === 0) return [];
   const admin = createAdminClient();
-  const rows = jobs.map((j) => ({ ...j, description: j.description.slice(0, 60_000), fetched_at: new Date().toISOString() }));
-  const out: Job[] = [];
-  for (let i = 0; i < rows.length; i += 200) {
-    const { data, error } = await admin
-      .from("jobs")
-      .upsert(rows.slice(i, i + 200), { onConflict: "source,external_id" })
-      .select("*");
+  const fetchedAt = new Date().toISOString();
+  const rows = jobs.map((j) => ({ ...j, description: j.description.slice(0, 60_000), fetched_at: fetchedAt }));
+  const chunks: (typeof rows)[] = [];
+  for (let i = 0; i < rows.length; i += 200) chunks.push(rows.slice(i, i + 200));
+
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      admin.from("jobs").upsert(chunk, { onConflict: "source,external_id" }).select("id, source, external_id"),
+    ),
+  );
+  const ids = new Map<string, string>();
+  for (const { data, error } of results) {
     if (error) console.error("upsertJobs", error.message);
-    else out.push(...((data ?? []) as Job[]));
+    for (const r of data ?? []) ids.set(`${r.source}|${r.external_id}`, r.id);
   }
-  return out;
+  return rows.flatMap((r) => {
+    const id = ids.get(`${r.source}|${r.external_id}`);
+    return id ? [{ ...r, id } as Job] : [];
+  });
 }
 
 function dedupe(jobs: JobInput[]): JobInput[] {
