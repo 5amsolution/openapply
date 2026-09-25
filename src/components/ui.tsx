@@ -32,7 +32,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   saved: "neutral",
   ready: "primary",
   applied: "info",
-  interviewing: "warn",
+  interviewing: "violet",
   offer: "success",
   rejected: "pink",
   archived: "neutral",
@@ -42,7 +42,7 @@ export const STATUS_DOT: Record<string, string> = {
   saved: "var(--subtle)",
   ready: "var(--primary)",
   applied: "var(--info)",
-  interviewing: "var(--warn)",
+  interviewing: "var(--violet)",
   offer: "var(--success)",
   rejected: "var(--danger)",
   archived: "var(--subtle)",
@@ -59,7 +59,7 @@ const BUTTON_BASE =
   "active:scale-[0.97] disabled:pointer-events-none";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-fg shadow-sm hover:bg-primary-hover hover:shadow-md",
+  primary: "bg-brand text-primary-fg shadow-sm hover:shadow-md hover:brightness-[1.06]",
   secondary: "border border-border-strong bg-surface text-fg shadow-xs hover:bg-surface-2",
   soft: "bg-primary-soft text-primary-soft-fg hover:bg-primary-soft-hover",
   ghost: "text-muted hover:bg-surface-2 hover:text-fg",
@@ -85,8 +85,8 @@ const BUTTON_SIZES: Record<ButtonSize, string> = {
   "icon-sm": "h-9 w-9",
 };
 
-export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
-  return cn(BUTTON_BASE, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className);
+export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string, disabled?: boolean) {
+  return cn(BUTTON_BASE, disabled ? BUTTON_DISABLED[variant] : BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className);
 }
 
 export function SpinnerIcon({ className }: { className?: string }) {
@@ -111,7 +111,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(buttonClass(variant, size), disabled && !loading && BUTTON_DISABLED[variant], className)}
+      className={buttonClass(variant, size, className, disabled && !loading)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}
@@ -235,7 +235,7 @@ export function PageHeader({
 const FIELD =
   "block w-full rounded-xl border border-border-strong bg-surface px-3.5 text-[15px] text-fg shadow-xs outline-none " +
   "transition-[border-color,box-shadow] duration-150 placeholder:text-subtle " +
-  "focus:border-primary focus:ring-4 focus:ring-ring " +
+  "focus:border-focus focus:ring-4 focus:ring-ring " +
   "disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
@@ -284,8 +284,8 @@ export function Switch({ label, className, ...props }: Omit<ComponentProps<"inpu
     <label className={cn("inline-flex items-center gap-2.5 text-sm font-medium text-fg", className)}>
       <span className="relative inline-flex shrink-0">
         <input type="checkbox" role="switch" className="peer sr-only" {...props} />
-        <span className="h-6 w-10 rounded-full bg-control-off transition-colors duration-200 peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary" />
-        <span className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out peer-checked:translate-x-4" />
+        <span className="h-6 w-10 rounded-full bg-control-off transition-colors duration-200 peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus" />
+        <span className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-[transform,background-color] duration-200 ease-out peer-checked:translate-x-4 peer-checked:bg-primary-fg" />
       </span>
       {label}
     </label>
@@ -304,7 +304,7 @@ export function Badge({ tone = "neutral", className, ...props }: ComponentProps<
 }
 
 export function scoreTone(score: number): Tone {
-  return score >= 80 ? "success" : score >= 60 ? "primary" : score >= 40 ? "warn" : "neutral";
+  return score >= 80 ? "success" : score >= 60 ? "primary" : "neutral";
 }
 
 export function ScoreBadge({ score, className }: { score: number | null | undefined; className?: string }) {
@@ -319,7 +319,6 @@ export function ScoreBadge({ score, className }: { score: number | null | undefi
 const RING_COLOR: Record<string, string> = {
   success: "var(--success)",
   primary: "var(--primary)",
-  warn: "var(--warn)",
   neutral: "var(--subtle)",
 };
 
@@ -391,7 +390,7 @@ export function Avatar({ name, size = 36, className }: { name: string; size?: nu
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4338ca,#6d28d9)] font-bold text-white shadow-xs",
+        "bg-brand inline-flex shrink-0 items-center justify-center rounded-full font-bold text-primary-fg shadow-xs",
         className,
       )}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}

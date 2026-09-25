@@ -43,8 +43,10 @@ export function NavLinks({ badges = {} }: { badges?: Badges }) {
         href={href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "group flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-150",
-          active ? "bg-primary-soft font-semibold text-primary-soft-fg" : "font-medium text-muted hover:bg-surface-2 hover:text-fg",
+          "group relative flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-150",
+          active
+            ? "bg-primary-soft font-semibold text-primary-soft-fg before:absolute before:inset-y-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-primary"
+            : "font-medium text-muted hover:bg-surface-2 hover:text-fg",
         )}
       >
         <Icon size={18} aria-hidden="true" className={cn("shrink-0 transition-transform duration-200 group-hover:scale-110", active && "text-primary-text")} />
@@ -71,7 +73,7 @@ export function BottomTabs({ badges = {} }: { badges?: Badges }) {
   const tabs = [...MAIN, ACCOUNT[0]];
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] text-fg backdrop-blur-md scheme-dark md:hidden"
       aria-label="Main"
     >
       <ul className="grid grid-cols-5">

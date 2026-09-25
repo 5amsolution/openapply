@@ -25,7 +25,7 @@ export function ExtensionTokens({
   return (
     <Card className="p-5 sm:p-6">
       <div className="mb-5 flex items-start gap-3">
-        <IconTile tone="violet">
+        <IconTile tone="primary">
           <Puzzle size={18} />
         </IconTile>
         <div className="min-w-0">
@@ -80,7 +80,7 @@ export function ExtensionTokens({
       )}
 
       <form
-        className="flex flex-wrap items-end gap-2"
+        className="flex flex-col gap-2 sm:flex-row sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
           start(async () => {
@@ -93,13 +93,13 @@ export function ExtensionTokens({
           });
         }}
       >
-        <div className="min-w-0 flex-1 sm:max-w-xs">
+        <div className="min-w-0 sm:w-72">
           <Label htmlFor="token-label" hint="optional">
             Name this device
           </Label>
           <Input id="token-label" placeholder="e.g. Work laptop" value={label} onChange={(e) => setLabel(e.target.value)} />
         </div>
-        <Button type="submit" variant="secondary" loading={pending}>
+        <Button type="submit" variant="secondary" loading={pending} className="self-start sm:self-auto">
           Create token
         </Button>
       </form>

@@ -15,8 +15,8 @@ export const metadata: Metadata = { title: "Autopilot" };
 
 const HOW: { icon: React.ReactNode; tone: Tone; title: string; body: string }[] = [
   { icon: <Search size={18} />, tone: "primary", title: "Searches every day", body: "Checks all your job sources for new postings." },
-  { icon: <Target size={18} />, tone: "violet", title: "Scores each match", body: "The AI compares every new job with your profile." },
-  { icon: <FileText size={18} />, tone: "pink", title: "Writes applications", body: "The best matches get a tailored cover letter and answers." },
+  { icon: <Target size={18} />, tone: "primary", title: "Scores each match", body: "The AI compares every new job with your profile." },
+  { icon: <FileText size={18} />, tone: "primary", title: "Writes applications", body: "The best matches get a tailored cover letter and answers." },
   { icon: <Hand size={18} />, tone: "success", title: "You review and send", body: "About a minute each — you always press submit." },
 ];
 
@@ -35,7 +35,7 @@ export default async function AutopilotPage() {
     <>
       <PageHeader
         icon={<Bot size={22} />}
-        tone="violet"
+        tone="primary"
         eyebrow={
           <>
             <Clock3 size={14} aria-hidden="true" /> Runs every day

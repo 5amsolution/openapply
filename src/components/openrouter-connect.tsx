@@ -64,7 +64,7 @@ export function OpenRouterConnect({
               <Badge tone="success">Recommended</Badge>
             </div>
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              Connect your own OpenRouter account. You approve OpenApply on OpenRouter&apos;s site — nothing to copy or paste — and
+              Connect your own OpenRouter account. You approve 5AM Apply on OpenRouter&apos;s site — nothing to copy or paste — and
               free models cost nothing: about 50 AI actions a day, or 1,000 a day after a one-time $10 credit purchase.
             </p>
             <ul className="mt-4 grid gap-2 text-sm text-fg sm:grid-cols-3">
@@ -148,7 +148,7 @@ export function OpenRouterConnect({
               act("disconnect", async () => {
                 const r = await removeAIKeyAction();
                 if (!r.ok) throw new Error(r.error);
-                return "Disconnected. You can also delete the OpenApply key on OpenRouter's site.";
+                return "Disconnected. You can also delete the 5AM Apply key on OpenRouter's site.";
               })
             }
           >
@@ -165,7 +165,7 @@ export function OpenRouterConnect({
             <a href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary-text underline underline-offset-2">
               OpenRouter privacy settings
             </a>
-            . If a free model is busy, OpenApply automatically falls back to another free one.
+            . If a free model is busy, 5AM Apply automatically falls back to another free one.
           </>
         ) : (
           <>Paid models are billed to your OpenRouter credits. Set a spending limit on your key to stay in control.</>

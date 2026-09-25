@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { publicEnv } from "@/lib/env";
 
 // Step 1 of "Connect with OpenRouter" (OAuth PKCE): send the user to
-// OpenRouter to approve a key for OpenApply. The verifier waits in a
+// OpenRouter to approve a key for 5AM Apply. The verifier waits in a
 // short-lived httpOnly cookie until OpenRouter redirects back.
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function GET() {
   auth.searchParams.set("callback_url", `${site}/api/openrouter/callback`);
   auth.searchParams.set("code_challenge", challenge);
   auth.searchParams.set("code_challenge_method", "S256");
-  auth.searchParams.set("key_label", "OpenApply");
+  auth.searchParams.set("key_label", "5AM Apply");
 
   const res = NextResponse.redirect(auth.toString());
   res.cookies.set("or_pkce", verifier, {

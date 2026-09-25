@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="min-h-dvh md:flex">
       {/* Phone top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md md:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/90 px-4 text-fg backdrop-blur-md scheme-dark md:hidden">
         <Logo href="/dashboard" />
         <Link href="/settings" className="rounded-full" aria-label="Settings and account">
           <Avatar name={name} size={34} />
@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </header>
 
       {/* Sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-surface text-fg scheme-dark md:flex">
         <div className="flex h-16 items-center px-5">
           <Logo href="/dashboard" />
         </div>

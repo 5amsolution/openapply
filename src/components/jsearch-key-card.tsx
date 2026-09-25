@@ -37,7 +37,7 @@ export function JSearchKeyCard({ info, siteKeyAvailable }: { info: Info; siteKey
   return (
     <Card className="p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-start gap-3">
-        <IconTile tone="info">
+        <IconTile tone="primary">
           <Globe size={18} />
         </IconTile>
         <div className="min-w-0 flex-1">

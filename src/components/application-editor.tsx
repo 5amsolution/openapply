@@ -172,7 +172,7 @@ export function ApplicationEditor({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {app.origin === "autopilot" && (
-                <Badge tone="violet">
+                <Badge>
                   <Bot size={12} aria-hidden="true" /> Autopilot
                 </Badge>
               )}
@@ -226,7 +226,7 @@ export function ApplicationEditor({
 
             <Section
               icon={<UserRound size={18} />}
-              tone="violet"
+              tone="primary"
               title="Tailored summary"
               copyText={summary}
               hint="Paste at the top of your resume or into “summary” fields."
@@ -237,7 +237,7 @@ export function ApplicationEditor({
             {app.tailored_bullets?.length > 0 && (
               <Section
                 icon={<ListChecks size={18} />}
-                tone="info"
+                tone="primary"
                 title="Tailored experience bullets"
                 hint="Swap these into your resume for this job."
                 copyText={app.tailored_bullets.map((b) => `${b.role}\n${b.bullets.map((x) => `• ${x}`).join("\n")}`).join("\n\n")}
@@ -260,7 +260,7 @@ export function ApplicationEditor({
               </Section>
             )}
 
-            <Section icon={<MessageSquareText size={18} />} tone="pink" title="Screening answers" hint="Answers to the questions application forms usually ask.">
+            <Section icon={<MessageSquareText size={18} />} tone="primary" title="Screening answers" hint="Answers to the questions application forms usually ask.">
               <div className="grid gap-4">
                 {answers.length === 0 && <p className="text-sm text-muted">No screening questions yet — add any the form asks below.</p>}
                 {answers.map((a, i) => (

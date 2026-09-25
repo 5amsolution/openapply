@@ -15,7 +15,7 @@ const SECTIONS: { icon: typeof Database; tone: Tone; title: string; body: React.
   },
   {
     icon: Share2,
-    tone: "violet",
+    tone: "primary",
     title: "Where your data goes",
     body: (
       <>
@@ -26,7 +26,7 @@ const SECTIONS: { icon: typeof Database; tone: Tone; title: string; body: React.
   },
   {
     icon: Globe,
-    tone: "info",
+    tone: "primary",
     title: "Job listings",
     body: "Listings come from public job-board APIs and company career pages. Applications are always submitted by you, on the employer's own form.",
   },

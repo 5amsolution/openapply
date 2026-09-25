@@ -1,20 +1,22 @@
 :root {
   color-scheme: light dark;
   --bg: #ffffff;
-  --fg: #101828;
-  --muted: #475467;
-  --border: #cdd2de;
-  --accent: #4f46e5;
-  --accent-fg: #ffffff;
+  --fg: #18130e;
+  --muted: #574f47;
+  --border: #d4cbc0;
+  --accent: #ff7a00;
+  --accent-text: #a93800;
+  --accent-fg: #17110b;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121725;
-    --fg: #eef1f8;
-    --muted: #aab3c7;
-    --border: #343c55;
-    --accent: #5b54f0;
-    --accent-fg: #ffffff;
+    --bg: #151210;
+    --fg: #f7f3ee;
+    --muted: #bab1a7;
+    --border: #3e3731;
+    --accent: #ff8a1f;
+    --accent-text: #ffa24d;
+    --accent-fg: #17110b;
   }
 }
 * {
@@ -57,7 +59,7 @@ button {
   padding: 9px 12px;
   border: 0;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--accent) linear-gradient(135deg, #ffb000, #ff8a00 45%, #ff6a00);
   color: var(--accent-fg);
   font: inherit;
   font-weight: 600;
@@ -97,4 +99,18 @@ button:focus-visible {
 footer {
   margin-top: 14px;
   font-size: 12px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.brand img {
+  border-radius: 5px;
+}
+.brand b {
+  color: var(--accent-text);
 }

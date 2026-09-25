@@ -1,27 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"] });
-const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: "italic" });
 const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+
+const description =
+  "Find. Tailor. Apply. Free, open-source job search across dozens of boards — AI scores how well you fit and writes a tailored application for every role.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-  title: { default: "OpenApply — free AI job search and applications", template: "%s · OpenApply" },
-  description:
-    "Free, open-source job search across dozens of boards, with AI that scores every job against your resume and writes tailored applications. Free AI via your own OpenRouter account.",
+  applicationName: "5AM Apply",
+  title: { default: "5AM Apply — Find. Tailor. Apply.", template: "%s · 5AM Apply" },
+  description,
   openGraph: {
-    title: "OpenApply",
-    description: "Free, open-source AI job search and applications.",
+    title: "5AM Apply — Find. Tailor. Apply.",
+    description,
+    siteName: "5AM Apply",
     type: "website",
   },
+  twitter: { card: "summary_large_image", title: "5AM Apply — Find. Tailor. Apply.", description },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0e17" },
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0908" },
   ],
   colorScheme: "light dark",
 };
@@ -31,7 +35,7 @@ const themeScript = `(function(){try{var t=localStorage.getItem("oa-theme");if(t
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${serif.variable} ${mono.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${mono.variable} antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

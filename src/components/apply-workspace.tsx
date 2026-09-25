@@ -241,11 +241,11 @@ export function ApplyWorkspace({
         )}
 
         <Card className="flex gap-3 p-4">
-          <IconTile tone="violet" size="sm">
+          <IconTile tone="primary" size="sm">
             <Puzzle size={15} />
           </IconTile>
           <p className="text-sm leading-relaxed text-muted">
-            The OpenApply browser extension can fill this form in one click.{" "}
+            The 5AM Apply browser extension can fill this form in one click.{" "}
             <Link href="/settings#extension" className="font-semibold text-primary-text underline underline-offset-2">
               Set it up
             </Link>
@@ -253,7 +253,7 @@ export function ApplyWorkspace({
         </Card>
         <p className="flex gap-2 px-1 text-xs leading-relaxed text-muted">
           <ShieldCheck size={15} aria-hidden="true" className="shrink-0 text-success" />
-          OpenApply never submits for you — the employer receives exactly what you send.
+          5AM Apply never submits for you — the employer receives exactly what you send.
         </p>
       </div>
     </div>

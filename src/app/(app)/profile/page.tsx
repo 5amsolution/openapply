@@ -36,7 +36,7 @@ export default async function ProfilePage(props: PageProps<"/profile">) {
     <>
       <PageHeader
         icon={<UserRound size={22} />}
-        tone="pink"
+        tone="primary"
         eyebrow={
           <>
             <Sparkles size={14} aria-hidden="true" /> The AI writes from this
@@ -55,7 +55,7 @@ export default async function ProfilePage(props: PageProps<"/profile">) {
         }
       />
       {sp.welcome && (
-        <Notice tone="success" title="Welcome to OpenApply!" className="mb-5">
+        <Notice tone="success" title="Welcome to 5AM Apply!" className="mb-5">
           Start by uploading your resume — we&apos;ll fill in the rest for you.
         </Notice>
       )}

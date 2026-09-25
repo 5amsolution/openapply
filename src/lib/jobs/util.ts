@@ -1,6 +1,6 @@
 import type { JobInput } from "@/lib/types";
 
-export const USER_AGENT = "OpenApply/1.0 (+https://github.com/openapply/openapply; open-source job search)";
+export const USER_AGENT = "5AMApply/1.0 (+https://github.com/MuhammadAbdullah80/openapply; open-source job search)";
 
 export async function fetchJSON<T>(url: string, init: RequestInit = {}, timeoutMs = 12_000): Promise<T> {
   const res = await fetch(url, {

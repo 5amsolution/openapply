@@ -67,7 +67,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       }}
     >
       <Card className="p-5 sm:p-6">
-        <SectionTitle icon={<UserRound size={18} />} tone="pink" title="Basics" hint="How employers reach you." />
+        <SectionTitle icon={<UserRound size={18} />} tone="primary" title="Basics" hint="How employers reach you." />
         <div className="grid gap-5 md:grid-cols-2">
           <Field name="full_name" label="Full name" defaultValue={profile.full_name} autoComplete="name" />
           <Field name="headline" label="Headline" defaultValue={profile.headline} placeholder="e.g. Senior Product Designer" />
@@ -136,7 +136,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <Card className="p-5 sm:p-6">
         <SectionTitle
           icon={<Briefcase size={18} />}
-          tone="violet"
+          tone="primary"
           title="Experience"
           hint="Your roles, newest first."
           action={
@@ -177,7 +177,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <Card className="p-5 sm:p-6">
         <SectionTitle
           icon={<GraduationCap size={18} />}
-          tone="info"
+          tone="primary"
           title="Education"
           action={
             <Button type="button" variant="secondary" size="sm" onClick={() => setEducation([...education, { school: "" }])}>
@@ -213,7 +213,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <Card className="p-5 sm:p-6">
         <SectionTitle
           icon={<MessageSquareText size={18} />}
-          tone="warn"
+          tone="primary"
           title="Standard answers"
           hint="Answers you give on every form. The AI and the extension reuse them word for word."
         />

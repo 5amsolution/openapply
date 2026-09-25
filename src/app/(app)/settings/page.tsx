@@ -79,7 +79,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
         ))}
       </nav>
 
-      <div className="grid gap-12">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12">
         <SettingsSection id="ai" title="AI" description="Scores your fit and writes your applications. Free with an OpenRouter account.">
           <OpenRouterConnect
             connected={ai?.connected_via === "oauth" && ai.provider === "openrouter"}
@@ -112,7 +112,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
             <SectionTitle
               level={3}
               icon={<BarChart3 size={18} />}
-              tone="warn"
+              tone="primary"
               title="AI usage this month"
               hint={`Billed by your provider, not by us.${ai?.monthly_token_limit ? ` Your cap: ${ai.monthly_token_limit.toLocaleString()} tokens.` : ""}`}
             />
@@ -168,10 +168,10 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
           <ExtensionTokens tokens={tokens ?? []} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} />
         </SettingsSection>
 
-        <SettingsSection id="appearance" title="Appearance" description="Choose how OpenApply looks on this device.">
+        <SettingsSection id="appearance" title="Appearance" description="Choose how 5AM Apply looks on this device.">
           <Card className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <IconTile tone="violet">
+              <IconTile tone="primary">
                 <Palette size={18} />
               </IconTile>
               <div>
@@ -193,7 +193,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
 
 function SettingsSection({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="grid scroll-mt-24 gap-4">
+    <section id={id} aria-labelledby={`${id}-title`} className="grid min-w-0 scroll-mt-24 grid-cols-[minmax(0,1fr)] gap-4">
       <div>
         <h2 id={`${id}-title`} className="text-lg font-bold tracking-tight text-fg">
           {title}

@@ -94,7 +94,7 @@ export default async function DashboardPage() {
     {
       done: steps[0].done,
       icon: FileUp,
-      tone: "pink" as Tone,
+      tone: "primary" as Tone,
       title: "Upload your resume",
       body: "The AI reads it and fills in your profile — it never adds experience you don't have.",
       href: "/profile",
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
     {
       done: steps[2].done,
       icon: Search,
-      tone: "info" as Tone,
+      tone: "primary" as Tone,
       title: "Find your first job",
       body: "Search every board at once, then let the AI score your fit and write the application.",
       href: "/jobs",
@@ -137,12 +137,12 @@ export default async function DashboardPage() {
       {/* Greeting */}
       <header className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div className="min-w-0">
-          <p className="mb-1.5 text-sm font-semibold text-muted">{firstRun ? "Welcome to OpenApply" : "Your job search today"}</p>
+          <p className="mb-1.5 text-sm font-semibold text-muted">{firstRun ? "Welcome to 5AM Apply" : "Your job search today"}</p>
           <h1 className="text-[30px] font-extrabold leading-[1.1] tracking-[-0.03em] text-fg md:text-[38px]">
             {firstRun ? (firstName ? "Hi" : "Hi there") : "Welcome back"}
             {firstName ? (
               <>
-                , <span className="font-serif text-[1.12em] font-normal italic tracking-normal text-primary-text">{firstName}</span>
+                , <span className="text-primary-text">{firstName}</span>
               </>
             ) : null}
           </h1>
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
 
       {lastRun && !lastRun.error && lastRun.finished_at && lastRun.drafts_created > 0 && (
         <Link href="/applications?status=ready" className="lift mb-6 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 shadow-xs">
-          <IconTile tone="violet">
+          <IconTile tone="primary">
             <Sparkles size={18} />
           </IconTile>
           <div className="min-w-0 flex-1">
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
             </div>
             <div className="mb-5 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
               <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#4f46e5,#8b5cf6)] transition-[width] duration-700"
+                className="bg-brand h-full rounded-full transition-[width] duration-700"
                 style={{ width: `${Math.max(4, (coreDone / 3) * 100)}%` }}
               />
             </div>
@@ -238,9 +238,9 @@ export default async function DashboardPage() {
 
           <section aria-label="Good to know" className="grid gap-3 sm:grid-cols-3">
             {[
-              { icon: Sparkles, tone: "violet" as Tone, title: "Free for everyone", body: "No subscription. Your AI runs on your own free OpenRouter account." },
+              { icon: Sparkles, tone: "primary" as Tone, title: "Free for everyone", body: "No subscription. Your AI runs on your own free OpenRouter account." },
               { icon: Hand, tone: "success" as Tone, title: "You stay in control", body: "Nothing is ever submitted for you — you review and send every application." },
-              { icon: Lock, tone: "info" as Tone, title: "Private by default", body: "Your resume and keys are encrypted, and you can delete everything any time." },
+              { icon: Lock, tone: "neutral" as Tone, title: "Private by default", body: "Your resume and keys are encrypted, and you can delete everything any time." },
             ].map((g) => (
               <div key={g.title} className="flex gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs">
                 <IconTile tone={g.tone} size="sm">
@@ -307,7 +307,7 @@ export default async function DashboardPage() {
                             <p className="truncate text-sm text-muted">{a.job?.company}</p>
                           </div>
                           {a.origin === "autopilot" && (
-                            <Badge tone="violet" className="hidden sm:inline-flex">
+                            <Badge className="hidden sm:inline-flex">
                               <Bot size={12} aria-hidden="true" /> Autopilot
                             </Badge>
                           )}
@@ -326,7 +326,7 @@ export default async function DashboardPage() {
                     icon={<CheckCircle2 size={18} />}
                     tone="success"
                     title="Finish setting up"
-                    hint={`${stepsDone} of ${steps.length} done — each one makes OpenApply work harder for you`}
+                    hint={`${stepsDone} of ${steps.length} done — each one makes 5AM Apply work harder for you`}
                   />
                   <div className="mb-4 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
                     <div className="h-full rounded-full bg-success" style={{ width: `${(stepsDone / steps.length) * 100}%` }} />
@@ -374,7 +374,7 @@ export default async function DashboardPage() {
                         <div
                           className={cn(
                             "w-full rounded-lg transition-[height] duration-700",
-                            last ? "bg-[linear-gradient(180deg,#8b5cf6,#4f46e5)]" : d.n ? "bg-primary-soft-hover" : "bg-surface-3",
+                            last ? "bg-brand" : d.n ? "bg-primary-soft-hover" : "bg-surface-3",
                           )}
                           style={{ height: `${Math.max(8, (d.n / weekMax) * 84)}px` }}
                         />
@@ -390,46 +390,38 @@ export default async function DashboardPage() {
                 )}
               </Card>
 
-              {/* Autopilot */}
-              <section
-                className="relative overflow-hidden rounded-2xl p-6 text-white shadow-md"
-                style={{ background: "var(--brand-deep)" }}
-                aria-labelledby="autopilot-card"
-              >
-                <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#8b5cf6] opacity-30 blur-3xl" aria-hidden="true" />
+              {/* Autopilot — always dark, like the logo */}
+              <section className="sunrise relative overflow-hidden rounded-2xl border border-border p-6 shadow-md" aria-labelledby="autopilot-card">
                 <div className="relative">
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15" aria-hidden="true">
+                    <IconTile tone="primary">
                       <Bot size={19} />
-                    </span>
-                    <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-bold">{rules > 0 ? `${rules} active` : "Off"}</span>
+                    </IconTile>
+                    <Badge tone={rules > 0 ? "success" : "neutral"}>{rules > 0 ? `${rules} active` : "Off"}</Badge>
                   </div>
-                  <h2 id="autopilot-card" className="mt-5 text-xl font-bold tracking-tight">
+                  <h2 id="autopilot-card" className="mt-5 text-xl font-bold tracking-tight text-fg">
                     Autopilot
                   </h2>
-                  <p className="mt-1 text-sm leading-relaxed text-[#e0e7ff]">
+                  <p className="mt-1 text-sm leading-relaxed text-muted">
                     {rules > 0 ? "Finds, scores and writes applications for you every day." : "Save a search and it runs every day — new matches arrive ready to send."}
                   </p>
-                  <ul className="mt-5 grid gap-2 text-sm">
+                  <ul className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-2 text-sm">
                     {(runs ?? []).length === 0 ? (
-                      <li className="rounded-xl bg-white/10 px-3 py-2.5 text-[#e0e7ff]">No runs yet.</li>
+                      <li className="rounded-xl border border-border bg-surface px-3 py-2.5 text-muted">No runs yet.</li>
                     ) : (
                       runs!.slice(0, 3).map((r) => (
-                        <li key={r.id} className="flex items-center justify-between gap-2 rounded-xl bg-white/10 px-3 py-2.5">
+                        <li key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-fg">
                           <span className="truncate">
-                            {r.error ? <span className="text-[#fecaca]">{r.error}</span> : !r.finished_at ? "Running now…" : `${r.drafts_created} written · ${r.jobs_scored} scored`}
+                            {r.error ? <span className="text-danger">{r.error}</span> : !r.finished_at ? "Running now…" : `${r.drafts_created} written · ${r.jobs_scored} scored`}
                           </span>
-                          <span className="shrink-0 text-xs text-[#c7d2fe]">{timeAgo(r.started_at)}</span>
+                          <span className="shrink-0 text-xs text-muted">{timeAgo(r.started_at)}</span>
                         </li>
                       ))
                     )}
                   </ul>
-                  <Link
-                    href="/autopilot"
-                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#312e81] shadow-sm transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
-                  >
+                  <ButtonLink href="/autopilot" className="mt-5">
                     {rules > 0 ? "Manage autopilot" : "Turn on autopilot"} <ArrowRight size={16} aria-hidden="true" />
-                  </Link>
+                  </ButtonLink>
                 </div>
               </section>
             </div>

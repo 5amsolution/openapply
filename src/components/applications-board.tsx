@@ -121,7 +121,7 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
                   <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                     <ScoreBadge score={a.match_score} />
                     {a.origin === "autopilot" && (
-                      <Badge tone="violet">
+                      <Badge>
                         <Bot size={12} aria-hidden="true" /> Autopilot
                       </Badge>
                     )}

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Bot, Check, Search, ShieldCheck, Sparkles } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { Logo, LogoMark } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 const BENEFITS = [
-  { icon: Search, title: "Every job board in one search", body: "Remote boards and top company career pages, scored against your resume." },
-  { icon: Sparkles, title: "Applications written for you", body: "A tailored cover letter and answers for each job — never invented." },
-  { icon: Bot, title: "Autopilot while you sleep", body: "New matches arrive each morning, ready for you to review and send." },
+  { icon: Search, title: "Find", body: "Every job board and hundreds of career pages in one search, scored against your resume." },
+  { icon: Sparkles, title: "Tailor", body: "A cover letter and answers written for each job — from your real experience, never invented." },
+  { icon: Bot, title: "Apply", body: "Everything ready to copy into the employer's form. Autopilot finds new matches every day." },
 ];
 
 export default async function LoginPage(props: PageProps<"/login">) {
@@ -24,53 +24,47 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      {/* Brand panel */}
-      <section
-        className="relative hidden overflow-hidden p-10 text-white lg:flex lg:flex-col xl:p-14"
-        style={{ background: "var(--brand-deep)" }}
-        aria-label="About OpenApply"
-      >
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-[#8b5cf6] opacity-25 blur-3xl" />
-          <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#ec4899] opacity-20 blur-3xl" />
-          <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-[#6366f1] opacity-30 blur-3xl" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" />
-        </div>
+      {/* Brand panel — always dark, like the logo */}
+      <section className="sunrise relative hidden overflow-hidden p-10 lg:flex lg:flex-col xl:p-14" aria-label="About 5AM Apply">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgb(255_255_255/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.035)_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]"
+          aria-hidden="true"
+        />
 
         <div className="relative">
-          <Logo invert />
+          <Logo />
         </div>
 
-        <div className="relative my-auto max-w-md py-12">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold text-[#e0e7ff] ring-1 ring-white/15">
-            <ShieldCheck size={15} aria-hidden="true" /> Free for every job seeker
+        <div className="relative my-auto max-w-md py-10">
+          <LogoMark size={96} tile={false} className="drop-shadow-[0_0_28px_rgb(255_122_0/0.45)]" />
+          <p className="mt-6 text-[44px] font-extrabold leading-[1.05] tracking-[-0.035em] text-fg">
+            Find. Tailor. <span className="text-brand">Apply.</span>
           </p>
-          <p className="mt-6 text-[44px] font-extrabold leading-[1.05] tracking-[-0.035em]">
-            Your next job,{" "}
-            <span className="font-serif text-[1.1em] font-normal italic tracking-normal text-[#c7d2fe]">found for you.</span>
-          </p>
-          <ul className="mt-10 grid gap-6">
+          <p className="mt-3 text-[15px] leading-relaxed text-muted">The free job search that does the busywork — so you can focus on landing the job.</p>
+          <ul className="mt-9 grid gap-6">
             {BENEFITS.map((b) => (
               <li key={b.title} className="flex gap-4">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/15" aria-hidden="true">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-fg ring-1 ring-white/10" aria-hidden="true">
                   <b.icon size={18} />
                 </span>
                 <div>
-                  <p className="font-bold">{b.title}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-[#e0e7ff]">{b.body}</p>
+                  <p className="font-bold text-fg">{b.title}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-muted">{b.body}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="relative flex items-center gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm animate-[oa-float_6s_ease-in-out_infinite]">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#4338ca]" aria-hidden="true">
+        <div className="relative flex items-center gap-3 rounded-2xl border border-border bg-surface/80 p-4 backdrop-blur-sm animate-[oa-float_6s_ease-in-out_infinite]">
+          <span className="bg-brand inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary-fg" aria-hidden="true">
             <Check size={20} strokeWidth={3} />
           </span>
           <div>
-            <p className="font-bold">3 applications ready this morning</p>
-            <p className="text-sm text-[#e0e7ff]">Written overnight by Autopilot · 92% best fit</p>
+            <p className="font-bold text-fg">3 applications ready this morning</p>
+            <p className="flex items-center gap-1.5 text-sm text-muted">
+              <ShieldCheck size={14} aria-hidden="true" /> Written by Autopilot · you review and send
+            </p>
           </div>
         </div>
       </section>

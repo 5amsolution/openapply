@@ -1,4 +1,4 @@
-// OpenApply popup: pick the application for this page and fill the form.
+// 5AM Apply popup: pick the application for this page and fill the form.
 
 const $ = (id) => document.getElementById(id);
 const EMBED_ORIGINS = ["https://job-boards.greenhouse.io/*", "https://boards.greenhouse.io/*", "https://jobs.lever.co/*"];
@@ -37,7 +37,7 @@ async function load() {
 
   if (!config.server || !config.token) {
     $("settings").hidden = false;
-    status("Connect the extension to your OpenApply account first.");
+    status("Connect the extension to your 5AM Apply account first.");
     return;
   }
 
@@ -108,7 +108,7 @@ $("fill").addEventListener("click", async () => {
   $("fill").disabled = true;
   $("result").textContent = "Filling…";
   try {
-    // On OpenApply's own apply page the employer form is an embedded frame from another
+    // On 5AM Apply's own apply page the employer form is an embedded frame from another
     // site, which needs a one-time permission for that site (asked from this click).
     if (config.server && tab.url?.startsWith(config.server)) {
       const granted = await chrome.permissions.request({ origins: EMBED_ORIGINS });

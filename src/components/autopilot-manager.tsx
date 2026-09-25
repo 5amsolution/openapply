@@ -385,7 +385,7 @@ function RuleForm({
                 <label
                   key={s.id}
                   className={cn(
-                    "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary",
+                    "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus",
                     on ? "border-transparent bg-primary-soft text-primary-soft-fg" : "border-border-strong bg-surface text-muted hover:text-fg",
                   )}
                 >

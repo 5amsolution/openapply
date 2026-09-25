@@ -1,68 +1,86 @@
 @import "tailwindcss";
 
 /*
- * OpenApply design tokens.
+ * 5AM Apply design tokens — colours taken from the logo: amber → orange
+ * gradient on near-black, with warm neutrals around it.
  *
  * Every text/background pair below is checked for WCAG AA contrast (4.5:1 for
  * text) in both themes — see the "…-fg" token that goes with each "…-soft"
- * background. Components use these tokens only; no raw hex in components.
+ * background. Orange is too light for white text, so anything filled with the
+ * brand orange uses near-black text (7:1+), like the logo itself.
  *
  * Theme: follows the system by default. The theme switcher stores "light" or
  * "dark" and sets data-theme on <html>, which pins color-scheme — and
- * light-dark() picks the matching value everywhere.
+ * light-dark() picks the matching value everywhere. Elements with
+ * `scheme-dark` or `.sunrise` get the dark values (the always-dark brand areas).
  */
 :root {
   color-scheme: light dark;
+}
 
-  --bg: light-dark(#f6f7fb, #0b0e17);
-  --surface: light-dark(#ffffff, #121725);
-  --surface-2: light-dark(#f2f4f9, #1a2031);
-  --surface-3: light-dark(#e7eaf2, #232a3e);
-  --fg: light-dark(#101828, #eef1f8);
-  --muted: light-dark(#475467, #aab3c7);
-  --subtle: light-dark(#5d6679, #9099ae);
-  --border: light-dark(#e4e7ef, #252c40);
-  --border-strong: light-dark(#cdd2de, #343c55);
+/*
+ * Lightning CSS compiles light-dark() into a variable toggle that resolves where
+ * a token is *declared*, so the tokens are declared on every theme root: the
+ * page, and each always-dark brand area (`scheme-dark`, `.sunrise`).
+ */
+:root,
+.scheme-dark,
+.sunrise {
+  --bg: light-dark(#faf8f5, #0b0908);
+  --surface: light-dark(#ffffff, #151210);
+  --surface-2: light-dark(#f5f1ec, #1d1916);
+  --surface-3: light-dark(#ece6df, #28231f);
+  --fg: light-dark(#18130e, #f7f3ee);
+  --muted: light-dark(#574f47, #bab1a7);
+  --subtle: light-dark(#675e55, #9d9389);
+  --border: light-dark(#e8e1d9, #2b2622);
+  --border-strong: light-dark(#d4cbc0, #3e3731);
 
-  --primary: light-dark(#4f46e5, #5b54f0);
-  --primary-hover: light-dark(#4338ca, #6158f3);
-  --primary-fg: #ffffff;
-  --primary-text: light-dark(#4338ca, #a5acfc);
-  --primary-soft: light-dark(#eef0ff, #1f2450);
-  --primary-soft-hover: light-dark(#e2e5ff, #282e62);
-  --primary-soft-fg: light-dark(#3730a3, #c9ceff);
+  --primary: light-dark(#ff7a00, #ff8a1f);
+  --primary-hover: light-dark(#ff8c1a, #ff9c40);
+  --primary-fg: #17110b;
+  --primary-text: light-dark(#a93800, #ffa24d);
+  --primary-soft: light-dark(#fff0e1, #2c1a0a);
+  --primary-soft-hover: light-dark(#ffe3c7, #3a230e);
+  --primary-soft-fg: light-dark(#8a3000, #ffc58f);
+  --focus: light-dark(#a93800, #ff9c40);
 
   --success: light-dark(#067647, #4ade9a);
-  --success-soft: light-dark(#e6f6ee, #0e2a20);
+  --success-soft: light-dark(#e6f5ec, #0f291e);
   --success-soft-fg: light-dark(#05603a, #86efbf);
-  --warn: light-dark(#a94206, #fbbf4a);
-  --warn-soft: light-dark(#fef3e2, #2d2210);
-  --warn-soft-fg: light-dark(#93370d, #fcd58a);
+  --warn: light-dark(#865700, #f2c14e);
+  --warn-soft: light-dark(#fcf3d7, #29220f);
+  --warn-soft-fg: light-dark(#6b4600, #f7d77f);
   --danger: light-dark(#b42318, #f97066);
   --danger-solid: light-dark(#d92d20, #f04438);
-  --danger-solid-fg: light-dark(#ffffff, #0b0e17);
-  --danger-soft: light-dark(#feeeec, #34161a);
+  --danger-solid-fg: light-dark(#ffffff, #17110b);
+  --danger-soft: light-dark(#fdecea, #33161a);
   --danger-soft-fg: light-dark(#a01f14, #fda29b);
   --info: light-dark(#026aa2, #4cc3f7);
-  --info-soft: light-dark(#e6f4fb, #0b2635);
+  --info-soft: light-dark(#e6f2f9, #0b2432);
   --info-soft-fg: light-dark(#065986, #8fd8fa);
-  --violet-soft: light-dark(#f3eeff, #251b45);
+  --violet: light-dark(#6d28d9, #a78bfa);
+  --violet-soft: light-dark(#f2edfd, #241a3d);
   --violet-soft-fg: light-dark(#5b21b6, #d6c6ff);
-  --pink-soft: light-dark(#fdeef6, #36182b);
+  --pink-soft: light-dark(#fcedf3, #34182a);
   --pink-soft-fg: light-dark(#9d174d, #f9b8d8);
 
-  --ring: light-dark(rgb(79 70 229 / 0.28), rgb(129 124 255 / 0.45));
-  --control-off: light-dark(#8a94a6, #4a5470);
-  --glow-a: light-dark(rgb(99 102 241 / 0.1), rgb(99 102 241 / 0.16));
-  --glow-b: light-dark(rgb(236 72 153 / 0.07), rgb(168 85 247 / 0.1));
+  --ring: light-dark(rgb(255 122 0 / 0.3), rgb(255 138 31 / 0.38));
+  --control-off: light-dark(#8a8178, #4d4640);
+  --glow-a: light-dark(rgb(255 138 0 / 0.11), rgb(255 122 0 / 0.14));
+  --glow-b: light-dark(rgb(255 184 0 / 0.1), rgb(233 78 10 / 0.1));
 
-  --shadow-xs: 0 1px 2px light-dark(rgb(16 24 40 / 0.05), rgb(0 0 0 / 0.3));
-  --shadow-sm: 0 1px 3px light-dark(rgb(16 24 40 / 0.07), rgb(0 0 0 / 0.35)), 0 1px 2px light-dark(rgb(16 24 40 / 0.04), rgb(0 0 0 / 0.25));
-  --shadow-md: 0 10px 20px -6px light-dark(rgb(16 24 40 / 0.1), rgb(0 0 0 / 0.5)), 0 3px 6px -3px light-dark(rgb(16 24 40 / 0.06), rgb(0 0 0 / 0.35));
-  --shadow-lg: 0 24px 48px -12px light-dark(rgb(16 24 40 / 0.18), rgb(0 0 0 / 0.6)), 0 6px 12px -6px light-dark(rgb(16 24 40 / 0.08), rgb(0 0 0 / 0.4));
+  --shadow-xs: 0 1px 2px light-dark(rgb(40 24 10 / 0.05), rgb(0 0 0 / 0.3));
+  --shadow-sm: 0 1px 3px light-dark(rgb(40 24 10 / 0.07), rgb(0 0 0 / 0.35)), 0 1px 2px light-dark(rgb(40 24 10 / 0.04), rgb(0 0 0 / 0.25));
+  --shadow-md: 0 10px 20px -6px light-dark(rgb(40 24 10 / 0.1), rgb(0 0 0 / 0.5)), 0 3px 6px -3px light-dark(rgb(40 24 10 / 0.06), rgb(0 0 0 / 0.35));
+  --shadow-lg: 0 24px 48px -12px light-dark(rgb(40 24 10 / 0.18), rgb(0 0 0 / 0.6)), 0 6px 12px -6px light-dark(rgb(40 24 10 / 0.08), rgb(0 0 0 / 0.4));
 
-  /* Deep brand panel (login, calls to action). White text on every stop is 9:1+. */
-  --brand-deep: linear-gradient(140deg, #1e1b4b 0%, #312e81 48%, #4c1d95 100%);
+  /* The logo's amber → orange ribbon. Near-black text on every stop is 6.5:1+. */
+  --brand-gradient: linear-gradient(135deg, #ffb000 0%, #ff8a00 45%, #ff6a00 100%);
+  /* "5AM sunrise": near-black sky with an orange glow on the horizon. */
+  --brand-deep:
+    radial-gradient(ellipse 85% 60% at 50% 118%, rgb(255 106 0 / 0.42), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 88% -8%, rgb(255 176 0 / 0.12), transparent 70%), #0b0908;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -122,6 +140,7 @@
   --color-pink-soft: var(--pink-soft);
   --color-pink-soft-fg: var(--pink-soft-fg);
   --color-ring: var(--ring);
+  --color-focus: var(--focus);
   --color-control-off: var(--control-off);
 
   --shadow-xs: var(--shadow-xs);
@@ -130,7 +149,6 @@
   --shadow-lg: var(--shadow-lg);
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -169,7 +187,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 
@@ -197,6 +215,25 @@
   summary::-webkit-details-marker {
     display: none;
   }
+}
+
+/* Brand fills — the logo's gradient. Pair with near-black text (text-primary-fg). */
+.bg-brand {
+  background-color: var(--primary);
+  background-image: var(--brand-gradient);
+}
+/* Gradient text for large display type on dark brand areas only. */
+.text-brand {
+  background-image: linear-gradient(120deg, #ffc233 0%, #ff9a1a 40%, #ff6a00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Always-dark brand area with the sunrise glow (logo backdrop). */
+.sunrise {
+  color-scheme: dark;
+  background: var(--brand-deep);
+  color: var(--fg);
 }
 
 /* Soft brand glow behind app pages — decorative only, never under text contrast checks. */

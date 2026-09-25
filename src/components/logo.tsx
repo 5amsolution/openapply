@@ -1,30 +1,41 @@
 import Link from "next/link";
 import { cn } from "@/components/ui";
 
-export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+/**
+ * The 5AM Apply "5" mark. By default it sits on a near-black rounded tile (like
+ * an app icon) so it looks right on light and dark backgrounds alike.
+ */
+export function LogoMark({ size = 32, tile = true, className }: { size?: number; tile?: boolean; className?: string }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-[10px] bg-[linear-gradient(135deg,#4f46e5_0%,#7c3aed_100%)] shadow-[0_4px_12px_-2px_rgb(79_70_229/0.45)]",
+        "inline-flex shrink-0 items-center justify-center",
+        tile && "overflow-hidden rounded-[24%] bg-[#0b0908] shadow-[0_6px_16px_-6px_rgb(255_106_0/0.55)] ring-1 ring-white/10",
         className,
       )}
       style={{ width: size, height: size }}
     >
-      <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 24 24" fill="none">
-        <path d="M5.5 12.5l4 4 9-9.5" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M18.6 1.8l.55 1.5 1.5.55-1.5.55-.55 1.5-.55-1.5-1.5-.55 1.5-.55z" fill="#fff" />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={size > 72 ? "/brand/mark.webp" : "/brand/mark-192.webp"}
+        alt=""
+        width={size}
+        height={size}
+        className={tile ? "h-[88%] w-[88%]" : "h-full w-full"}
+        draggable={false}
+      />
     </span>
   );
 }
 
-export function Logo({ href = "/", className, invert }: { href?: string; className?: string; invert?: boolean }) {
+/** Mark + "5AM APPLY" wordmark, coloured like the logo (orange "5AM", light/dark "APPLY"). */
+export function Logo({ href = "/", className, size = 32 }: { href?: string; className?: string; size?: number }) {
   return (
-    <Link href={href} className={cn("inline-flex items-center gap-2.5 rounded-lg text-[17px] font-extrabold tracking-[-0.02em]", className)}>
-      <LogoMark />
-      <span className={invert ? "text-white" : "text-fg"}>
-        Open<span className={invert ? "text-[#c7d2fe]" : "text-primary-text"}>Apply</span>
+    <Link href={href} className={cn("inline-flex items-center gap-2.5 rounded-lg", className)}>
+      <LogoMark size={size} />
+      <span className="whitespace-nowrap text-[16px] font-extrabold uppercase leading-none tracking-[0.02em]">
+        <span className="text-primary-text">5AM</span> <span className="text-fg">Apply</span>
       </span>
     </Link>
   );

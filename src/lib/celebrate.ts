@@ -2,7 +2,7 @@
 // sent). Pure DOM + Web Animations — no dependencies, skipped for people who
 // prefer reduced motion.
 
-const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#0ea5e9"];
+const COLORS = ["#ffb000", "#ff8a00", "#ff6a00", "#e94e0a", "#ffd166", "#17110b"];
 
 export function celebrate(from?: { x: number; y: number }) {
   if (typeof window === "undefined") return;

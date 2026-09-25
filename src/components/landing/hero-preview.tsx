@@ -12,7 +12,7 @@ const JOBS: { title: string; company: string; initials: string; tone: Tone; plac
 
 export function HeroPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-[540px] pb-28 pt-4 sm:pb-24 sm:pt-10 lg:mr-0" aria-hidden="true">
+    <div className="relative mx-auto w-full max-w-[600px] pb-28 pt-4 text-left sm:pb-24 sm:pt-10" aria-hidden="true">
       {/* App window */}
       <div className="relative rounded-2xl border border-border bg-surface shadow-lg">
         <div className="flex items-center gap-2 rounded-t-2xl border-b border-border bg-surface-2 px-4 py-3">
@@ -81,7 +81,7 @@ export function HeroPreview() {
 
       {/* Toast */}
       <div className="absolute -bottom-2 right-0 flex items-center gap-3 rounded-2xl bg-fg py-3 pl-3 pr-4 text-bg shadow-lg animate-[oa-float_6s_ease-in-out_0.6s_infinite] sm:bottom-8 sm:-right-4">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6366f1,#a855f7)] text-white">
+        <span className="bg-brand flex h-8 w-8 items-center justify-center rounded-full text-primary-fg">
           <Check size={16} strokeWidth={3} />
         </span>
         <div>

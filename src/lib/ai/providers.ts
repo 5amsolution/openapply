@@ -282,7 +282,7 @@ async function chatCompletionOnce(
       "content-type": "application/json",
       authorization: `Bearer ${config.apiKey}`,
       ...(config.provider === "openrouter"
-        ? { "x-title": "OpenApply", "http-referer": process.env.NEXT_PUBLIC_SITE_URL || "https://github.com/MuhammadAbdullah80/openapply" }
+        ? { "x-title": "5AM Apply", "http-referer": process.env.NEXT_PUBLIC_SITE_URL || "https://github.com/MuhammadAbdullah80/openapply" }
         : {}),
     },
     body: JSON.stringify({
@@ -405,7 +405,7 @@ async function assertPublicUrl(raw: string) {
   const addresses = await lookup(url.hostname, { all: true }).catch(() => []);
   if (addresses.length === 0) throw new AIError(`Could not resolve ${url.hostname}.`);
   if (addresses.some((a) => isPrivateAddress(a.address))) {
-    throw new AIError("Private or local network addresses aren't allowed on this server. Self-host OpenApply to use a local model.");
+    throw new AIError("Private or local network addresses aren't allowed on this server. Self-host 5AM Apply to use a local model.");
   }
 }
 

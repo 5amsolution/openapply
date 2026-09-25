@@ -1,10 +1,14 @@
-# OpenApply
+<p align="center"><img src="public/brand/logo.webp" width="220" alt="5AM Apply logo" /></p>
+
+# 5AM Apply
+
+**Find. Tailor. Apply.**
 
 **Free, open-source AI job search and application assistant.** Search a dozen job boards at once, have AI score
 every posting against your resume, and get a tailored cover letter, resume summary and screening answers for each
 one. A browser extension fills the application form, and you review it and click submit.
 
-AI is free for users: they click **Connect with OpenRouter**, approve OpenApply on OpenRouter's site (no key to copy
+AI is free for users: they click **Connect with OpenRouter**, approve 5AM Apply on OpenRouter's site (no key to copy
 or paste), and use free models, about 50 AI actions a day, or 1,000 after a one-time $10 credit purchase. Each user
 connects their own account, so they can set a spending limit or revoke access there anytime, and the hosted app
 never pays for anyone's AI. Anyone who prefers can instead paste their own Anthropic, OpenAI, Gemini, Groq or
@@ -36,7 +40,7 @@ OpenAI-compatible key under Settings → Advanced.
 ### Why it doesn't auto-submit
 
 Job boards' terms prohibit automated submissions, most forms have CAPTCHAs, and unreviewed AI applications hurt
-candidates. OpenApply automates everything up to the submit button, which takes applying down to about a minute per
+candidates. 5AM Apply automates everything up to the submit button, which takes applying down to about a minute per
 job.
 
 ## Stack
@@ -110,7 +114,7 @@ service instead.
 
 ## Job data
 
-Listings belong to the boards they come from. OpenApply shows the source on every job and links back to the original
+Listings belong to the boards they come from. 5AM Apply shows the source on every job and links back to the original
 posting, as the Remotive, Remote OK, Jobicy and Himalayas APIs require. Don't republish their listings to other job
 aggregators.
 

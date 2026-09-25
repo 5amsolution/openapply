@@ -1,6 +1,6 @@
 import type { Job } from "@/lib/types";
 
-// Which employer application forms can be shown inside OpenApply.
+// Which employer application forms can be shown inside 5AM Apply.
 // Greenhouse publishes an official embeddable form; Lever's apply page
 // allows framing. Ashby and most boards forbid it (X-Frame-Options: DENY).
 

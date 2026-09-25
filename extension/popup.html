@@ -2,25 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>OpenApply</title>
+    <title>5AM Apply</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header>
-      <strong>OpenApply</strong>
+      <strong class="brand"><img src="icons/icon32.png" width="20" height="20" alt="" /> <span><b>5AM</b> Apply</span></strong>
       <button id="toggle-settings" class="link" type="button">Settings</button>
     </header>
 
     <section id="settings" hidden>
       <label>
         Server URL
-        <input id="server" type="url" placeholder="https://your-openapply-domain.com" />
+        <input id="server" type="url" placeholder="https://openapply-production.up.railway.app" />
       </label>
       <label>
         Extension token
         <input id="token" type="password" placeholder="oa_…" />
       </label>
-      <p class="muted">Create a token in OpenApply → Settings → Autofill browser extension.</p>
+      <p class="muted">Create a token in 5AM Apply → Settings → Autofill browser extension.</p>
       <button id="save-settings" type="button">Save</button>
     </section>
 
@@ -43,7 +43,7 @@
       <p id="result" class="muted"></p>
     </section>
 
-    <footer class="muted">Review every field before you submit. OpenApply never submits for you.</footer>
+    <footer class="muted">Review every field before you submit. 5AM Apply never submits for you.</footer>
     <script src="popup.js"></script>
   </body>
 </html>
