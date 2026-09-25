@@ -55,7 +55,7 @@ export function JSearchKeyCard({ info, siteKeyAvailable }: { info: Info; siteKey
           </div>
           <p className="mt-1 text-sm leading-relaxed text-muted">
             These come from JSearch, which gathers listings from LinkedIn, Indeed, Glassdoor and more. Add your own free key and
-            your searches use your own 200 requests a month — results from your key are visible only to you.
+            your searches use your own 200 requests a month. Results from your key are visible only to you.
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function JSearchKeyCard({ info, siteKeyAvailable }: { info: Info; siteKey
           <li className="flex gap-3">
             <Step n={2} />
             <span>
-              Subscribe to the free <b>Basic</b> plan — no card needed.
+              Subscribe to the free <b>Basic</b> plan. No card needed.
             </span>
           </li>
           <li className="flex gap-3">

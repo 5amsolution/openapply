@@ -32,7 +32,7 @@ export function StatusSelect({ id, status, compact, inputId }: { id: string; sta
           if (!res.ok) throw new Error(res.error);
           if (next === "offer" || next === "interviewing") {
             celebrate();
-            toast(next === "offer" ? "An offer — congratulations!" : "An interview — nice work!", { tone: "celebrate" });
+            toast(next === "offer" ? "An offer! Congratulations!" : "An interview! Nice work!", { tone: "celebrate" });
           } else toast(`Moved to ${STATUS_LABELS[next]}`);
           router.refresh();
         } catch (err) {

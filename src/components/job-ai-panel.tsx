@@ -115,7 +115,7 @@ export function JobAIPanel({
           )}
           {!aiReady && (
             <Notice tone="primary">
-              AI is free to turn on. <Link href="/settings">Connect in Settings</Link> — it takes one click.
+              AI is free to turn on. <Link href="/settings">Connect in Settings</Link>. It takes one click.
             </Notice>
           )}
 

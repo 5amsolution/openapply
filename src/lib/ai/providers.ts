@@ -40,10 +40,10 @@ export const PROVIDERS: ProviderInfo[] = [
     label: "Anthropic (Claude)",
     keyUrl: "https://console.anthropic.com/settings/keys",
     models: [
-      { id: "claude-opus-5", label: "Claude Opus 5 — best quality" },
-      { id: "claude-sonnet-5", label: "Claude Sonnet 5 — balanced" },
-      { id: "claude-haiku-4-5", label: "Claude Haiku 4.5 — cheapest, fastest" },
-      { id: "claude-fable-5", label: "Claude Fable 5 — most capable, premium price" },
+      { id: "claude-opus-5", label: "Claude Opus 5 (best quality)" },
+      { id: "claude-sonnet-5", label: "Claude Sonnet 5 (balanced)" },
+      { id: "claude-haiku-4-5", label: "Claude Haiku 4.5 (cheapest, fastest)" },
+      { id: "claude-fable-5", label: "Claude Fable 5 (most capable, premium price)" },
     ],
   },
   {
@@ -74,7 +74,7 @@ export const PROVIDERS: ProviderInfo[] = [
     models: [
       ...FREE_OPENROUTER_MODELS.map((id) => ({
         id,
-        label: id === "openrouter/free" ? "Auto — best available free model (recommended)" : `${id.replace(/:free$/, "")} — free`,
+        label: id === "openrouter/free" ? "Auto: best available free model (recommended)" : `${id.replace(/:free$/, "")} (free)`,
       })),
       { id: "anthropic/claude-sonnet-5", label: "Claude Sonnet 5 (paid, best writing)" },
       { id: "anthropic/claude-haiku-4-5", label: "Claude Haiku 4.5 (paid, cheap)" },
@@ -220,7 +220,7 @@ async function openAICompatibleObject<T extends z.ZodType>(
     usage.outputTokens += outputTokens;
 
     const raw = extractJSON(text);
-    // Only repair answers that are mostly there — an empty or off-topic object must be retried, not padded.
+    // Only repair answers that are mostly there, an empty or off-topic object must be retried, not padded.
     const repairable = raw !== null && mostlyPresent(raw, jsonSchema as JSONSchemaNode);
     const parsed = opts.schema.safeParse(repairable ? coerceToSchema(raw, jsonSchema as JSONSchemaNode) : raw);
     if (parsed.success) return { data: parsed.data, usage };
@@ -241,7 +241,7 @@ async function openAICompatibleObject<T extends z.ZodType>(
       { role: "assistant", content: text.slice(0, 20_000) },
       {
         role: "user",
-        content: `That response was not valid for the schema (${issues || "not a JSON object"}). Reply again with only the corrected JSON object — every required field present, strings instead of null.`,
+        content: `That response was not valid for the schema (${issues || "not a JSON object"}). Reply again with only the corrected JSON object: every required field present, strings instead of null.`,
       },
     );
   }
@@ -444,7 +444,7 @@ function providerError(config: AIConfig, status: number, body: string): AIError 
     );
   }
   if ((status === 429 || status === 502 || status === 503) && free) {
-    return new AIError("The free AI models are busy right now. Please try again in a minute — or pick a paid model in Settings for reliable speed.", status);
+    return new AIError("The free AI models are busy right now. Please try again in a minute, or pick a paid model in Settings for reliable speed.", status);
   }
   if (status === 429) return new AIError("The AI provider is rate-limiting requests. Please try again shortly.", 429);
   return new AIError(`AI provider error ${status}: ${body.slice(0, 300)}`, status);

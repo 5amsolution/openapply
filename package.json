@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/pack-extension.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,7 +14,8 @@
     "db:types": "supabase gen types typescript --local --schema public > src/lib/database.types.ts",
     "setup:supabase": "node scripts/setup-supabase.mjs",
     "deploy:railway": "node scripts/deploy-railway.mjs",
-    "cron": "node scripts/cron.mjs"
+    "cron": "node scripts/cron.mjs",
+    "pack:extension": "node scripts/pack-extension.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

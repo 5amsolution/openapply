@@ -30,7 +30,7 @@ const EMPTY_HINT: Partial<Record<ApplicationStatus, string>> = {
   applied: "Drag a card here once you've sent it",
   interviewing: "Your interviews will show up here",
   offer: "Where the good news goes",
-  rejected: "Nothing here — and that's fine",
+  rejected: "Nothing here, and that's fine",
 };
 
 /** Kanban board: drag cards between columns (desktop) or use the status menu (touch). */
@@ -50,7 +50,7 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
       if (!res.ok) throw new Error(res.error);
       if (to === "offer" || to === "interviewing") {
         celebrate();
-        toast(to === "offer" ? "An offer — congratulations!" : "An interview — nice work!", { tone: "celebrate" });
+        toast(to === "offer" ? "An offer! Congratulations!" : "An interview! Nice work!", { tone: "celebrate" });
       } else {
         toast(`${item.job?.title ?? "Application"} → ${STATUS_LABELS[to]}`);
       }
@@ -72,7 +72,7 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
           <section
             key={status}
             className={cn(
-              "flex w-[82vw] max-w-[290px] shrink-0 snap-start flex-col rounded-2xl border border-border bg-surface-2 p-2 transition-[box-shadow,background-color] duration-150 md:w-[262px]",
+              "flex w-[82vw] max-w-[290px] shrink-0 snap-start flex-col rounded-2xl border border-border bg-sunken p-2 transition-[box-shadow,background-color] duration-150 md:w-auto md:min-w-[228px] md:max-w-none md:flex-1 md:basis-0",
               isOver && "bg-primary-soft ring-2 ring-primary",
               single && "w-full max-w-none md:w-full",
             )}
@@ -106,7 +106,7 @@ export function ApplicationsBoard({ items: initial, columns }: { items: BoardIte
                     setOver(null);
                   }}
                   className={cn(
-                    "group relative rounded-xl border border-border bg-surface p-3 shadow-xs transition-[transform,box-shadow,border-color,opacity] duration-150 hover:border-border-strong hover:shadow-md md:cursor-grab md:active:cursor-grabbing",
+                    "group relative rounded-xl border border-border bg-surface p-3 shadow-xs transition-[translate,box-shadow,border-color,opacity] duration-200 hover:-translate-y-0.5 hover:border-hover-border hover:shadow-lg md:cursor-grab md:active:cursor-grabbing",
                     dragId === a.id && "rotate-1 opacity-60",
                   )}
                 >

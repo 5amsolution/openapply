@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const body = (await res.json().catch(() => ({}))) as { key?: string; error?: { message?: string } | string };
     if (!res.ok || !body.key) {
       const msg = typeof body.error === "string" ? body.error : body.error?.message;
-      return done("error", `OpenRouter didn't accept the approval (${msg || res.status}). It may have expired — please click Connect again.`);
+      return done("error", `OpenRouter didn't accept the approval (${msg || res.status}). It may have expired, so please click Connect again.`);
     }
     key = body.key;
   } catch {

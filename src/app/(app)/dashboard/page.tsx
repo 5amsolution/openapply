@@ -96,7 +96,7 @@ export default async function DashboardPage() {
       icon: FileUp,
       tone: "primary" as Tone,
       title: "Upload your resume",
-      body: "The AI reads it and fills in your profile — it never adds experience you don't have.",
+      body: "The AI reads it and fills in your profile. It never adds experience you don't have.",
       href: "/profile",
       cta: "Upload resume",
     },
@@ -123,9 +123,9 @@ export default async function DashboardPage() {
   const nextStep = core.find((c) => !c.done);
 
   const subline = firstRun
-    ? "Three quick steps and the AI starts writing tailored applications for you — all free."
+    ? "Three quick steps and the AI starts writing tailored applications for you. All free."
     : offers
-      ? `You have ${offers === 1 ? "an offer" : `${offers} offers`} on the table — congratulations!`
+      ? `You have ${offers === 1 ? "an offer" : `${offers} offers`} on the table. Congratulations!`
       : readyCount
         ? `${readyCount} application${readyCount === 1 ? " is" : "s are"} ready to send. Each one takes about a minute.`
         : appliedThisWeek
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
           <section aria-label="Good to know" className="grid gap-3 sm:grid-cols-3">
             {[
               { icon: Sparkles, tone: "primary" as Tone, title: "Free for everyone", body: "No subscription. Your AI runs on your own free OpenRouter account." },
-              { icon: Hand, tone: "success" as Tone, title: "You stay in control", body: "Nothing is ever submitted for you — you review and send every application." },
+              { icon: Hand, tone: "success" as Tone, title: "You stay in control", body: "Nothing is ever submitted for you. You review and send every application." },
               { icon: Lock, tone: "neutral" as Tone, title: "Private by default", body: "Your resume and keys are encrypted, and you can delete everything any time." },
             ].map((g) => (
               <div key={g.title} className="flex gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs">
@@ -288,7 +288,7 @@ export default async function DashboardPage() {
                 {ready.length === 0 ? (
                   <div className="rounded-xl bg-surface-2 px-6 py-10 text-center">
                     <p className="font-semibold text-fg">Nothing waiting right now</p>
-                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted">Open a job and click Write application — or let autopilot find some for you.</p>
+                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted">Open a job and click Write application, or let autopilot find some for you.</p>
                     <div className="mt-4 flex justify-center gap-2">
                       <ButtonLink href="/jobs">Find jobs</ButtonLink>
                     </div>
@@ -326,7 +326,7 @@ export default async function DashboardPage() {
                     icon={<CheckCircle2 size={18} />}
                     tone="success"
                     title="Finish setting up"
-                    hint={`${stepsDone} of ${steps.length} done — each one makes 5AM Apply work harder for you`}
+                    hint={`${stepsDone} of ${steps.length} done. Each one makes 5AM Apply work harder for you.`}
                   />
                   <div className="mb-4 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
                     <div className="h-full rounded-full bg-success" style={{ width: `${(stepsDone / steps.length) * 100}%` }} />
@@ -385,12 +385,12 @@ export default async function DashboardPage() {
                 </div>
                 {appliedThisWeek > 0 && (
                   <p className="mt-4 flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-sm font-semibold text-success-soft-fg">
-                    <Send size={15} aria-hidden="true" /> {appliedThisWeek} sent this week — nice work
+                    <Send size={15} aria-hidden="true" /> {appliedThisWeek} sent this week. Nice work!
                   </p>
                 )}
               </Card>
 
-              {/* Autopilot — always dark, like the logo */}
+              {/* Autopilot: always dark, like the logo */}
               <section className="sunrise relative overflow-hidden rounded-2xl border border-border p-6 shadow-md" aria-labelledby="autopilot-card">
                 <div className="relative">
                   <div className="flex items-center justify-between">
@@ -403,7 +403,7 @@ export default async function DashboardPage() {
                     Autopilot
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-muted">
-                    {rules > 0 ? "Finds, scores and writes applications for you every day." : "Save a search and it runs every day — new matches arrive ready to send."}
+                    {rules > 0 ? "Finds, scores and writes applications for you every day." : "Save a search and it runs every day. New matches arrive ready to send."}
                   </p>
                   <ul className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-2 text-sm">
                     {(runs ?? []).length === 0 ? (

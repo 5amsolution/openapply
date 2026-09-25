@@ -11,6 +11,12 @@
       <button id="toggle-settings" class="link" type="button">Settings</button>
     </header>
 
+    <section id="connect" hidden>
+      <p><strong>Connect your account</strong></p>
+      <p class="muted">Open 5AM Apply and click “Connect extension”. It takes one click.</p>
+      <button id="open-site" type="button">Open 5AM Apply</button>
+    </section>
+
     <section id="settings" hidden>
       <label>
         Server URL
@@ -20,7 +26,7 @@
         Extension token
         <input id="token" type="password" placeholder="oa_…" />
       </label>
-      <p class="muted">Create a token in 5AM Apply → Settings → Autofill browser extension.</p>
+      <p class="muted">Or paste a token from 5AM Apply: Settings, Autofill extension, Manual setup.</p>
       <button id="save-settings" type="button">Save</button>
     </section>
 
@@ -44,6 +50,7 @@
     </section>
 
     <footer class="muted">Review every field before you submit. 5AM Apply never submits for you.</footer>
+    <script src="defaults.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

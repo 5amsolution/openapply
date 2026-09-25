@@ -28,4 +28,4 @@ while (rounds < 40) {
   console.log(`round ${rounds}: ran ${body.processed} rules, wrote ${body.drafts} applications, ${body.errors} errors`);
   if (body.processed === 0) break;
 }
-console.log(`done — ${total} rules processed`);
+console.log(`done: ${total} rules processed`);

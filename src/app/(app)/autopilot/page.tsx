@@ -17,7 +17,7 @@ const HOW: { icon: React.ReactNode; tone: Tone; title: string; body: string }[] 
   { icon: <Search size={18} />, tone: "primary", title: "Searches every day", body: "Checks all your job sources for new postings." },
   { icon: <Target size={18} />, tone: "primary", title: "Scores each match", body: "The AI compares every new job with your profile." },
   { icon: <FileText size={18} />, tone: "primary", title: "Writes applications", body: "The best matches get a tailored cover letter and answers." },
-  { icon: <Hand size={18} />, tone: "success", title: "You review and send", body: "About a minute each — you always press submit." },
+  { icon: <Hand size={18} />, tone: "success", title: "You review and send", body: "About a minute each. You always press submit." },
 ];
 
 export default async function AutopilotPage() {
@@ -78,7 +78,7 @@ export default async function AutopilotPage() {
           ))}
         </ol>
         <p className="mt-3 text-[13px] leading-relaxed text-muted">
-          Autopilot never submits applications on its own — job sites prohibit bots, and most forms need a human check. It does
+          Autopilot never submits applications on its own. Job sites prohibit bots, and most forms need a human check. It does
           everything up to the submit button.
         </p>
       </section>

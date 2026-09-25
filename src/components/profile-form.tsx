@@ -115,7 +115,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
               <option value="onsite">On-site</option>
             </Select>
           </div>
-          <Field name="salary_expectation" label="Salary expectation" defaultValue={profile.salary_expectation} placeholder="e.g. $120k–140k or negotiable" />
+          <Field name="salary_expectation" label="Salary expectation" defaultValue={profile.salary_expectation} placeholder="e.g. $120k to $140k, or negotiable" />
           <Field name="work_authorization" label="Work authorization" defaultValue={profile.work_authorization} placeholder="e.g. US citizen, EU passport, H-1B" />
           <div>
             <Label htmlFor="needs_sponsorship">Needs visa sponsorship?</Label>

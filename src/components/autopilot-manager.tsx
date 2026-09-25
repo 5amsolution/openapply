@@ -219,7 +219,7 @@ export function AutopilotManager({
                       ? { tone: "danger", text: `${rule.name}: ${st.error}` }
                       : {
                           tone: "success",
-                          text: `${rule.name}: found ${st.jobsFound} new jobs, scored ${st.jobsScored}, wrote ${st.draftsCreated} application${st.draftsCreated === 1 ? "" : "s"}${st.draftsCreated ? " — they're in Ready to apply." : "."}`,
+                          text: `${rule.name}: found ${st.jobsFound} new jobs, scored ${st.jobsScored}, wrote ${st.draftsCreated} application${st.draftsCreated === 1 ? "" : "s"}${st.draftsCreated ? ". They're in Ready to apply." : "."}`,
                         },
                   );
                   router.refresh();
@@ -242,7 +242,7 @@ export function AutopilotManager({
               const res = await saveRuleAction(null, toInput(d, true));
               if (!res.ok) throw new Error(res.error);
               setEditing(null);
-              return "Autopilot search created. It runs once a day — or click “Run now”.";
+              return "Autopilot search created. It runs once a day, or click “Run now” to run it now.";
             })
           }
         />
@@ -314,7 +314,7 @@ function RuleForm({
         </IconTile>
         <div>
           <h3 className="text-base font-bold text-fg">{title}</h3>
-          <p className="text-sm text-muted">Describe the jobs you want — autopilot checks for new ones every day.</p>
+          <p className="text-sm text-muted">Describe the jobs you want. Autopilot checks for new ones every day.</p>
         </div>
       </div>
       <form

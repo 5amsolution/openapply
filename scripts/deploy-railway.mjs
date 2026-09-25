@@ -19,7 +19,7 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!existsSync(".env.production")) fail("Missing .env.production — run scripts/setup-supabase.mjs first.");
+if (!existsSync(".env.production")) fail("Missing .env.production. Run scripts/setup-supabase.mjs first.");
 
 try {
   railway("whoami", { capture: true });

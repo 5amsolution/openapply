@@ -128,7 +128,7 @@ export function ApplicationEditor({
       router.refresh();
       setApp({ ...app, status: "applied", applied_at: new Date().toISOString() });
       celebrate();
-      toast("Nice — application sent. Good luck!", { tone: "celebrate" });
+      toast("Nice! Application sent. Good luck!", { tone: "celebrate" });
     });
 
   const remove = () =>
@@ -194,7 +194,7 @@ export function ApplicationEditor({
             </IconTile>
             <h2 className="mt-4 text-lg font-bold tracking-tight">No application written yet</h2>
             <p className="mt-1.5 max-w-md text-[15px] leading-relaxed text-muted">
-              The AI writes a tailored cover letter, resume summary and screening answers from your profile — usually in under a
+              The AI writes a tailored cover letter, resume summary and screening answers from your profile, usually in under a
               minute.
             </p>
             <Button size="lg" className="mt-5" onClick={regenerate} disabled={!aiReady || !!busy} loading={busy === "draft"}>
@@ -203,7 +203,7 @@ export function ApplicationEditor({
             <ProgressSteps className="mt-5 w-full max-w-md text-left" active={busy === "draft"} steps={STEPS.draft} />
             {!aiReady && (
               <Notice tone="primary" className="mt-5 text-left">
-                <Link href="/settings">Turn on AI (free)</Link> to enable this — it takes one click.
+                <Link href="/settings">Turn on AI (free)</Link> to enable this. It takes one click.
               </Notice>
             )}
           </Card>
@@ -262,7 +262,7 @@ export function ApplicationEditor({
 
             <Section icon={<MessageSquareText size={18} />} tone="primary" title="Screening answers" hint="Answers to the questions application forms usually ask.">
               <div className="grid gap-4">
-                {answers.length === 0 && <p className="text-sm text-muted">No screening questions yet — add any the form asks below.</p>}
+                {answers.length === 0 && <p className="text-sm text-muted">No screening questions yet. Add any the form asks below.</p>}
                 {answers.map((a, i) => (
                   <div key={i} className="rounded-xl border border-border p-3.5">
                     <div className="mb-2 flex items-start justify-between gap-2">
@@ -318,7 +318,7 @@ export function ApplicationEditor({
               <CheckCircle2 size={20} aria-hidden="true" className="mt-px shrink-0" />
               <div className="text-sm">
                 <p className="font-bold">{app.status === "applied" ? "Applied" : STATUS_LABELS[app.status]}</p>
-                <p>{app.applied_at ? `Sent ${timeAgo(app.applied_at)}. ` : ""}Nice work — keep it going.</p>
+                <p>{app.applied_at ? `Sent ${timeAgo(app.applied_at)}. ` : ""}Nice work, keep it going.</p>
               </div>
             </div>
           ) : (

@@ -69,7 +69,7 @@ async function main() {
     }
     ref = project.ref || project.id;
     writeFileSync(STATE_FILE, JSON.stringify({ ref, dbPass }, null, 2));
-    console.log(`  created ${ref} (details saved to ${STATE_FILE} — keep it private)`);
+    console.log(`  created ${ref} (details saved to ${STATE_FILE}, keep it private)`);
   } else {
     console.log(`→ Using existing project ${ref}`);
     if (!dbPass) fail("Set SUPABASE_DB_PASSWORD for the existing project (needed to push migrations).");
@@ -93,7 +93,7 @@ async function main() {
     execSync(`npx supabase db push --password "${dbPass}" --include-all --yes`, { stdio: "inherit", env });
   } catch {
     // Some access tokens can't use the CLI link endpoint; apply through the Management API instead.
-    console.log("  CLI push unavailable — applying migrations through the Management API…");
+    console.log("  CLI push unavailable, applying migrations through the Management API…");
     await applyViaApi(ref);
   }
 
@@ -113,7 +113,7 @@ async function main() {
   const anon = keys.find((k) => k.name === "anon")?.api_key || "PASTE_PUBLISHABLE_KEY";
   const service = keys.find((k) => k.name === "service_role")?.api_key || "PASTE_SECRET_KEY";
   if (anon.startsWith("PASTE")) {
-    console.log(`  Couldn't read API keys with this token — copy them from https://supabase.com/dashboard/project/${ref}/settings/api-keys into .env.production`);
+    console.log(`  Couldn't read API keys with this token. Copy them from https://supabase.com/dashboard/project/${ref}/settings/api-keys into .env.production`);
   }
 
   const existing = existsSync(".env.production") ? readFileSync(".env.production", "utf8") : "";
@@ -129,7 +129,7 @@ async function main() {
   writeFileSync(".env.production", lines.join("\n") + "\n");
 
   console.log(`\n✓ Supabase is ready: https://supabase.com/dashboard/project/${ref}`);
-  console.log("✓ Wrote .env.production — these are the variables for Railway.");
+  console.log("✓ Wrote .env.production. These are the variables for Railway.");
   console.log("  ENCRYPTION_KEY protects every user's AI key: back it up and never change it.\n");
 }
 

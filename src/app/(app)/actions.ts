@@ -177,7 +177,7 @@ type ResumeResult = { parsedWithAI: boolean; aiError?: string };
 
 /**
  * Saves the resume file and its text first, then (if AI is on) fills the
- * profile from it. An AI failure never loses the upload — the user can retry
+ * profile from it. An AI failure never loses the upload, the user can retry
  * with fillProfileFromResumeAction.
  */
 export async function uploadResumeAction(formData: FormData): Promise<ActionResult<ResumeResult>> {
@@ -217,7 +217,7 @@ export async function uploadResumeAction(formData: FormData): Promise<ActionResu
   });
 }
 
-/** Re-reads the already uploaded resume with AI — the "Fill profile with AI" button. */
+/** Re-reads the already uploaded resume with AI (the "Fill profile with AI" button). */
 export async function fillProfileFromResumeAction(): Promise<ActionResult<ResumeResult>> {
   return attempt(async () => {
     const { user } = await requireUser();
@@ -365,6 +365,31 @@ export async function createExtensionTokenAction(label: string): Promise<ActionR
     const { error } = await admin
       .from("extension_tokens")
       .insert({ user_id: user.id, token_hash: sha256(token), label: label.trim().slice(0, 60) || "Browser extension" });
+    if (error) throw new Error(error.message);
+    revalidatePath("/settings");
+    return token;
+  });
+}
+
+/** One-click connect from Settings: a fresh token for the extension, labelled by browser. */
+export async function connectExtensionAction(browser: string): Promise<ActionResult<string>> {
+  return attempt(async () => {
+    const { user } = await requireUser();
+    const admin = createAdminClient();
+    const label = `${browser.replace(/[^\w .-]/g, "").trim().slice(0, 30) || "Browser"} extension`;
+    const { data: existing } = await admin
+      .from("extension_tokens")
+      .select("id, label")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+    // Reconnecting shouldn't pile up tokens: make room by dropping the oldest connected ones.
+    const auto = (existing ?? []).filter((t) => t.label.endsWith(" extension"));
+    const excess = (existing?.length ?? 0) - 9;
+    if (excess > 0 && auto.length) {
+      await admin.from("extension_tokens").delete().in("id", auto.slice(0, excess).map((t) => t.id)).eq("user_id", user.id);
+    }
+    const token = `oa_${randomToken(24)}`;
+    const { error } = await admin.from("extension_tokens").insert({ user_id: user.id, token_hash: sha256(token), label });
     if (error) throw new Error(error.message);
     revalidatePath("/settings");
     return token;

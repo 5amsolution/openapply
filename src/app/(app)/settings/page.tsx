@@ -7,7 +7,7 @@ import { PROVIDERS, providerInfo } from "@/lib/ai/providers";
 import { OpenRouterConnect } from "@/components/openrouter-connect";
 import { Card, IconTile, PageHeader, SectionTitle } from "@/components/ui";
 import { AISettingsForm } from "@/components/ai-settings-form";
-import { ExtensionTokens } from "@/components/extension-tokens";
+import { ExtensionSetup } from "@/components/extension-setup";
 import { DangerZone } from "@/components/danger-zone";
 import { JSearchKeyCard } from "@/components/jsearch-key-card";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -165,7 +165,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
         </SettingsSection>
 
         <SettingsSection id="extension" title="Autofill extension" description="Fill application forms on any site in one click.">
-          <ExtensionTokens tokens={tokens ?? []} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} />
+          <ExtensionSetup tokens={tokens ?? []} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} justInstalled={sp.extension === "installed"} />
         </SettingsSection>
 
         <SettingsSection id="appearance" title="Appearance" description="Choose how 5AM Apply looks on this device.">

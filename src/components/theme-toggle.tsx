@@ -5,7 +5,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { cn } from "@/components/ui";
 
 // Light / dark / system switch. The choice lives in localStorage ("system"
-// stores nothing) and is applied to <html data-theme> — the inline script in
+// stores nothing) and is applied to <html data-theme>, the inline script in
 // the root layout applies it before first paint on page loads.
 
 type Theme = "light" | "dark" | "system";

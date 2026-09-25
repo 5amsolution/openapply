@@ -52,8 +52,8 @@ export function LiveRun({ runId, onDone }: { runId: string; onDone: (status: Run
     : status.jobsFound === 0 && status.jobsScored === 0
       ? "Searching job boards for new matches…"
       : status.jobsScored === 0
-        ? `Found ${status.jobsFound} new jobs — scoring the most promising with AI…`
-        : `Scored ${status.jobsScored} of the best matches — writing applications for the strongest…`;
+        ? `Found ${status.jobsFound} new jobs. Scoring the most promising with AI…`
+        : `Scored ${status.jobsScored} of the best matches. Writing applications for the strongest…`;
 
   return (
     <div className="mt-4 w-full overflow-hidden rounded-xl border border-border bg-surface-2 text-sm" role="status" aria-live="polite">
@@ -78,7 +78,7 @@ export function LiveRun({ runId, onDone }: { runId: string; onDone: (status: Run
         </div>
         <p className="mt-3 text-xs leading-relaxed text-muted tabular-nums">
           {mins > 0 ? `${mins}m ` : ""}
-          {elapsed % 60}s running · this keeps going on the server even if you leave — free AI models can take a few minutes
+          {elapsed % 60}s running · this keeps going on the server even if you leave. Free AI models can take a few minutes
         </p>
         {problem && <p className="mt-1 text-xs font-medium text-danger">{problem}</p>}
       </div>

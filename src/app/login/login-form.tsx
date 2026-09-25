@@ -12,8 +12,8 @@ type Mode = "signin" | "signup" | "magic";
 
 const COPY: Record<Mode, { title: string; sub: string; submit: string }> = {
   signin: { title: "Welcome back", sub: "Sign in to pick up where you left off.", submit: "Sign in" },
-  signup: { title: "Create your free account", sub: "No card needed — free AI included.", submit: "Create account" },
-  magic: { title: "Sign in with a link", sub: "We'll email you a sign-in link — no password needed.", submit: "Email me a link" },
+  signup: { title: "Create your free account", sub: "No card needed. Free AI included.", submit: "Create account" },
+  magic: { title: "Sign in with a link", sub: "We'll email you a sign-in link. No password needed.", submit: "Email me a link" },
 };
 
 export function LoginForm({
@@ -55,7 +55,7 @@ export function LoginForm({
       if (mode === "magic") {
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
         if (error) throw error;
-        setMessage("Check your inbox — we sent you a sign-in link.");
+        setMessage("Check your inbox. We sent you a sign-in link.");
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo() } });
         if (error) throw error;
@@ -63,7 +63,7 @@ export function LoginForm({
           router.replace("/profile?welcome=1");
           router.refresh();
         } else {
-          setMessage("Almost there — confirm your email using the link we just sent.");
+          setMessage("Almost there. Confirm your email using the link we just sent.");
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -220,7 +220,7 @@ export function LoginForm({
       </div>
 
       <p className="mt-8 border-t border-border pt-6 text-center text-[13px] leading-relaxed text-muted">
-        Free and open source. We never sell your data —{" "}
+        Free and open source. We never sell your data.{" "}
         <Link href="/privacy" className="font-semibold text-fg underline underline-offset-2">
           read our privacy notes
         </Link>

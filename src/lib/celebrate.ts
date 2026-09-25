@@ -1,5 +1,5 @@
 // A short confetti burst for happy moments (like marking an application as
-// sent). Pure DOM + Web Animations — no dependencies, skipped for people who
+// sent). Pure DOM + Web Animations, no dependencies, skipped for people who
 // prefer reduced motion.
 
 const COLORS = ["#ffb000", "#ff8a00", "#ff6a00", "#e94e0a", "#ffd166", "#17110b"];

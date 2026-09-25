@@ -41,7 +41,7 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
       if (!res.ok) return setMessage({ tone: "danger", text: res.error });
       setMessage(
         res.data.parsedWithAI
-          ? { tone: "success", text: "Resume read. Your profile below was filled in — check it over and save." }
+          ? { tone: "success", text: "Resume read. Your profile below was filled in, so check it over and save." }
           : res.data.aiError
             ? aiFailed(res.data.aiError)
             : { tone: "info", text: "Resume uploaded. Turn on AI in Settings (free) to auto-fill your whole profile from it." },
@@ -56,7 +56,7 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
       const res = await fillProfileFromResumeAction();
       setBusy("");
       setMessage(
-        res.ok ? { tone: "success", text: "Profile filled from your resume — check it over and save." } : aiFailed(res.error),
+        res.ok ? { tone: "success", text: "Profile filled from your resume. Check it over and save." } : aiFailed(res.error),
       );
       router.refresh();
     });
@@ -89,7 +89,7 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
             {filename && <CheckCircle2 size={17} aria-hidden="true" className="shrink-0 text-success" />}
           </h2>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            {filename ? "Drop a new file here to replace it. " : "Drag it here or choose a file — "}
+            {filename ? "Drop a new file here to replace it. " : "Drag it here or choose a file. "}
             PDF, DOCX or TXT, up to 10 MB.{" "}
             {aiReady ? (
               "The AI fills in your profile from it."

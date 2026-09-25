@@ -27,7 +27,7 @@ export async function getUserSourceKey(userId: string, source: SourceKeyId): Pro
   }
 }
 
-/** Public view for Settings — never includes the key. */
+/** Public view for Settings (never includes the key). */
 export async function getUserSourceKeyInfo(userId: string, source: SourceKeyId) {
   const { data } = await createAdminClient()
     .from("source_keys")

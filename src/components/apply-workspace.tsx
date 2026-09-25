@@ -109,7 +109,7 @@ export function ApplyWorkspace({
                 {job.title} · {job.company}
               </h1>
               <p className="truncate text-xs text-muted">
-                {embedUrl ? `The employer's own form on ${sourceLabel(job.source)} — you submit it directly to them` : `Listing from ${sourceLabel(job.source)}`}
+                {embedUrl ? `The employer's own form on ${sourceLabel(job.source)}. You submit it directly to them` : `Listing from ${sourceLabel(job.source)}`}
               </p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function ApplyWorkspace({
             <h2 className="text-lg font-bold tracking-tight">This form opens on the employer&apos;s site</h2>
             <p className="max-w-md text-[15px] leading-relaxed text-muted">
               {sourceLabel(job.source)} doesn&apos;t allow its application form inside other sites. Open it in a new tab, keep this
-              page beside it and copy each section across — or let the autofill extension do it in one click.
+              page beside it and copy each section across, or let the autofill extension do it in one click.
             </p>
             <a href={externalUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("primary", "lg")}>
               Open the application form <ExternalLink size={16} aria-hidden="true" />
@@ -159,7 +159,7 @@ export function ApplyWorkspace({
             <div className="flex items-start gap-3">
               <PartyPopper size={22} aria-hidden="true" className="shrink-0" />
               <div>
-                <p className="font-bold">Marked as applied — good luck!</p>
+                <p className="font-bold">Marked as applied. Good luck!</p>
                 <p className="mt-1 text-sm">Every application is a step closer. Want to keep the momentum going?</p>
                 <ButtonLink href="/jobs" variant="secondary" size="sm" className="mt-3">
                   Find the next one
@@ -179,7 +179,7 @@ export function ApplyWorkspace({
               ))}
             </ol>
             <Button onClick={markApplied} loading={busy === "applied"} className="mt-4 w-full">
-              {busy !== "applied" && <Check size={16} aria-hidden="true" />} I submitted it — mark as applied
+              {busy !== "applied" && <Check size={16} aria-hidden="true" />} I submitted it, mark as applied
             </Button>
           </Card>
         )}
@@ -253,7 +253,7 @@ export function ApplyWorkspace({
         </Card>
         <p className="flex gap-2 px-1 text-xs leading-relaxed text-muted">
           <ShieldCheck size={15} aria-hidden="true" className="shrink-0 text-success" />
-          5AM Apply never submits for you — the employer receives exactly what you send.
+          5AM Apply never submits for you. The employer receives exactly what you send.
         </p>
       </div>
     </div>

@@ -108,7 +108,7 @@ export default async function JobPage(props: PageProps<"/jobs/[id]">) {
 
           <Card className="p-5 sm:p-7">
             <h2 className="mb-4 text-lg font-bold tracking-tight text-fg">About this job</h2>
-            <div className="prose-job text-fg">{j.description || "No description provided — open the original posting."}</div>
+            <div className="prose-job text-fg">{j.description || "No description provided. Open the original posting."}</div>
             <p className="mt-8 border-t border-border pt-4 text-[13px] text-muted">
               Listing provided by{" "}
               {sourceHome ? (

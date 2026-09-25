@@ -27,7 +27,7 @@ export function OpenRouterConnect({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState<{ tone: "success" | "danger"; text: string } | null>(
     status === "connected"
-      ? { tone: "success", text: "Connected! You're using a free model — no card needed." }
+      ? { tone: "success", text: "Connected! You're using a free model. No card needed." }
       : status === "error"
         ? { tone: "danger", text: statusMessage || "Couldn't connect to OpenRouter." }
         : null,
@@ -60,11 +60,11 @@ export function OpenRouterConnect({
               <IconTile tone="primary">
                 <Sparkles size={18} />
               </IconTile>
-              <h3 className="text-lg font-bold tracking-tight text-fg">Turn on AI — free</h3>
+              <h3 className="text-lg font-bold tracking-tight text-fg">Turn on AI for free</h3>
               <Badge tone="success">Recommended</Badge>
             </div>
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              Connect your own OpenRouter account. You approve 5AM Apply on OpenRouter&apos;s site — nothing to copy or paste — and
+              Connect your own OpenRouter account. You approve 5AM Apply on OpenRouter&apos;s site, with nothing to copy or paste, and
               free models cost nothing: about 50 AI actions a day, or 1,000 a day after a one-time $10 credit purchase.
             </p>
             <ul className="mt-4 grid gap-2 text-sm text-fg sm:grid-cols-3">
@@ -97,7 +97,7 @@ export function OpenRouterConnect({
           </IconTile>
           <div>
             <h3 className="text-base font-bold tracking-tight text-fg">Connected to OpenRouter</h3>
-            <p className="text-sm text-muted">AI is on — fit scores and applications are ready to go.</p>
+            <p className="text-sm text-muted">AI is on. Fit scores and applications are ready to go.</p>
           </div>
         </div>
         <a
@@ -161,7 +161,7 @@ export function OpenRouterConnect({
         {isFree ? (
           <>
             Free models are rate-limited (about 50 requests a day) and write less polished letters than paid ones. Some free
-            providers may log prompts, and your resume is part of them — control this in{" "}
+            providers may log prompts, and your resume is part of them. Control this in{" "}
             <a href="https://openrouter.ai/settings/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary-text underline underline-offset-2">
               OpenRouter privacy settings
             </a>

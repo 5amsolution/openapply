@@ -3,76 +3,66 @@ import {
   ArrowRight,
   Bot,
   Check,
-  ChevronDown,
-  CircleDot,
-  Clock3,
+  ChevronRight,
   EyeOff,
   FileText,
-  Gift,
+  Hand,
   Kanban,
   Lock,
+  MessageSquareText,
   Puzzle,
   Search,
   Send,
   Sparkles,
   Target,
-  Upload,
   Wand2,
 } from "lucide-react";
 import { GithubIcon } from "@/components/icons";
 import { Logo, LogoMark } from "@/components/logo";
 import { HeroPreview } from "@/components/landing/hero-preview";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ButtonLink, IconTile, SOFT, ScoreRing, buttonClass, cn, type Tone } from "@/components/ui";
+import { ButtonLink, IconTile, buttonClass } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 
 const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/MuhammadAbdullah80/openapply";
 
-const SOURCES = ["Remotive", "Himalayas", "Jobicy", "Remote OK", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "LinkedIn · Indeed · Glassdoor (free key)"];
+const SOURCES = ["Remotive", "Himalayas", "Jobicy", "Remote OK", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "LinkedIn", "Indeed", "Glassdoor"];
 
-const STEPS: { icon: typeof Upload; title: string; body: string }[] = [
-  {
-    icon: Search,
-    title: "Find",
-    body: "One search covers remote job boards and hundreds of company career pages — and every result shows how well you fit.",
-  },
-  {
-    icon: Wand2,
-    title: "Tailor",
-    body: "The AI writes a cover letter, resume summary and screening answers for each job, from your real experience. Never invented.",
-  },
-  {
-    icon: Send,
-    title: "Apply",
-    body: "Open the employer's form right inside 5AM Apply with everything ready to copy across. About a minute per job.",
-  },
+const STATS = [
+  ["11", "job sources"],
+  ["1 min", "per application"],
+  ["$0", "to use, forever"],
+];
+
+const FEATURES = [
+  { icon: Search, title: "Every board, one search", body: "Remote boards and hundreds of company career pages." },
+  { icon: Target, title: "Honest fit score", body: "See why you match before you spend time applying." },
+  { icon: FileText, title: "Tailored cover letters", body: "Written from your real experience. Never invented." },
+  { icon: MessageSquareText, title: "Screening answers", body: "The usual form questions, answered for you." },
+  { icon: Send, title: "Apply inside the app", body: "The employer's form next to your ready answers." },
+  { icon: Bot, title: "Autopilot", body: "Finds new matches daily and drafts the best ones." },
+  { icon: Kanban, title: "Tracker board", body: "Saved, applied, interviewing and offers in one view." },
+  { icon: Puzzle, title: "Autofill extension", body: "Fills Workday, Lever and other forms in one click." },
+];
+
+const STEPS = [
+  { icon: Search, title: "Find", body: "Search once. Every result gets a fit score." },
+  { icon: Wand2, title: "Tailor", body: "The AI writes your letter and answers." },
+  { icon: Send, title: "Apply", body: "Review, submit, and track it. About a minute." },
+];
+
+const PROMISES = [
+  { icon: Sparkles, title: "Free AI", body: "Runs on your own free OpenRouter account." },
+  { icon: Hand, title: "You submit", body: "Nothing is ever sent without you." },
+  { icon: Lock, title: "Private", body: "Keys and resumes are encrypted." },
+  { icon: EyeOff, title: "No ads, no tracking", body: "Open source (MIT). Nothing is sold." },
 ];
 
 const FAQ = [
-  {
-    q: "Is 5AM Apply really free?",
-    a: "Yes. The hosted app costs nothing, and the AI runs on your own OpenRouter account where free models cost $0 — about 50 AI actions a day, or 1,000 a day after a one-time $10 credit purchase. No subscription, no ads.",
-  },
-  {
-    q: "Does it apply to jobs for me automatically?",
-    a: "No, on purpose. Job sites prohibit bots and most forms need a human check. 5AM Apply does everything up to the submit button — you review and send, which usually takes about a minute.",
-  },
-  {
-    q: "Will the AI make things up about me?",
-    a: "The AI writes only from your own profile and resume, and it's instructed never to invent experience. You can edit every word before you apply.",
-  },
-  {
-    q: "Where do the jobs come from?",
-    a: "Public job boards (Remotive, Himalayas, Jobicy, Remote OK and Arbeitnow) plus company career pages on Greenhouse, Lever and Ashby. Add a free JSearch key to include LinkedIn, Indeed and Glassdoor.",
-  },
-  {
-    q: "Is my data safe?",
-    a: "Your AI key is encrypted with AES-256-GCM, nothing is sold, and there are no trackers. You can delete your account and everything in it from Settings at any time.",
-  },
-  {
-    q: "Can I run my own copy?",
-    a: "Yes — 5AM Apply is MIT-licensed. You can self-host it on Railway and Supabase in about ten minutes.",
-  },
+  { q: "Is it really free?", a: "Yes. The app is free, and the AI runs on your own OpenRouter account, where free models cost nothing." },
+  { q: "Does it apply for me?", a: "No, on purpose. It prepares everything up to the submit button. You review and send, usually in a minute." },
+  { q: "Will the AI make things up?", a: "No. It only uses your profile and resume, and you can edit every word before you apply." },
+  { q: "Where do the jobs come from?", a: "Public job boards and company career pages. Add a free key for LinkedIn, Indeed and Glassdoor." },
 ];
 
 export default async function Home() {
@@ -81,17 +71,18 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
   const startHref = user ? "/dashboard" : "/login?mode=signup";
+  const startLabel = user ? "Open your dashboard" : "Get started free";
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Header — always dark, like the logo */}
+      {/* Header: always dark, like the logo */}
       <header className="sticky top-0 z-40 border-b border-border bg-bg text-fg scheme-dark">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5">
+        <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center justify-between gap-4 px-5 lg:px-10">
           <Logo />
           <nav aria-label="Main" className="hidden items-center gap-1 text-sm font-semibold text-muted md:flex">
             {[
-              ["#how", "How it works"],
               ["#features", "Features"],
+              ["#how", "How it works"],
               ["#faq", "FAQ"],
             ].map(([href, label]) => (
               <a key={href} href={href} className="rounded-lg px-3 py-2 transition-colors hover:bg-surface-2 hover:text-fg">
@@ -103,86 +94,92 @@ export default async function Home() {
             <a href={REPO_URL} className={buttonClass("ghost", "sm", "hidden sm:inline-flex")}>
               <GithubIcon size={16} /> Source
             </a>
-            {user ? (
-              <ButtonLink href="/dashboard" size="sm">
-                Open app <ArrowRight size={15} aria-hidden="true" />
+            {!user && (
+              <ButtonLink href="/login" variant="ghost" size="sm" className="text-fg">
+                Sign in
               </ButtonLink>
-            ) : (
-              <>
-                <ButtonLink href="/login" variant="ghost" size="sm" className="text-fg">
-                  Sign in
-                </ButtonLink>
-                <ButtonLink href="/login?mode=signup" size="sm">
-                  <span>
-                    Get started<span className="hidden sm:inline"> free</span>
-                  </span>
-                </ButtonLink>
-              </>
             )}
+            <ButtonLink href={startHref} size="sm">
+              {user ? "Open app" : "Get started"} <ArrowRight size={15} aria-hidden="true" />
+            </ButtonLink>
           </div>
         </div>
       </header>
 
       <main id="main" className="flex-1">
-        {/* Hero — the 5AM sunrise */}
-        <section className="sunrise relative isolate overflow-hidden">
+        {/* Hero: the 5AM sunrise */}
+        <section className="sunrise relative isolate overflow-hidden border-b border-border">
           <div
-            className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]"
+            className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgb(255_255_255/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.035)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_70%_at_30%_0%,black,transparent)]"
             aria-hidden="true"
           />
-          <div className="mx-auto max-w-4xl px-5 pb-12 pt-14 text-center sm:pt-20">
-            <LogoMark size={112} tile={false} className="mx-auto flex animate-[oa-rise_700ms_var(--ease-out)] drop-shadow-[0_0_36px_rgb(255_122_0/0.5)]" />
-            <p className="mt-7 inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 py-1 pl-1 pr-3.5 text-[13px] font-semibold text-fg">
-              <span className="inline-flex h-6 items-center gap-1 rounded-full bg-primary-soft px-2 text-primary-soft-fg">
-                <Gift size={13} aria-hidden="true" /> Free
-              </span>
-              Open source · No credit card
-            </p>
-            <h1 className="mt-6 text-[46px] font-extrabold leading-[1.02] tracking-[-0.04em] text-fg sm:text-[64px] lg:text-[76px]">
-              Find. Tailor. <span className="text-brand">Apply.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-              5AM Apply searches dozens of job boards at once, tells you honestly how well you fit each role, and writes a tailored
-              application for every one — with AI you control, at no cost.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <ButtonLink href={startHref} size="lg" className="h-13 px-7 text-base">
-                {user ? "Open your dashboard" : "Get started — it's free"} <ArrowRight size={18} aria-hidden="true" />
-              </ButtonLink>
-              <a href="#how" className={buttonClass("secondary", "lg", "h-13 px-7 text-base")}>
-                See how it works
-              </a>
+          <div className="mx-auto grid max-w-[1360px] items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 lg:px-10 lg:pb-20 lg:pt-16">
+            <div className="animate-[oa-rise_600ms_var(--ease-out)]">
+              <div className="flex items-center gap-3">
+                <LogoMark size={56} tile={false} className="drop-shadow-[0_0_24px_rgb(255_122_0/0.5)]" />
+                <span className="rounded-full border border-border bg-surface/80 px-3 py-1 text-[13px] font-semibold text-fg">Free and open source</span>
+              </div>
+              <h1 className="mt-6 text-[48px] font-extrabold leading-[1] tracking-[-0.04em] text-fg sm:text-[64px] xl:text-[76px]">
+                Find. Tailor.
+                <br />
+                <span className="text-brand">Apply.</span>
+              </h1>
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">
+                Search every job board at once, see how well you fit, and send tailored applications in minutes.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <ButtonLink href={startHref} size="lg" className="px-7">
+                  {startLabel} <ArrowRight size={18} aria-hidden="true" />
+                </ButtonLink>
+                <a href="#how" className={buttonClass("secondary", "lg", "px-7")}>
+                  How it works
+                </a>
+              </div>
+              <dl className="mt-9 grid max-w-md grid-cols-3 gap-3">
+                {STATS.map(([n, label]) => (
+                  <div key={label} className="rounded-xl border border-border bg-surface/70 px-3 py-3">
+                    <dt className="sr-only">{label}</dt>
+                    <dd>
+                      <span className="block text-2xl font-extrabold tracking-tight text-fg">{n}</span>
+                      <span className="text-[13px] text-muted">{label}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-            <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2.5 text-sm font-semibold text-fg">
-              {["Free forever", "Never submits without you", "Your data stays yours"].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-soft text-primary-soft-fg" aria-hidden="true">
-                    <Check size={13} strokeWidth={3} />
-                  </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
+            <div className="pb-10">
+              <HeroPreview />
+            </div>
           </div>
-          <div className="mx-auto max-w-[640px] px-5 pb-16 sm:pb-24">
-            <HeroPreview />
+          <div className="border-t border-border">
+            <div className="mx-auto flex max-w-[1360px] flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4 lg:px-10">
+              <span className="text-[13px] font-semibold uppercase tracking-wider text-muted">Searches</span>
+              {SOURCES.map((s) => (
+                <span key={s} className="text-sm font-semibold text-fg">
+                  {s}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Sources */}
-        <section aria-labelledby="sources-title" className="border-b border-border bg-surface py-8">
-          <p id="sources-title" className="text-center text-sm font-semibold text-muted">
-            One search covers
-          </p>
-          <div className="relative mt-4 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
-            <ul className="flex w-max animate-[oa-marquee_45s_linear_infinite] gap-3 hover:[animation-play-state:paused]">
-              {[...SOURCES, ...SOURCES].map((s, i) => (
-                <li
-                  key={i}
-                  aria-hidden={i >= SOURCES.length || undefined}
-                  className="shrink-0 rounded-full border border-border bg-bg px-4 py-2 text-sm font-semibold text-fg"
-                >
-                  {s}
+        {/* Features */}
+        <section id="features" aria-labelledby="features-title" className="scroll-mt-16 py-16 sm:py-20">
+          <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <h2 id="features-title" className="text-3xl font-extrabold tracking-[-0.03em] text-fg sm:text-4xl">
+                Everything for the job hunt
+              </h2>
+              <p className="text-base text-muted">One place, from search to offer.</p>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {FEATURES.map((f) => (
+                <li key={f.title} className="lift group rounded-2xl border border-border bg-surface p-5 shadow-xs">
+                  <IconTile tone="primary" className="transition-transform duration-200 group-hover:scale-110">
+                    <f.icon size={19} />
+                  </IconTile>
+                  <h3 className="mt-4 text-base font-bold text-fg">{f.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted">{f.body}</p>
                 </li>
               ))}
             </ul>
@@ -190,218 +187,91 @@ export default async function Home() {
         </section>
 
         {/* How it works */}
-        <section id="how" aria-labelledby="how-title" className="scroll-mt-20 py-20 sm:py-28">
-          <div className="mx-auto max-w-6xl px-5">
-            <SectionIntro
-              id="how-title"
-              eyebrow="How it works"
-              title="Three steps to every application"
-              body="Upload your resume once — the AI builds your profile in about thirty seconds. After that, it's find, tailor, apply."
-            />
-            <ol className="mt-14 grid gap-5 md:grid-cols-3">
+        <section id="how" aria-labelledby="how-title" className="scroll-mt-16 border-y border-border bg-surface py-16 sm:py-20">
+          <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
+            <h2 id="how-title" className="mb-8 text-3xl font-extrabold tracking-[-0.03em] text-fg sm:text-4xl">
+              How it works
+            </h2>
+            <ol className="grid gap-4 md:grid-cols-3">
               {STEPS.map((s, i) => (
-                <li key={s.title} className="relative rounded-3xl border border-border bg-surface p-7 shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <IconTile tone="primary" size="lg">
-                      <s.icon size={22} />
-                    </IconTile>
-                    <span className="rounded-full bg-surface-2 px-3 py-1 text-xs font-bold uppercase tracking-wider text-muted">Step {i + 1}</span>
+                <li key={s.title} className="lift group relative flex items-center gap-4 rounded-2xl border border-border bg-bg p-5">
+                  <span className="bg-brand flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-extrabold text-primary-fg" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="flex items-center gap-2 text-lg font-extrabold text-fg">
+                      <s.icon size={18} aria-hidden="true" className="text-primary-text" /> {s.title}
+                    </h3>
+                    <p className="mt-0.5 text-sm text-muted">{s.body}</p>
                   </div>
-                  <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-fg">{s.title}</h3>
-                  <p className="mt-2 text-[15px] leading-relaxed text-muted">{s.body}</p>
+                  {i < STEPS.length - 1 && (
+                    <ChevronRight
+                      size={22}
+                      aria-hidden="true"
+                      className="absolute -right-[19px] top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-border bg-surface text-primary-text md:block"
+                    />
+                  )}
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* Features */}
-        <section id="features" aria-labelledby="features-title" className="scroll-mt-20 border-y border-border bg-surface py-20 sm:py-28">
-          <div className="mx-auto max-w-6xl px-5">
-            <SectionIntro
-              id="features-title"
-              eyebrow="Everything in one place"
-              title="The calm, organised way to job hunt"
-              body="Stop juggling tabs, spreadsheets and blank cover letters. 5AM Apply keeps the whole search in one friendly place."
-            />
-            <div className="mt-14 grid gap-5 md:grid-cols-6">
-              <Feature className="md:col-span-4" icon={Search} tone="primary" title="One search, every board" body="Remote job boards plus the career pages of hundreds of companies — deduplicated and ranked for you.">
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {SOURCES.slice(0, 8).map((s) => (
-                    <span key={s} className="rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-semibold text-fg">
-                      {s}
-                    </span>
-                  ))}
-                  <span className="rounded-full bg-primary-soft px-3 py-1.5 text-[13px] font-semibold text-primary-soft-fg">+ LinkedIn, Indeed & Glassdoor</span>
-                </div>
-              </Feature>
-              <Feature className="md:col-span-2" icon={Target} tone="success" title="Honest fit scores" body="See why you fit — and what's worth addressing — before you spend time applying.">
-                <div className="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
-                  <ScoreRing score={87} size={56} />
-                  <ul className="grid gap-1.5 text-[13px] text-fg">
-                    <li className="flex items-center gap-1.5">
-                      <Check size={14} strokeWidth={3} className="text-success" aria-hidden="true" /> React & TypeScript
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CircleDot size={14} className="text-warn" aria-hidden="true" /> Add a team lead story
-                    </li>
-                  </ul>
-                </div>
-              </Feature>
-              <Feature className="md:col-span-2" icon={FileText} tone="primary" title="Tailored, never invented" body="A cover letter, resume summary and screening answers written for each job — from your real experience.">
-                <p className="mt-6 rounded-2xl border border-border bg-surface p-4 text-[13px] leading-relaxed text-fg">
-                  “…four years building <mark className="rounded bg-primary-soft px-1 text-primary-soft-fg">React dashboards</mark> for{" "}
-                  <mark className="rounded bg-primary-soft px-1 text-primary-soft-fg">20k daily users</mark> — exactly the scale your team is growing
-                  into.”
-                </p>
-              </Feature>
-              <Feature className="md:col-span-4" icon={Bot} tone="primary" title="Autopilot finds jobs while you sleep" body="Save a search and it runs every day. New matches are scored, and the best ones get an application written — waiting for you when you wake up.">
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  {[
-                    ["42", "new jobs found"],
-                    ["12", "scored by AI"],
-                    ["3", "ready to send"],
-                  ].map(([n, l]) => (
-                    <div key={l} className="rounded-2xl border border-border bg-surface p-4 text-center">
-                      <p className="text-3xl font-extrabold tracking-tight text-fg">{n}</p>
-                      <p className="text-[13px] font-medium text-muted">{l}</p>
-                    </div>
-                  ))}
-                </div>
-              </Feature>
-              <Feature className="md:col-span-3" icon={Sparkles} tone="primary" title="Apply without tab-juggling" body="The employer's form opens right inside 5AM Apply, with your letter, answers and details one click from being copied.">
-                <div className="mt-6 grid grid-cols-[1.4fr_1fr] gap-2 rounded-2xl border border-border bg-surface p-3">
-                  <div className="grid content-start gap-2 rounded-xl bg-surface-2 p-3">
-                    {["Full name", "Email", "Why this role?"].map((f) => (
-                      <div key={f}>
-                        <p className="text-[11px] font-semibold text-muted">{f}</p>
-                        <div className="mt-1 h-6 rounded-md border border-border bg-surface" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid content-start gap-2">
-                    {["Cover letter", "Answers", "Resume"].map((f) => (
-                      <div key={f} className="flex items-center justify-between rounded-lg border border-border px-2 py-1.5 text-[12px] font-semibold text-fg">
-                        {f} <span className="rounded bg-primary-soft px-1.5 text-[11px] text-primary-soft-fg">Copy</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Feature>
-              <Feature className="md:col-span-3" icon={Kanban} tone="neutral" title="Every application, tracked" body="Drag cards from saved to applied to interviewing. Celebrate every step forward.">
-                <div className="mt-6 grid grid-cols-3 gap-2">
-                  {(
-                    [
-                      ["Applied", "info", ["Northwind", "Brightpath"]],
-                      ["Interviewing", "violet", ["Lumen Labs"]],
-                      ["Offer", "success", ["Acme Co."]],
-                    ] as [string, Tone, string[]][]
-                  ).map(([col, tone, cards]) => (
-                    <div key={col} className="rounded-xl bg-surface-2 p-2">
-                      <p className="mb-2 px-1 text-[12px] font-bold text-fg">{col}</p>
-                      <div className="grid gap-1.5">
-                        {cards.map((c) => (
-                          <div key={c} className="rounded-lg border border-border bg-surface p-2">
-                            <p className="truncate text-[12px] font-semibold text-fg">{c}</p>
-                            <span className={cn("mt-1 inline-block rounded-full px-1.5 text-[11px] font-semibold", SOFT[tone])}>{col}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Feature>
-              <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-border bg-bg p-7 sm:flex-row sm:items-center md:col-span-6">
-                <div className="flex items-start gap-4">
-                  <IconTile tone="primary" size="lg">
-                    <Puzzle size={22} />
-                  </IconTile>
-                  <div>
-                    <h3 className="text-lg font-bold tracking-tight text-fg">Autofill extension for everything else</h3>
-                    <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-muted">
-                      On Workday, SmartRecruiters and other sites, the browser extension fills your details and tailored answers in one
-                      click — and double-checks every field.
-                    </p>
-                  </div>
-                </div>
-                <ButtonLink href={startHref} variant="secondary">
-                  Try it free
-                </ButtonLink>
-              </div>
+        {/* Promises: always dark, like the logo */}
+        <section aria-labelledby="free-title" className="sunrise border-b border-border py-14">
+          <div className="mx-auto grid max-w-[1360px] gap-8 px-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)] lg:items-center lg:px-10">
+            <div>
+              <h2 id="free-title" className="text-3xl font-extrabold tracking-[-0.03em] text-fg sm:text-4xl">
+                Free, private, yours.
+              </h2>
+              <ButtonLink href={startHref} className="mt-5">
+                {startLabel} <ArrowRight size={16} aria-hidden="true" />
+              </ButtonLink>
             </div>
-          </div>
-        </section>
-
-        {/* Free & private — always dark, like the logo */}
-        <section aria-labelledby="free-title" className="py-20 sm:py-28">
-          <div className="mx-auto max-w-6xl px-5">
-            <div className="sunrise relative overflow-hidden rounded-[28px] border border-border p-8 shadow-lg sm:p-12">
-              <div className="relative grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-wider text-primary-text">Free, really</p>
-                  <h2 id="free-title" className="mt-3 text-3xl font-extrabold leading-tight tracking-[-0.03em] text-fg sm:text-[40px]">
-                    Free because you bring the AI
-                  </h2>
-                  <p className="mt-4 max-w-lg text-[17px] leading-relaxed text-muted">
-                    5AM Apply doesn&apos;t charge you or sell your data. Connect your own OpenRouter account in one click and use free AI
-                    models — no card, no keys to copy, and you can disconnect whenever you like.
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {PROMISES.map((p) => (
+                <li key={p.title} className="rounded-2xl border border-border bg-surface/70 p-4">
+                  <p className="flex items-center gap-2 font-bold text-fg">
+                    <p.icon size={17} aria-hidden="true" className="text-primary-text" /> {p.title}
                   </p>
-                  <ButtonLink href={startHref} size="lg" className="mt-8">
-                    {user ? "Open your dashboard" : "Start for free"} <ArrowRight size={18} aria-hidden="true" />
-                  </ButtonLink>
-                </div>
-                <ul className="grid gap-4 sm:grid-cols-2">
-                  {[
-                    { icon: Sparkles, title: "Free AI models", body: "About 50 AI actions a day at no cost." },
-                    { icon: Lock, title: "Encrypted & private", body: "Keys and resumes are encrypted at rest." },
-                    { icon: EyeOff, title: "No ads, no trackers", body: "Nothing about you is ever sold." },
-                    { icon: Clock3, title: "Yours to keep", body: "MIT-licensed. Self-host in ten minutes." },
-                  ].map((f) => (
-                    <li key={f.title} className="rounded-2xl border border-border bg-surface/70 p-5">
-                      <f.icon size={20} aria-hidden="true" className="text-primary-text" />
-                      <p className="mt-3 font-bold text-fg">{f.title}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-muted">{f.body}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+                  <p className="mt-1 text-sm text-muted">{p.body}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
         {/* FAQ */}
-        <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 pb-20 sm:pb-28">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 lg:grid-cols-[1fr_1.5fr]">
-            <SectionIntro id="faq-title" eyebrow="Questions" title="Good to know" body="Anything else? Open an issue on GitHub — a real person reads every one." align="left" />
-            <div className="grid content-start gap-3">
+        <section id="faq" aria-labelledby="faq-title" className="scroll-mt-16 py-16 sm:py-20">
+          <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
+            <h2 id="faq-title" className="mb-8 text-3xl font-extrabold tracking-[-0.03em] text-fg sm:text-4xl">
+              Questions
+            </h2>
+            <dl className="grid gap-4 md:grid-cols-2">
               {FAQ.map((f) => (
-                <details key={f.q} className="group rounded-2xl border border-border bg-surface shadow-xs open:shadow-sm">
-                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-5 py-4 text-base font-bold text-fg">
-                    {f.q}
-                    <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180" />
-                  </summary>
-                  <p className="px-5 pb-5 text-[15px] leading-relaxed text-muted">{f.a}</p>
-                </details>
+                <div key={f.q} className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
+                  <dt className="flex items-center gap-2 font-bold text-fg">
+                    <Check size={17} aria-hidden="true" className="shrink-0 text-primary-text" /> {f.q}
+                  </dt>
+                  <dd className="mt-1.5 pl-[25px] text-sm leading-relaxed text-muted">{f.a}</dd>
+                </div>
               ))}
-            </div>
+            </dl>
           </div>
         </section>
 
         {/* Final call to action */}
-        <section aria-labelledby="cta-title" className="border-t border-border bg-surface py-20 sm:py-24">
-          <div className="mx-auto max-w-3xl px-5 text-center">
-            <LogoMark size={64} className="mx-auto" />
-            <h2 id="cta-title" className="mt-7 text-[34px] font-extrabold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[46px]">
+        <section aria-labelledby="cta-title" className="mx-auto w-full max-w-[1360px] px-5 pb-16 lg:px-10">
+          <div className="sunrise flex flex-col items-center gap-5 rounded-3xl border border-border px-6 py-12 text-center">
+            <LogoMark size={64} tile={false} className="drop-shadow-[0_0_24px_rgb(255_122_0/0.45)]" />
+            <h2 id="cta-title" className="text-3xl font-extrabold tracking-[-0.03em] text-fg sm:text-4xl">
               Your next job is out there.
-              <br />
-              <span className="text-primary-text">Let&apos;s go find it.</span>
             </h2>
-            <p className="mx-auto mt-5 max-w-lg text-lg leading-relaxed text-muted">Free to use, with free AI. Setting up takes about two minutes.</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <ButtonLink href={startHref} size="lg" className="h-13 px-7 text-base">
-                {user ? "Open your dashboard" : "Get started — it's free"} <ArrowRight size={18} aria-hidden="true" />
+            <div className="flex flex-wrap justify-center gap-3">
+              <ButtonLink href={startHref} size="lg" className="px-7">
+                {startLabel} <ArrowRight size={18} aria-hidden="true" />
               </ButtonLink>
-              <a href={REPO_URL} className={buttonClass("secondary", "lg", "h-13 px-7 text-base")}>
+              <a href={REPO_URL} className={buttonClass("secondary", "lg", "px-7")}>
                 <GithubIcon size={18} /> Star on GitHub
               </a>
             </div>
@@ -409,13 +279,12 @@ export default async function Home() {
         </section>
       </main>
 
-      {/* Footer — always dark, like the logo */}
+      {/* Footer: always dark, like the logo */}
       <footer className="border-t border-border bg-bg text-fg scheme-dark">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 md:flex-row md:items-center md:justify-between">
-          <div>
+        <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-4 px-5 py-6 lg:px-10">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Logo />
-            <p className="mt-3 text-sm font-semibold text-primary-text">Find. Tailor. Apply.</p>
-            <p className="mt-1 max-w-sm text-sm text-muted">Free, open-source job search with AI you control. Job listings belong to the boards they link to.</p>
+            <span className="text-sm font-semibold text-primary-text">Find. Tailor. Apply.</span>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
             <Link href="/privacy" className="rounded-lg px-3 py-2 text-muted hover:bg-surface-2 hover:text-fg">
@@ -428,59 +297,6 @@ export default async function Home() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function SectionIntro({
-  id,
-  eyebrow,
-  title,
-  body,
-  align = "center",
-}: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  body: string;
-  align?: "center" | "left";
-}) {
-  return (
-    <div className={align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-md"}>
-      <p className="text-sm font-bold uppercase tracking-wider text-primary-text">{eyebrow}</p>
-      <h2 id={id} className="mt-3 text-3xl font-extrabold leading-tight tracking-[-0.03em] text-fg sm:text-[40px]">
-        {title}
-      </h2>
-      <p className="mt-4 text-lg leading-relaxed text-muted">{body}</p>
-    </div>
-  );
-}
-
-function Feature({
-  icon: Icon,
-  tone,
-  title,
-  body,
-  className,
-  children,
-}: {
-  icon: typeof Search;
-  tone: Tone;
-  title: string;
-  body: string;
-  className?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className={cn("lift flex flex-col rounded-3xl border border-border bg-bg p-7", className)}>
-      <IconTile tone={tone}>
-        <Icon size={20} />
-      </IconTile>
-      <h3 className="mt-5 text-lg font-bold tracking-tight text-fg">{title}</h3>
-      <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{body}</p>
-      <div className="mt-auto" aria-hidden="true">
-        {children}
-      </div>
     </div>
   );
 }

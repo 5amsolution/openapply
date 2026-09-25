@@ -15,20 +15,20 @@ export const STEPS = {
     { label: "Reading your resume", after: 0 },
     { label: "Picking out your experience and skills", after: 5 },
     { label: "Filling in your profile", after: 14 },
-    { label: "Almost done — free models can take up to a minute", after: 30 },
+    { label: "Almost done. Free models can take up to a minute", after: 30 },
   ],
   score: [
     { label: "Reading the job description", after: 0 },
     { label: "Comparing it with your profile", after: 4 },
     { label: "Scoring your fit", after: 10 },
-    { label: "Still thinking — free models can be slow at busy times", after: 25 },
+    { label: "Still thinking. Free models can be slow at busy times", after: 25 },
   ],
   draft: [
     { label: "Scoring your fit for this job", after: 0 },
     { label: "Writing your cover letter", after: 8 },
     { label: "Tailoring your resume summary and bullets", after: 22 },
     { label: "Answering screening questions", after: 35 },
-    { label: "Final touches — hang tight", after: 55 },
+    { label: "Final touches, hang tight", after: 55 },
   ],
   answers: [
     { label: "Reading the questions", after: 0 },
@@ -40,11 +40,11 @@ export const STEPS = {
     { label: "Filtering out jobs you've already seen", after: 12 },
     { label: "Scoring the most promising jobs with AI", after: 20 },
     { label: "Writing applications for the best matches", after: 45 },
-    { label: "This run is taking a while — it can take a few minutes", after: 120 },
+    { label: "This run is taking a while. It can take a few minutes", after: 120 },
   ],
   test: [
     { label: "Contacting your AI provider", after: 0 },
-    { label: "Waiting for a reply — free models can take a moment", after: 6 },
+    { label: "Waiting for a reply. Free models can take a moment", after: 6 },
   ],
 } satisfies Record<string, Step[]>;
 
@@ -116,7 +116,7 @@ export function ProgressBar({ className }: { className?: string }) {
 export function friendlyError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   if (/unexpected response was received from the server|Failed to find Server Action|Failed to fetch|NetworkError|Load failed/i.test(msg)) {
-    return "The connection to 5AM Apply was interrupted — it may have just been updated. Refresh the page and try again.";
+    return "The connection to 5AM Apply was interrupted. It may have just been updated, so refresh the page and try again.";
   }
   return msg;
 }

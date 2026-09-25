@@ -111,7 +111,7 @@ export function AISettingsForm({
           </datalist>
         </div>
         <div className="md:col-span-2">
-          <Label htmlFor="ai-key" hint={sameProvider && current?.api_key_hint ? `saved: ${current.api_key_hint} — leave blank to keep` : undefined}>
+          <Label htmlFor="ai-key" hint={sameProvider && current?.api_key_hint ? `saved: ${current.api_key_hint} (leave blank to keep)` : undefined}>
             API key
           </Label>
           <Input

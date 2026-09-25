@@ -18,7 +18,7 @@ const POSTED: [Posted, string][] = [
   ["30", "Past month"],
 ];
 
-/** Search results with sorting, quick filters and "show more" paging — all instant, in the browser. */
+/** Search results with sorting, quick filters and "show more" paging, all instant in the browser. */
 export function JobResults({ items, header }: { items: ResultItem[]; header: React.ReactNode }) {
   const [sort, setSort] = useState<Sort>("relevance");
   const [posted, setPosted] = useState<Posted>("any");

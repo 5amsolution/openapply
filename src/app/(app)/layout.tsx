@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </aside>
 
       <main id="main" className="page-glow min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 md:px-8 md:pb-14 md:pt-8 lg:px-10">
-        <div className="stagger mx-auto w-full max-w-6xl">{children}</div>
+        <div className="stagger mx-auto w-full max-w-[1440px]">{children}</div>
       </main>
 
       <BottomTabs badges={badges} />

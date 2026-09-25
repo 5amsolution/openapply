@@ -47,7 +47,7 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
           </>
         }
         title="Find jobs"
-        description="One search across remote job boards and top company career pages — every result scored against your resume."
+        description="One search across remote job boards and top company career pages. Every result is scored against your resume."
       />
 
       <Card className="mb-6 p-3 shadow-sm sm:p-4">
@@ -60,7 +60,7 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
                 defaultValue={q}
                 required
                 aria-label="Job title, skill or company"
-                placeholder="Job title, skill or company — e.g. product designer"
+                placeholder="Job title, skill or company, e.g. product designer"
                 className="h-12 pl-11 text-base"
               />
             </div>
@@ -143,7 +143,7 @@ async function Results({ userId, q, loc, remote, src }: { userId: string; q: str
   const items: ResultItem[] = jobs.map((job, rank) => {
     const app = appByJob.get(job.id);
     const score = app?.match_score ?? (profile ? keywordMatch(profile as unknown as Profile, job).score : null);
-    // Send only what a result card shows — descriptions stay on the server.
+    // Send only what a result card shows, descriptions stay on the server.
     const { id, title, company, company_logo, location, remote, salary_min, salary_max, salary_currency, salary_period, source, posted_at, tags } = job;
     return {
       job: { id, title, company, company_logo, location, remote, salary_min, salary_max, salary_currency, salary_period, source, posted_at, tags },
@@ -183,7 +183,7 @@ function ResultsSkeleton() {
           { label: "Searching Remotive, Himalayas, Jobicy and Remote OK", after: 0 },
           { label: "Checking company career pages on Greenhouse, Lever and Ashby", after: 3 },
           { label: "Removing duplicates and ranking the best matches", after: 9 },
-          { label: "Some job boards are slow today — nearly there", after: 18 },
+          { label: "Some job boards are slow today. Nearly there", after: 18 },
         ]}
       />
       {Array.from({ length: 5 }).map((_, i) => (

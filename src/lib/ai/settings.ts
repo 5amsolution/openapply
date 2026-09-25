@@ -18,7 +18,7 @@ export class TokenLimitError extends Error {
   }
 }
 
-/** Public view of a user's AI settings — never includes the key itself. */
+/** Public view of a user's AI settings (never includes the key itself). */
 export async function getAISettingsPublic(userId: string) {
   const { data } = await createAdminClient()
     .from("ai_settings")

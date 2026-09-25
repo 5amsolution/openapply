@@ -187,7 +187,7 @@
         continue;
       }
 
-      // Autocomplete widgets (react-select etc.) discard programmatic values — leave for the user.
+      // Autocomplete widgets (react-select etc.) discard programmatic values, so leave them for the user.
       if (isCombobox(el)) {
         if (el.required || el.getAttribute("aria-required") === "true" || /\*/.test(label)) {
           el.style.outline = TODO;

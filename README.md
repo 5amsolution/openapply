@@ -31,7 +31,8 @@ OpenAI-compatible key under Settings → Advanced.
   applications for matches above your threshold. A daily cap limits spend.
 - **Tracker.** A board with Saved → Ready → Applied → Interviewing → Offer / Rejected columns, plus notes.
 - **Autofill extension.** Fills Greenhouse, Lever, Ashby, SmartRecruiters, Workday (page by page) and most plain
-  forms, and attaches your resume. It never submits.
+  forms, and attaches your resume. It never submits. Users download it from Settings and connect it in one click
+  (see `extension/README.md`).
 - **Free AI via OpenRouter.** One-click OAuth (PKCE) connection to the user's own OpenRouter account, free models by
   default, with automatic fallback to other free models when one is busy.
 - **Privacy and cost controls.** Keys are encrypted with AES-256-GCM and only used server-side. Per-user usage

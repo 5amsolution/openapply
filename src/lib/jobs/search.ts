@@ -118,7 +118,7 @@ export async function upsertJobs(jobs: JobInput[], userId?: string): Promise<Job
   }
 
   // Someone else's private posting that this search also found is public data
-  // for both of them now — open it up so the link works for everyone who has it.
+  // for both of them now, open it up so the link works for everyone who has it.
   const toPublish = jobs
     .map((j) => known.get(key(j)))
     .filter((k): k is NonNullable<typeof k> => !!k && !!k.owner_id && k.owner_id !== userId);

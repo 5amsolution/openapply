@@ -5,7 +5,7 @@ export function formatSalary(job: Pick<Job, "salary_min" | "salary_max" | "salar
   if (!min && !max) return null;
   const cur = job.salary_currency || "";
   const fmt = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(Math.round(n)));
-  const range = min && max && min !== max ? `${fmt(min)}–${fmt(max)}` : fmt((min || max)!);
+  const range = min && max && min !== max ? `${fmt(min)}-${fmt(max)}` : fmt((min || max)!);
   const period = job.salary_period ? ` / ${job.salary_period.replace(/ly$/, "").replace("annual", "yr")}` : "";
   return `${cur === "USD" ? "$" : cur ? cur + " " : ""}${range}${period}`;
 }

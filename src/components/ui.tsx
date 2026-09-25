@@ -55,16 +55,18 @@ export type ButtonSize = "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const BUTTON_BASE =
   "inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold " +
-  "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-150 ease-out " +
+  "transition-[background-color,border-color,color,box-shadow,translate,scale,opacity,filter] duration-200 ease-out " +
   "active:scale-[0.97] disabled:pointer-events-none";
 
+// Every button answers the pointer: it lifts a little and brightens on hover.
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-primary-fg shadow-sm hover:shadow-md hover:brightness-[1.06]",
-  secondary: "border border-border-strong bg-surface text-fg shadow-xs hover:bg-surface-2",
-  soft: "bg-primary-soft text-primary-soft-fg hover:bg-primary-soft-hover",
+  primary: "bg-brand text-primary-fg shadow-sm hover:-translate-y-0.5 hover:shadow-lg hover:brightness-[1.08]",
+  secondary: "border border-border-strong bg-surface text-fg shadow-xs hover:-translate-y-0.5 hover:border-hover-border hover:bg-surface-2 hover:shadow-md",
+  soft: "bg-primary-soft text-primary-soft-fg hover:-translate-y-0.5 hover:bg-primary-soft-hover",
   ghost: "text-muted hover:bg-surface-2 hover:text-fg",
-  danger: "border border-border-strong bg-surface text-danger shadow-xs hover:border-danger hover:bg-danger-soft hover:text-danger-soft-fg",
-  "danger-solid": "bg-danger-solid text-danger-solid-fg shadow-sm hover:opacity-90",
+  danger:
+    "border border-border-strong bg-surface text-danger shadow-xs hover:-translate-y-0.5 hover:border-danger hover:bg-danger-soft hover:text-danger-soft-fg",
+  "danger-solid": "bg-danger-solid text-danger-solid-fg shadow-sm hover:-translate-y-0.5 hover:opacity-90",
 };
 
 // Disabled buttons stay readable (no fading): a quiet grey fill with 5:1+ text.
@@ -232,9 +234,10 @@ export function PageHeader({
 
 /* ----------------------------------------------------------------- fields */
 
+// Fields sit "inset" (darker than their card in dark mode) with a clearly visible edge.
 const FIELD =
-  "block w-full rounded-xl border border-border-strong bg-surface px-3.5 text-[15px] text-fg shadow-xs outline-none " +
-  "transition-[border-color,box-shadow] duration-150 placeholder:text-subtle " +
+  "block w-full rounded-xl border border-border-strong bg-field px-3.5 text-[15px] text-fg shadow-xs outline-none " +
+  "transition-[border-color,box-shadow] duration-150 placeholder:text-subtle hover:border-hover-border " +
   "focus:border-focus focus:ring-4 focus:ring-ring " +
   "disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted";
 
@@ -242,8 +245,9 @@ export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(FIELD, "h-11", className)} {...props} />;
 }
 
+/** Grows with its content (no tiny scroll boxes), up to most of the screen. */
 export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
-  return <textarea className={cn(FIELD, "min-h-28 py-3 leading-relaxed", className)} {...props} />;
+  return <textarea className={cn(FIELD, "field-sizing-content min-h-28 max-h-[70vh] py-3 leading-relaxed", className)} {...props} />;
 }
 
 export function Select({ className, wrapperClassName, ...props }: ComponentProps<"select"> & { wrapperClassName?: string }) {
@@ -364,7 +368,7 @@ export function ScoreRing({
         )}
       </svg>
       <span className="absolute inset-0 flex items-center justify-center font-extrabold tabular-nums text-fg" aria-hidden="true">
-        <span style={{ fontSize: size * 0.28 }}>{score ?? "–"}</span>
+        <span style={{ fontSize: size * 0.28 }}>{score ?? "?"}</span>
         {score != null && <span className="text-muted" style={{ fontSize: size * 0.15 }}>%</span>}
       </span>
     </div>

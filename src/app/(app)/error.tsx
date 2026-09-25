@@ -19,7 +19,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-fg">That didn&apos;t load</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-muted">
         {error.digest
-          ? "Something went wrong on our side. Your data is safe — please try again in a moment."
+          ? "Something went wrong on our side. Your data is safe, so please try again in a moment."
           : friendlyError(error)}
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">

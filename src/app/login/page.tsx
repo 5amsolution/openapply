@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Sign in" };
 
 const BENEFITS = [
   { icon: Search, title: "Find", body: "Every job board and hundreds of career pages in one search, scored against your resume." },
-  { icon: Sparkles, title: "Tailor", body: "A cover letter and answers written for each job — from your real experience, never invented." },
+  { icon: Sparkles, title: "Tailor", body: "A cover letter and answers written for each job from your real experience. Never invented." },
   { icon: Bot, title: "Apply", body: "Everything ready to copy into the employer's form. Autopilot finds new matches every day." },
 ];
 
@@ -24,7 +24,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      {/* Brand panel — always dark, like the logo */}
+      {/* Brand panel: always dark, like the logo */}
       <section className="sunrise relative hidden overflow-hidden p-10 lg:flex lg:flex-col xl:p-14" aria-label="About 5AM Apply">
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgb(255_255_255/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.035)_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]"
@@ -40,7 +40,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
           <p className="mt-6 text-[44px] font-extrabold leading-[1.05] tracking-[-0.035em] text-fg">
             Find. Tailor. <span className="text-brand">Apply.</span>
           </p>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted">The free job search that does the busywork — so you can focus on landing the job.</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted">The free job search that does the busywork, so you can focus on landing the job.</p>
           <ul className="mt-9 grid gap-6">
             {BENEFITS.map((b) => (
               <li key={b.title} className="flex gap-4">

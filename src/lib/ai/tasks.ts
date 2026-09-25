@@ -4,12 +4,33 @@ import { generateObject, type AIConfig, type AIUsage } from "@/lib/ai/providers"
 import type { Job, Profile } from "@/lib/types";
 
 // The three things the AI does for a job seeker: read their resume, judge a
-// job against it, and write the application. All prompts insist on honesty —
+// job against it, and write the application. All prompts insist on honesty:
 // the model may reword real experience but must never invent any.
 
 const HONESTY =
   "Never invent employers, titles, dates, degrees, certifications, metrics or skills the candidate does not have. " +
   "You may rephrase and emphasize real experience. If something is missing, leave it out rather than making it up.";
+
+// Em and en dashes make writing read as AI-generated, so none of the text we
+// write for people uses them: the prompt asks, and noDashes() cleans up the rest.
+const STYLE = "Never use em dashes or en dashes. Use commas, periods, colons or 'to' instead.";
+
+const EN = String.fromCharCode(0x2013);
+const EM = String.fromCharCode(0x2014);
+const DASH_RULES: [RegExp, string][] = [
+  [new RegExp(`(\\d)[ \\t]*[${EN}${EM}][ \\t]*(\\d)`, "g"), "$1-$2"], // ranges: 2019-2021
+  [new RegExp(`^[ \\t]*[${EN}${EM}][ \\t]*`, "gm"), ""], // dash at the start of a line
+  [new RegExp(`[ \\t]*${EM}[ \\t]*`, "g"), ", "], // em dash between clauses
+  [new RegExp(`[ \\t]+${EN}[ \\t]+`, "g"), ", "], // spaced en dash used the same way
+  [new RegExp(EN, "g"), "-"],
+  [/,[ \t]*,/g, ","],
+  [/,[ \t]*([.!?:;])/g, "$1"],
+  [/,[ \t]*$/gm, ""],
+];
+
+export function noDashes(text: string): string {
+  return DASH_RULES.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), text);
+}
 
 // ---------------------------------------------------------------------------
 // 1. Resume → structured profile
@@ -82,11 +103,20 @@ export async function scoreMatch(config: AIConfig, profile: Profile, job: Job) {
     system:
       "You are a pragmatic recruiter. Score candidate-job fit honestly: 85+ means clearly qualified, " +
       "60-84 means worth applying, below 60 means a stretch. Consider seniority, core skills, domain, " +
-      "location/remote constraints and work authorization.",
+      "location/remote constraints and work authorization. " +
+      STYLE,
     prompt: `${candidateBlock(profile)}\n\n${jobBlock(job)}\n\nScore this match.`,
     schema: MatchSchema,
     maxTokens: 2000,
-  });
+  }).then((res) => ({
+    ...res,
+    data: {
+      ...res.data,
+      summary: noDashes(res.data.summary),
+      strengths: res.data.strengths.map(noDashes),
+      gaps: res.data.gaps.map(noDashes),
+    },
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -125,11 +155,13 @@ export async function draftApplication(
   const questions = [...COMMON_QUESTIONS, ...extraQuestions].map((q) => `- ${q}`).join("\n");
   return generateObject(config, {
     system:
-      "You write job applications that sound like a real, specific person — direct, warm, no clichés " +
+      "You write job applications that sound like a real, specific person: direct, warm, no clichés " +
       "('I am writing to express', 'passionate', 'synergy'). Reference concrete details from the job posting " +
       "and the candidate's real experience. Answer screening questions in first person. For salary, " +
       "authorization, sponsorship and start date use the candidate's stated preferences; if unknown, give a " +
       "short, neutral answer the candidate can edit. " +
+      STYLE +
+      " " +
       HONESTY,
     prompt:
       `${candidateBlock(profile)}\n\n${jobBlock(job)}\n\n` +
@@ -137,7 +169,15 @@ export async function draftApplication(
       "Write the application package.",
     schema: ApplicationDraftSchema,
     maxTokens: 8000,
-  });
+  }).then((res) => ({
+    ...res,
+    data: {
+      cover_letter: noDashes(res.data.cover_letter),
+      tailored_summary: noDashes(res.data.tailored_summary),
+      tailored_bullets: res.data.tailored_bullets.map((b) => ({ role: noDashes(b.role), bullets: b.bullets.map(noDashes) })),
+      answers: res.data.answers.map((a) => ({ question: a.question, answer: noDashes(a.answer) })),
+    },
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +188,7 @@ function candidateBlock(p: Profile): string {
   const experience = (p.experience ?? [])
     .map(
       (e) =>
-        `- ${e.title} at ${e.company} (${e.start || "?"} – ${e.end || "?"})${e.location ? `, ${e.location}` : ""}\n` +
+        `- ${e.title} at ${e.company} (${e.start || "?"} to ${e.end || "?"})${e.location ? `, ${e.location}` : ""}\n` +
         (e.bullets ?? []).map((b) => `    • ${b}`).join("\n"),
     )
     .join("\n");
@@ -185,7 +225,7 @@ function candidateBlock(p: Profile): string {
 function jobBlock(j: Job): string {
   const salary =
     j.salary_min || j.salary_max
-      ? `${j.salary_min ?? "?"}–${j.salary_max ?? "?"} ${j.salary_currency ?? ""} ${j.salary_period ?? ""}`
+      ? `${j.salary_min ?? "?"} to ${j.salary_max ?? "?"} ${j.salary_currency ?? ""} ${j.salary_period ?? ""}`
       : "not listed";
   return [
     "<job>",

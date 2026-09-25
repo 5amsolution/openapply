@@ -49,14 +49,14 @@ export default async function ProfilePage(props: PageProps<"/profile">) {
             <ScoreRing score={complete} size={48} label="Profile completeness" />
             <div>
               <p className="text-sm font-bold text-fg">{complete === 100 ? "Profile complete" : `${complete}% complete`}</p>
-              <p className="text-xs text-muted">{complete === 100 ? "Great — the AI has everything" : "Fuller profiles get better letters"}</p>
+              <p className="text-xs text-muted">{complete === 100 ? "Great, the AI has everything" : "Fuller profiles get better letters"}</p>
             </div>
           </div>
         }
       />
       {sp.welcome && (
         <Notice tone="success" title="Welcome to 5AM Apply!" className="mb-5">
-          Start by uploading your resume — we&apos;ll fill in the rest for you.
+          Start by uploading your resume and we&apos;ll fill in the rest for you.
         </Notice>
       )}
       <ResumeUpload filename={profile.resume_filename} aiReady={aiReady} />

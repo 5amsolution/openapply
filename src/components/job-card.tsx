@@ -7,7 +7,7 @@ import { formatSalary, STATUS_LABELS, timeAgo } from "@/lib/format";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Job } from "@/lib/types";
 
-/** What a result card needs — no description, so result lists stay light. */
+/** What a result card needs (no description, so result lists stay light). */
 export type JobSummary = Pick<
   Job,
   "id" | "title" | "company" | "company_logo" | "location" | "remote" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "source" | "posted_at" | "tags"

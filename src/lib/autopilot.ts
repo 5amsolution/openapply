@@ -9,7 +9,7 @@ import type { AutopilotRule, Job } from "@/lib/types";
 // The autopilot: for each active rule, find new jobs, pre-filter them with the
 // free keyword matcher, have the user's AI score the best candidates, and
 // write full application packages for the ones above the rule's threshold.
-// Packages land in the "Ready to apply" column — submitting stays with the
+// Packages land in the "Ready to apply" column, submitting stays with the
 // user (one click with the browser extension), because job boards forbid
 // automated submissions and most require a human-verified form anyway.
 
@@ -42,7 +42,7 @@ export async function startRuleRun(rule: AutopilotRule): Promise<string> {
 export async function closeInterruptedRuns(opts: { all?: boolean; userId?: string } = {}) {
   let q = createAdminClient()
     .from("agent_runs")
-    .update({ finished_at: new Date().toISOString(), error: "Interrupted — the server restarted. Run it again." })
+    .update({ finished_at: new Date().toISOString(), error: "Interrupted because the server restarted. Run it again." })
     .is("finished_at", null);
   if (!opts.all) q = q.lt("started_at", new Date(Date.now() - STALE_RUN_MS).toISOString());
   if (opts.userId) q = q.eq("user_id", opts.userId);

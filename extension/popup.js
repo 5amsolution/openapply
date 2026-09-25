@@ -29,17 +29,21 @@ async function currentTab() {
   return tab;
 }
 
+const siteUrl = () => (config.server || globalThis.DEFAULT_SERVER || "").replace(/\/$/, "");
+
 async function load() {
   const stored = await chrome.storage.local.get(["server", "token"]);
   config = { server: stored.server || "", token: stored.token || "" };
-  $("server").value = config.server;
+  $("server").value = config.server || globalThis.DEFAULT_SERVER || "";
   $("token").value = config.token;
 
   if (!config.server || !config.token) {
-    $("settings").hidden = false;
-    status("Connect the extension to your 5AM Apply account first.");
+    $("connect").hidden = false;
+    $("main").hidden = true;
     return;
   }
+  $("connect").hidden = true;
+  $("main").hidden = false;
 
   try {
     const tab = await currentTab();
@@ -59,7 +63,7 @@ async function load() {
     for (const a of applications) {
       const opt = document.createElement("option");
       opt.value = a.id;
-      opt.textContent = `${a.title} — ${a.company}`;
+      opt.textContent = `${a.title} at ${a.company}`;
       select.appendChild(opt);
     }
     if (apps.match) select.value = apps.match.id;
@@ -90,6 +94,11 @@ $("application").addEventListener("change", updateButtons);
 
 $("toggle-settings").addEventListener("click", () => {
   $("settings").hidden = !$("settings").hidden;
+});
+
+$("open-site").addEventListener("click", () => {
+  chrome.tabs.create({ url: `${siteUrl()}/settings#extension` });
+  window.close();
 });
 
 $("save-settings").addEventListener("click", async () => {

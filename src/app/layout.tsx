@@ -6,20 +6,20 @@ const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin
 const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const description =
-  "Find. Tailor. Apply. Free, open-source job search across dozens of boards — AI scores how well you fit and writes a tailored application for every role.";
+  "Find. Tailor. Apply. Free, open-source job search across dozens of boards. AI scores how well you fit and writes a tailored application for every role.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   applicationName: "5AM Apply",
-  title: { default: "5AM Apply — Find. Tailor. Apply.", template: "%s · 5AM Apply" },
+  title: { default: "5AM Apply · Find. Tailor. Apply.", template: "%s · 5AM Apply" },
   description,
   openGraph: {
-    title: "5AM Apply — Find. Tailor. Apply.",
+    title: "5AM Apply · Find. Tailor. Apply.",
     description,
     siteName: "5AM Apply",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "5AM Apply — Find. Tailor. Apply.", description },
+  twitter: { card: "summary_large_image", title: "5AM Apply · Find. Tailor. Apply.", description },
 };
 
 export const viewport: Viewport = {
@@ -31,7 +31,9 @@ export const viewport: Viewport = {
 };
 
 // Applies a saved light/dark choice before the first paint (no flash). "System" stores nothing.
-const themeScript = `(function(){try{var t=localStorage.getItem("oa-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
+// Also turns hover effects on at the first mouse/trackpad movement: touchscreen laptops
+// often report "no hover" even though their trackpad can hover.
+const themeScript = `(function(){var d=document.documentElement;try{var t=localStorage.getItem("oa-theme");if(t==="light"||t==="dark")d.setAttribute("data-theme",t)}catch(e){}function h(e){if(e.pointerType==="mouse"||e.pointerType==="pen"){d.setAttribute("data-hover","");removeEventListener("pointermove",h)}}addEventListener("pointermove",h,{passive:true})})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

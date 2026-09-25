@@ -52,7 +52,7 @@ const base = {
 } satisfies Partial<JobInput>;
 
 // ---------------------------------------------------------------------------
-// Remotive — remote jobs, keyword search
+// Remotive, remote jobs, keyword search
 // ---------------------------------------------------------------------------
 const remotive: JobSource = {
   id: "remotive",
@@ -98,7 +98,7 @@ const remotive: JobSource = {
 };
 
 // ---------------------------------------------------------------------------
-// Himalayas — remote jobs, keyword search
+// Himalayas, remote jobs, keyword search
 // ---------------------------------------------------------------------------
 const himalayas: JobSource = {
   id: "himalayas",
@@ -153,7 +153,7 @@ const himalayas: JobSource = {
 };
 
 // ---------------------------------------------------------------------------
-// Jobicy — remote jobs, tag search (one tag per request)
+// Jobicy, remote jobs, tag search (one tag per request)
 // ---------------------------------------------------------------------------
 const jobicy: JobSource = {
   id: "jobicy",
@@ -205,7 +205,7 @@ const jobicy: JobSource = {
 };
 
 // ---------------------------------------------------------------------------
-// Remote OK — full remote feed, filtered locally (cached for 30 minutes)
+// Remote OK, full remote feed, filtered locally (cached for 30 minutes)
 // ---------------------------------------------------------------------------
 let remoteOkCache: { at: number; jobs: JobInput[] } | null = null;
 
@@ -261,7 +261,7 @@ const remoteok: JobSource = {
 };
 
 // ---------------------------------------------------------------------------
-// Arbeitnow — Europe-focused board (on-site + remote), filtered locally
+// Arbeitnow, Europe-focused board (on-site + remote), filtered locally
 // ---------------------------------------------------------------------------
 const arbeitnow: JobSource = {
   id: "arbeitnow",

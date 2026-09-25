@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/** POST { id } — mark an application as applied after the user submits. */
+/** POST { id }: mark an application as applied after the user submits. */
 export async function POST(request: NextRequest) {
   const userId = await authenticateExtension(request);
   if (!userId) return json({ error: "Invalid or revoked token" }, 401);
