@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Bot, FileText, KeyRound, Puzzle, Search, ShieldCheck } from "lucide-react";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { Bot, FileText, KeyRound, Puzzle, Search, ShieldCheck } from "lucide-react";
+import { LandingMosaic } from "@/components/landing-mosaic";
+import "./landing.css";
 import { GithubIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { ButtonLink, Card } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-jakarta" });
 
 const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/openapply/openapply";
 
@@ -14,8 +19,8 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
+    <div className={`${jakarta.variable} flex min-h-screen flex-col`}>
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4">
         <Logo />
         <nav className="flex items-center gap-2">
           <a href={REPO_URL} className="hidden items-center gap-1.5 px-3 py-2 text-sm text-muted hover:text-fg sm:flex">
@@ -35,28 +40,9 @@ export default async function Home() {
       </header>
 
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pt-24">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Free forever · Open source · Free AI included
-          </p>
-          <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
-            Let AI do the tedious part of the job hunt.
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-muted">
-            OpenApply searches a dozen job boards at once, scores every posting against your resume, and writes a
-            tailored cover letter and screening answers for each one. You review, click apply, and move on.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href={user ? "/jobs" : "/login?mode=signup"} className="px-5 py-2.5 text-base">
-              Start searching <ArrowRight size={18} />
-            </ButtonLink>
-            <ButtonLink href="#how" variant="secondary" className="px-5 py-2.5 text-base">
-              How it works
-            </ButtonLink>
-          </div>
-        </section>
+        <LandingMosaic signedIn={!!user} />
 
-        <section id="how" className="mx-auto grid max-w-6xl gap-4 px-5 pb-20 sm:grid-cols-2 lg:grid-cols-3">
+        <section id="how" className="mx-auto grid max-w-6xl scroll-mt-6 gap-4 px-5 pb-20 pt-10 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
               icon: Search,
