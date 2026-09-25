@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
+import { closeInterruptedRuns } from "@/lib/autopilot";
 import { enabledSources } from "@/lib/jobs/sources";
 import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { Card, Notice, PageHeader } from "@/components/ui";
@@ -13,6 +14,7 @@ export const metadata: Metadata = { title: "Autopilot" };
 
 export default async function AutopilotPage() {
   const { supabase, user } = await requireUser();
+  await closeInterruptedRuns({ userId: user.id });
   const hasOwnJSearch = !!(await getUserSourceKeyInfo(user.id, "jsearch"));
   const [{ data: rules }, { data: runs }, aiReady, { data: profile }] = await Promise.all([
     supabase.from("autopilot_rules").select("*").order("created_at"),
@@ -54,6 +56,9 @@ export default async function AutopilotPage() {
           remoteOnly: profile?.remote_preference === "remote",
         }}
         aiReady={aiReady}
+        activeRuns={Object.fromEntries(
+          (runs ?? []).filter((r) => !r.finished_at && r.rule_id).map((r) => [r.rule_id as string, r.id]),
+        )}
       />
 
       <Card className="mt-8 p-5">

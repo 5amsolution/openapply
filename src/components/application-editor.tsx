@@ -13,7 +13,7 @@ import {
 } from "@/app/(app)/actions";
 import { Badge, Button, Card, Notice, ScoreBadge, Textarea } from "@/components/ui";
 import { StatusSelect } from "@/components/status-select";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Application, Job } from "@/lib/types";
 
@@ -55,7 +55,7 @@ export function ApplicationEditor({
       try {
         await fn();
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        setError(friendlyError(e));
       } finally {
         setBusy("");
       }

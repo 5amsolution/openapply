@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ExternalLink, Globe } from "lucide-react";
 import { removeJSearchKeyAction, saveJSearchKeyAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
-import { ProgressSteps } from "@/components/progress";
+import { ProgressSteps, friendlyError } from "@/components/progress";
 
 type Info = { key_hint: string | null; monthly_limit: number; usedThisMonth: number } | null;
 
@@ -24,7 +24,7 @@ export function JSearchKeyCard({ info, siteKeyAvailable }: { info: Info; siteKey
       setKey("");
       router.refresh();
     } catch (e) {
-      setMessage({ tone: "danger", text: e instanceof Error ? e.message : String(e) });
+      setMessage({ tone: "danger", text: friendlyError(e) });
     } finally {
       setBusy("");
     }

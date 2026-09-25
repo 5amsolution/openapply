@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExternalLink, KeyRound } from "lucide-react";
 import { removeAIKeyAction, saveAISettingsAction, testAIKeyAction } from "@/app/(app)/actions";
 import { Button, Input, Label, Notice, Select } from "@/components/ui";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 import type { ProviderId } from "@/lib/ai/providers";
 
 type ProviderOption = { id: ProviderId; label: string; keyUrl: string; baseUrl: string; models: { id: string; label: string }[] };
@@ -40,7 +40,7 @@ export function AISettingsForm({
         setMessage({ tone: "accent", text: await fn() });
         router.refresh();
       } catch (e) {
-        setMessage({ tone: "danger", text: e instanceof Error ? e.message : String(e) });
+        setMessage({ tone: "danger", text: friendlyError(e) });
       } finally {
         setBusy("");
       }

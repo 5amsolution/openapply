@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileUp, Sparkles } from "lucide-react";
 import { fillProfileFromResumeAction, uploadResumeAction } from "@/app/(app)/actions";
 import { Button, Card, Notice } from "@/components/ui";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 
 type Message = { tone: "accent" | "danger" | "info" | "warn"; text: string };
 
@@ -15,7 +15,11 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
   const input = useRef<HTMLInputElement>(null);
   // Run async work outside a transition so "busy" state renders immediately
   // (state set inside startTransition only shows once the whole action finishes).
-  const start = (fn: () => Promise<void>) => void fn();
+  const start = (fn: () => Promise<void>) =>
+    void fn().catch((e) => {
+      setBusy("");
+      setMessage({ tone: "danger", text: friendlyError(e) });
+    });
   const [busy, setBusy] = useState<"" | "upload" | "fill">("");
   const [message, setMessage] = useState<Message | null>(null);
   const pending = busy !== "";

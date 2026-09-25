@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Target } from "lucide-react";
 import { analyzeJobAction, draftApplicationAction, saveJobAction } from "@/app/(app)/actions";
 import { Button, Card, Notice, ScoreBadge } from "@/components/ui";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 import { STATUS_LABELS } from "@/lib/format";
 import type { Application } from "@/lib/types";
 import type { KeywordMatch } from "@/lib/matching";
@@ -30,7 +30,11 @@ export function JobAIPanel({
   const [busy, setBusy] = useState<"" | "analyze" | "draft" | "save">("");
   // Run async work outside a transition so "busy" state renders immediately
   // (state set inside startTransition only shows once the whole action finishes).
-  const start = (fn: () => Promise<void>) => void fn();
+  const start = (fn: () => Promise<void>) =>
+    void fn().catch((e) => {
+      setBusy("");
+      setError(friendlyError(e));
+    });
 
   const run = (kind: "analyze" | "draft" | "save") =>
     start(async () => {

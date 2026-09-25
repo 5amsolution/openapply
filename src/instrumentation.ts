@@ -38,14 +38,14 @@ export async function register() {
   setInterval(tick, 60 * 60_000).unref();
 
   // Keep the whole-board job sources cached so searches stay fast (cache lives 1h).
-  const warm = () =>
-    fetch(`http://127.0.0.1:${port}/api/cron/warm`, {
+  const warm = (boot = false) =>
+    fetch(`http://127.0.0.1:${port}/api/cron/warm${boot ? "?boot=1" : ""}`, {
       method: "POST",
       headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
     })
       .then((r) => r.json())
       .then((b: { ms: number }) => console.log(`[warm] job boards cached in ${b.ms}ms`))
       .catch((err) => console.error("[warm] failed", err));
-  setTimeout(warm, 5_000).unref();
-  setInterval(warm, 50 * 60_000).unref();
+  setTimeout(() => warm(true), 5_000).unref();
+  setInterval(() => warm(), 50 * 60_000).unref();
 }

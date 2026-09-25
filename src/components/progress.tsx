@@ -120,3 +120,12 @@ export function ProgressBar({ className }: { className?: string }) {
     </div>
   );
 }
+
+/** Turns low-level client errors into something a person can act on. */
+export function friendlyError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/unexpected response was received from the server|Failed to find Server Action|Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+    return "The connection to OpenApply was interrupted — it may have just been updated. Refresh the page and try again.";
+  }
+  return msg;
+}

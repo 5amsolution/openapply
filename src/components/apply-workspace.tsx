@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Check, Copy, Download, ExternalLink, PartyPopper, Puzzle } from "lucide-react";
 import { resumeDownloadUrlAction, updateApplicationAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Notice, cn } from "@/components/ui";
-import { Spinner } from "@/components/progress";
+import { Spinner, friendlyError } from "@/components/progress";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Application, Job } from "@/lib/types";
 
@@ -53,7 +53,11 @@ export function ApplyWorkspace({
   const [error, setError] = useState("");
   // Run async work outside a transition so "busy" state renders immediately
   // (state set inside startTransition only shows once the whole action finishes).
-  const start = (fn: () => Promise<void>) => void fn();
+  const start = (fn: () => Promise<void>) =>
+    void fn().catch((e) => {
+      setBusy("");
+      setError(friendlyError(e));
+    });
 
   const markApplied = () =>
     start(async () => {

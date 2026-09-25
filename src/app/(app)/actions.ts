@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzeJob, answerQuestions, draftForJob, saveJob } from "@/lib/applications";
-import { runRule } from "@/lib/autopilot";
+import { closeInterruptedRuns, startRuleRun } from "@/lib/autopilot";
 import { encrypt, keyHint, randomToken, sha256 } from "@/lib/crypto";
 import { generateObject, PROVIDERS, type ProviderId } from "@/lib/ai/providers";
 import { getAIConfig, hasAIConfig, recordUsage } from "@/lib/ai/settings";
@@ -423,19 +423,58 @@ export async function deleteRuleAction(id: string): Promise<ActionResult> {
   });
 }
 
-export async function runRuleNowAction(id: string): Promise<ActionResult<{ draftsCreated: number; jobsScored: number; jobsFound: number; error?: string }>> {
+export type RunStatus = {
+  id: string;
+  finished: boolean;
+  jobsFound: number;
+  jobsScored: number;
+  draftsCreated: number;
+  error: string | null;
+  startedAt: string;
+};
+
+/** Starts a run in the background and returns its id straight away (or the run already in progress). */
+export async function runRuleNowAction(id: string): Promise<ActionResult<string>> {
   return attempt(async () => {
-    const { supabase } = await requireUser();
+    const { supabase, user } = await requireUser();
     const { data: rule } = await supabase.from("autopilot_rules").select("*").eq("id", id).single();
     if (!rule) throw new Error("Rule not found");
+    await closeInterruptedRuns({ userId: user.id });
+    const { data: running } = await supabase
+      .from("agent_runs")
+      .select("id")
+      .eq("rule_id", id)
+      .is("finished_at", null)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (running) return running.id;
     if (rule.last_run_at && Date.now() - new Date(rule.last_run_at).getTime() < 10 * 60_000) {
       throw new Error("This search ran less than 10 minutes ago. Give it a moment.");
     }
-    const summary = await runRule(rule as AutopilotRule);
-    revalidatePath("/autopilot");
-    revalidatePath("/applications");
-    revalidatePath("/dashboard");
-    return summary;
+    return startRuleRun(rule as AutopilotRule);
+  });
+}
+
+export async function runStatusAction(runId: string): Promise<ActionResult<RunStatus>> {
+  return attempt(async () => {
+    const { supabase } = await requireUser();
+    const { data: r } = await supabase.from("agent_runs").select("*").eq("id", runId).maybeSingle();
+    if (!r) throw new Error("Run not found");
+    if (r.finished_at) {
+      revalidatePath("/autopilot");
+      revalidatePath("/applications");
+      revalidatePath("/dashboard");
+    }
+    return {
+      id: r.id,
+      finished: !!r.finished_at,
+      jobsFound: r.jobs_found,
+      jobsScored: r.jobs_scored,
+      draftsCreated: r.drafts_created,
+      error: r.error,
+      startedAt: r.started_at,
+    };
   });
 }
 

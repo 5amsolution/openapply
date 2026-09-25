@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ExternalLink, Sparkles } from "lucide-react";
 import { removeAIKeyAction, setAIModelAction, testAIKeyAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 
 type Model = { id: string; label: string };
 
@@ -45,7 +45,7 @@ export function OpenRouterConnect({
         setMessage({ tone: "accent", text: await fn() });
         router.refresh();
       } catch (e) {
-        setMessage({ tone: "danger", text: e instanceof Error ? e.message : String(e) });
+        setMessage({ tone: "danger", text: friendlyError(e) });
       } finally {
         setBusy("");
       }

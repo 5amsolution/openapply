@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Pause, Pencil, Play, Plus, Trash2, Zap } from "lucide-react";
 import { deleteRuleAction, runRuleNowAction, saveRuleAction } from "@/app/(app)/actions";
 import { Badge, Button, Card, Input, Label, Notice } from "@/components/ui";
-import { ProgressSteps, STEPS } from "@/components/progress";
+import { friendlyError } from "@/components/progress";
+import { LiveRun } from "@/components/live-run";
 import { timeAgo } from "@/lib/format";
 import type { AutopilotRule } from "@/lib/types";
 
@@ -25,7 +26,9 @@ export function AutopilotManager({
   sources,
   defaults,
   aiReady,
+  activeRuns,
 }: {
+  activeRuns: Record<string, string>;
   rules: AutopilotRule[];
   sources: { id: string; label: string }[];
   defaults: { keywords: string; location: string; remoteOnly: boolean };
@@ -35,6 +38,8 @@ export function AutopilotManager({
   const [editing, setEditing] = useState<string | "new" | null>(rules.length === 0 ? "new" : null);
   const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
   const [busy, setBusy] = useState("");
+  // ruleId → id of the run happening in the background right now
+  const [runs, setRuns] = useState<Record<string, string>>(activeRuns);
   // Run async work outside a transition so "busy" state renders immediately
   // (state set inside startTransition only shows once the whole action finishes).
   const start = (fn: () => Promise<void>) => void fn();
@@ -59,7 +64,7 @@ export function AutopilotManager({
         if (text) setMessage({ tone: "accent", text });
         router.refresh();
       } catch (e) {
-        setMessage({ tone: "danger", text: e instanceof Error ? e.message : String(e) });
+        setMessage({ tone: "danger", text: friendlyError(e) });
       } finally {
         setBusy("");
       }
@@ -102,18 +107,17 @@ export function AutopilotManager({
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
-                disabled={!aiReady || !!busy}
-                loading={busy === `run:${rule.id}`}
+                disabled={!aiReady || !!busy || !!runs[rule.id]}
+                loading={busy === `run:${rule.id}` || !!runs[rule.id]}
                 onClick={() =>
                   act(`run:${rule.id}`, async () => {
                     const res = await runRuleNowAction(rule.id);
                     if (!res.ok) throw new Error(res.error);
-                    if (res.data.error) throw new Error(res.data.error);
-                    return `Found ${res.data.jobsFound} new jobs, scored ${res.data.jobsScored}, wrote ${res.data.draftsCreated} applications.`;
+                    setRuns((prev) => ({ ...prev, [rule.id]: res.data }));
                   })
                 }
               >
-                {busy !== `run:${rule.id}` && <Zap size={14} />} {busy === `run:${rule.id}` ? "Running…" : "Run now"}
+                {!runs[rule.id] && busy !== `run:${rule.id}` && <Zap size={14} />} {runs[rule.id] ? "Running…" : "Run now"}
               </Button>
               <Button
                 variant="ghost"
@@ -145,7 +149,27 @@ export function AutopilotManager({
                 <Trash2 size={14} />
               </Button>
             </div>
-            <ProgressSteps className="w-full basis-full" active={busy === `run:${rule.id}`} steps={STEPS.autopilot} />
+            {runs[rule.id] && (
+              <LiveRun
+                runId={runs[rule.id]}
+                onDone={(st) => {
+                  setRuns((prev) => {
+                    const next = { ...prev };
+                    delete next[rule.id];
+                    return next;
+                  });
+                  setMessage(
+                    st.error
+                      ? { tone: "danger", text: `${rule.name}: ${st.error}` }
+                      : {
+                          tone: "accent",
+                          text: `${rule.name}: found ${st.jobsFound} new jobs, scored ${st.jobsScored}, wrote ${st.draftsCreated} application${st.draftsCreated === 1 ? "" : "s"}${st.draftsCreated ? " — they're in Ready to apply." : "."}`,
+                        },
+                  );
+                  router.refresh();
+                }}
+              />
+            )}
           </Card>
         ),
       )}
