@@ -170,7 +170,14 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   });
 }
 
-export async function uploadResumeAction(formData: FormData): Promise<ActionResult<{ parsedWithAI: boolean }>> {
+type ResumeResult = { parsedWithAI: boolean; aiError?: string };
+
+/**
+ * Saves the resume file and its text first, then (if AI is on) fills the
+ * profile from it. An AI failure never loses the upload — the user can retry
+ * with fillProfileFromResumeAction.
+ */
+export async function uploadResumeAction(formData: FormData): Promise<ActionResult<ResumeResult>> {
   return attempt(async () => {
     const { supabase, user } = await requireUser();
     const file = formData.get("resume");
@@ -188,44 +195,69 @@ export async function uploadResumeAction(formData: FormData): Promise<ActionResu
     if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
     const { data: current } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-    const keep = (existing: string | null | undefined, incoming: string) => (existing && existing.trim() ? existing : incoming || null);
-
-    const update: TablesUpdate<"profiles"> = { resume_text: text, resume_path: path, resume_filename: file.name };
-    let parsedWithAI = false;
-
-    if (await hasAIConfig(user.id)) {
-      const config = await getAIConfig(user.id);
-      const { data: parsed, usage } = await parseResume(config, text);
-      await recordUsage(user.id, config, "resume", usage);
-      parsedWithAI = true;
-      Object.assign(update, {
-        full_name: keep(current?.full_name, parsed.full_name),
-        email: keep(current?.email, parsed.email),
-        phone: keep(current?.phone, parsed.phone),
-        location: keep(current?.location, parsed.location),
-        headline: parsed.headline || current?.headline,
-        summary: parsed.summary || current?.summary,
-        links: { ...(current?.links as object), ...Object.fromEntries(Object.entries(parsed.links).filter(([, v]) => v)) },
-        skills: parsed.skills.length ? parsed.skills : current?.skills,
-        experience: parsed.experience,
-        education: parsed.education,
-        desired_titles: current?.desired_titles?.length ? current.desired_titles : parsed.desired_titles,
-      });
-    } else {
-      const h = heuristicProfile(text);
-      Object.assign(update, {
-        full_name: keep(current?.full_name, h.full_name),
-        email: keep(current?.email, h.email),
-        phone: keep(current?.phone, h.phone),
-        links: { ...(current?.links as object), ...(h.linkedin ? { linkedin: h.linkedin } : {}), ...(h.github ? { github: h.github } : {}) },
-      });
-    }
-
-    const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
+    const h = heuristicProfile(text);
+    const saved: TablesUpdate<"profiles"> = {
+      resume_text: text,
+      resume_path: path,
+      resume_filename: file.name,
+      full_name: keepValue(current?.full_name, h.full_name),
+      email: keepValue(current?.email, h.email),
+      phone: keepValue(current?.phone, h.phone),
+      links: { ...(current?.links as object), ...(h.linkedin ? { linkedin: h.linkedin } : {}), ...(h.github ? { github: h.github } : {}) },
+    };
+    const { error } = await supabase.from("profiles").update(saved).eq("id", user.id);
     if (error) throw new Error(error.message);
+
+    const result = await fillProfileWithAI(user.id);
     revalidatePath("/profile");
-    return { parsedWithAI };
+    return result;
   });
+}
+
+/** Re-reads the already uploaded resume with AI — the "Fill profile with AI" button. */
+export async function fillProfileFromResumeAction(): Promise<ActionResult<ResumeResult>> {
+  return attempt(async () => {
+    const { user } = await requireUser();
+    const result = await fillProfileWithAI(user.id);
+    revalidatePath("/profile");
+    if (result.aiError) throw new Error(result.aiError);
+    return result;
+  });
+}
+
+function keepValue(existing: string | null | undefined, incoming: string) {
+  return existing && existing.trim() ? existing : incoming || null;
+}
+
+async function fillProfileWithAI(userId: string): Promise<ResumeResult> {
+  if (!(await hasAIConfig(userId))) return { parsedWithAI: false };
+  const admin = createAdminClient();
+  const { data: current } = await admin.from("profiles").select("*").eq("id", userId).single();
+  if (!current?.resume_text) return { parsedWithAI: false, aiError: "Upload a resume first." };
+
+  try {
+    const config = await getAIConfig(userId);
+    const { data: parsed, usage } = await parseResume(config, current.resume_text);
+    await recordUsage(userId, config, "resume", usage);
+    const update: TablesUpdate<"profiles"> = {
+      full_name: keepValue(current.full_name, parsed.full_name),
+      email: keepValue(current.email, parsed.email),
+      phone: keepValue(current.phone, parsed.phone),
+      location: keepValue(current.location, parsed.location),
+      headline: parsed.headline || current.headline,
+      summary: parsed.summary || current.summary,
+      links: { ...(current.links as object), ...Object.fromEntries(Object.entries(parsed.links).filter(([, v]) => v)) },
+      skills: parsed.skills.length ? parsed.skills : current.skills,
+      experience: parsed.experience.length ? parsed.experience : current.experience,
+      education: parsed.education.length ? parsed.education : current.education,
+      desired_titles: current.desired_titles?.length ? current.desired_titles : parsed.desired_titles,
+    };
+    const { error } = await admin.from("profiles").update(update).eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { parsedWithAI: true };
+  } catch (err) {
+    return { parsedWithAI: false, aiError: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 export async function resumeDownloadUrlAction(): Promise<ActionResult<string>> {

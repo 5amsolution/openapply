@@ -32,7 +32,7 @@ export function OpenRouterConnect({
         : null,
   );
   const [, start] = useTransition();
-  const isFree = value.endsWith(":free");
+  const isFree = value === "openrouter/free" || value.endsWith(":free");
 
   const act = (key: string, fn: () => Promise<string>) =>
     start(async () => {
@@ -111,7 +111,7 @@ export function OpenRouterConnect({
         }}
       >
         <div>
-          <Label htmlFor="or-model" hint="free models end in :free">
+          <Label htmlFor="or-model" hint="Auto is free and most reliable">
             Model
           </Label>
           <Input id="or-model" list="or-models" value={value} onChange={(e) => setValue(e.target.value)} required />

@@ -3,28 +3,54 @@
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FileUp } from "lucide-react";
-import { uploadResumeAction } from "@/app/(app)/actions";
+import { FileUp, Sparkles } from "lucide-react";
+import { fillProfileFromResumeAction, uploadResumeAction } from "@/app/(app)/actions";
 import { Button, Card, Notice } from "@/components/ui";
+
+type Message = { tone: "accent" | "danger" | "info" | "warn"; text: string };
 
 export function ResumeUpload({ filename, aiReady }: { filename: string | null; aiReady: boolean }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<{ tone: "accent" | "danger" | "info"; text: string } | null>(null);
+  const [busy, setBusy] = useState<"" | "upload" | "fill">("");
+  const [message, setMessage] = useState<Message | null>(null);
   const [dragging, setDragging] = useState(false);
+
+  const aiFailed = (error: string): Message => ({
+    tone: "warn",
+    text: `Your resume is saved, but the AI couldn't read it this time: ${error} Click “Fill profile with AI” to try again.`,
+  });
 
   const upload = (file: File) =>
     start(async () => {
+      setBusy("upload");
       setMessage(null);
       const fd = new FormData();
       fd.set("resume", file);
       const res = await uploadResumeAction(fd);
+      setBusy("");
       if (!res.ok) return setMessage({ tone: "danger", text: res.error });
       setMessage(
         res.data.parsedWithAI
           ? { tone: "accent", text: "Resume read. Your profile below was filled in — check it over and save." }
-          : { tone: "info", text: "Resume uploaded. Turn on AI in Settings (free) to auto-fill your whole profile from it." },
+          : res.data.aiError
+            ? aiFailed(res.data.aiError)
+            : { tone: "info", text: "Resume uploaded. Turn on AI in Settings (free) to auto-fill your whole profile from it." },
+      );
+      router.refresh();
+    });
+
+  const refill = () =>
+    start(async () => {
+      setBusy("fill");
+      setMessage(null);
+      const res = await fillProfileFromResumeAction();
+      setBusy("");
+      setMessage(
+        res.ok
+          ? { tone: "accent", text: "Profile filled from your resume — check it over and save." }
+          : aiFailed(res.error),
       );
       router.refresh();
     });
@@ -53,9 +79,14 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
             <p className="font-medium">{filename ? filename : "Upload your resume"}</p>
             <p className="text-sm text-muted">
               PDF, DOCX or TXT, up to 10 MB.{" "}
-              {aiReady ? "The AI will fill in your profile." : (
+              {aiReady ? (
+                "The AI will fill in your profile."
+              ) : (
                 <>
-                  <Link href="/settings" className="underline">Turn on AI (free)</Link> to auto-fill your profile.
+                  <Link href="/settings" className="underline">
+                    Turn on AI (free)
+                  </Link>{" "}
+                  to auto-fill your profile.
                 </>
               )}
             </p>
@@ -72,9 +103,16 @@ export function ResumeUpload({ filename, aiReady }: { filename: string | null; a
             e.target.value = "";
           }}
         />
-        <Button onClick={() => input.current?.click()} disabled={pending}>
-          {pending ? "Reading resume…" : filename ? "Replace resume" : "Choose file"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {filename && aiReady && (
+            <Button variant="secondary" onClick={refill} disabled={pending}>
+              <Sparkles size={14} /> {busy === "fill" ? "Reading resume… (up to a minute)" : "Fill profile with AI"}
+            </Button>
+          )}
+          <Button onClick={() => input.current?.click()} disabled={pending}>
+            {busy === "upload" ? "Reading resume…" : filename ? "Replace resume" : "Choose file"}
+          </Button>
+        </div>
       </div>
       {message && (
         <div className="mt-4">

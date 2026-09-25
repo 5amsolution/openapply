@@ -21,10 +21,17 @@ export interface ProviderInfo {
  * falls back to the next ones automatically when it is busy or removed.
  */
 export const FREE_OPENROUTER_MODELS = [
+  "openrouter/free", // OpenRouter's router: picks whichever free model is available right now
   "google/gemma-4-31b-it:free",
   "nvidia/nemotron-3-super-120b-a12b:free",
+  "qwen/qwen3.8-27b:free",
+  "dots-studio/dots-3-note-preview:free",
   "google/gemma-4-26b-a4b-it:free",
 ];
+
+export function isFreeModel(model: string): boolean {
+  return model === "openrouter/free" || model.endsWith(":free");
+}
 export const DEFAULT_OPENROUTER_MODEL = FREE_OPENROUTER_MODELS[0];
 
 export const PROVIDERS: ProviderInfo[] = [
@@ -65,7 +72,10 @@ export const PROVIDERS: ProviderInfo[] = [
     keyUrl: "https://openrouter.ai/keys",
     baseUrl: "https://openrouter.ai/api/v1",
     models: [
-      ...FREE_OPENROUTER_MODELS.map((id) => ({ id, label: `${id.replace(/:free$/, "")} — free` })),
+      ...FREE_OPENROUTER_MODELS.map((id) => ({
+        id,
+        label: id === "openrouter/free" ? "Auto — best available free model (recommended)" : `${id.replace(/:free$/, "")} — free`,
+      })),
       { id: "anthropic/claude-sonnet-5", label: "Claude Sonnet 5 (paid, best writing)" },
       { id: "anthropic/claude-haiku-4-5", label: "Claude Haiku 4.5 (paid, cheap)" },
       { id: "openai/gpt-5-mini", label: "GPT-5 mini (paid, cheap)" },
@@ -191,6 +201,81 @@ async function openAICompatibleObject<T extends z.ZodType>(
   const jsonSchema = z.toJSONSchema(opts.schema, { target: "draft-7" });
   const system = `${opts.system}\n\nRespond with a single JSON object that matches this JSON Schema, and nothing else:\n${JSON.stringify(jsonSchema)}`;
 
+  type Message = { role: "system" | "user" | "assistant"; content: string };
+  const messages: Message[] = [
+    { role: "system", content: system },
+    { role: "user", content: opts.prompt },
+  ];
+  const usage: AIUsage = { inputTokens: 0, outputTokens: 0 };
+  // Reasoning models (which OpenRouter's free router may pick) spend part of the
+  // budget thinking before they answer, so give them generous headroom.
+  let budget = Math.max(maxTokens, 8000);
+
+  // Smaller and free models often return almost-right JSON (nulls, missing
+  // fields, numbers as strings). Repair what we can, and give the model one
+  // chance to fix the rest before giving up.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { text, inputTokens, outputTokens, finishReason } = await chatCompletion(config, baseUrl, messages, budget);
+    usage.inputTokens += inputTokens;
+    usage.outputTokens += outputTokens;
+
+    const raw = extractJSON(text);
+    // Only repair answers that are mostly there — an empty or off-topic object must be retried, not padded.
+    const repairable = raw !== null && mostlyPresent(raw, jsonSchema as JSONSchemaNode);
+    const parsed = opts.schema.safeParse(repairable ? coerceToSchema(raw, jsonSchema as JSONSchemaNode) : raw);
+    if (parsed.success) return { data: parsed.data, usage };
+
+    const issues = parsed.error.issues
+      .slice(0, 8)
+      .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+      .join("; ");
+    console.error(`[ai] ${config.provider}/${config.model} invalid JSON (attempt ${attempt + 1}, finish=${finishReason}, ${text.length} chars): ${issues}`);
+    if (finishReason === "length") {
+      if (attempt === 0) {
+        budget = Math.min(budget * 2, 32000);
+        continue;
+      }
+      throw new AIError("The model ran out of output space before finishing. Try again, or pick a different model in Settings.");
+    }
+    messages.push(
+      { role: "assistant", content: text.slice(0, 20_000) },
+      {
+        role: "user",
+        content: `That response was not valid for the schema (${issues || "not a JSON object"}). Reply again with only the corrected JSON object — every required field present, strings instead of null.`,
+      },
+    );
+  }
+  throw new AIError("The model's answer wasn't in the expected format, even after a retry. Try again, or pick a different model in Settings.");
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function chatCompletion(
+  config: AIConfig,
+  baseUrl: string,
+  messages: { role: string; content: string }[],
+  maxTokens: number,
+) {
+  const retries = config.provider === "openrouter" && isFreeModel(config.model) ? 3 : 1;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await chatCompletionOnce(config, baseUrl, messages, maxTokens, attempt);
+    } catch (err) {
+      const busy = err instanceof AIError && (err.status === 429 || err.status === 502 || err.status === 503);
+      if (!busy || attempt + 1 >= retries) throw err;
+      console.warn(`[ai] ${config.model} busy (${err.status}), retrying with other free models…`);
+      await sleep(1500 * (attempt + 1));
+    }
+  }
+}
+
+async function chatCompletionOnce(
+  config: AIConfig,
+  baseUrl: string,
+  messages: { role: string; content: string }[],
+  maxTokens: number,
+  attempt: number,
+) {
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -202,43 +287,86 @@ async function openAICompatibleObject<T extends z.ZodType>(
     },
     body: JSON.stringify({
       model: config.model,
-      ...(config.provider === "openrouter" ? openRouterRouting(config.model) : {}),
-      max_completion_tokens: maxTokens,
+      ...(config.provider === "openrouter" ? openRouterRouting(config.model, attempt) : {}),
+      // OpenAI's newer models want max_completion_tokens; most other providers only read max_tokens.
+      ...(config.provider === "openai" ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }),
       response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: opts.prompt },
-      ],
+      messages,
     }),
-    signal: AbortSignal.timeout(120_000),
+    signal: AbortSignal.timeout(150_000),
   });
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     if (res.status === 401) throw new AIError("Your API key was rejected. Check it in Settings.", 401);
-    if (res.status === 429) {
-      throw new AIError(
-        config.provider === "openrouter" && config.model.endsWith(":free")
-          ? "You've hit OpenRouter's free limit (50 requests a day, or 1,000 after a one-time $10 credit purchase). Try again tomorrow or pick a paid model."
-          : "Provider rate limit or credit limit reached.",
-        429,
-      );
-    }
-    if (res.status === 402) throw new AIError("Your OpenRouter account is out of credits. Add credits or switch to a free model.", 402);
-    throw new AIError(`AI provider error ${res.status}: ${body.slice(0, 300)}`, res.status);
+    throw providerError(config, res.status, body);
   }
 
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+  // OpenRouter streams keep-alive whitespace and can report upstream failures inside a 200.
+  const raw = await res.text();
+  let json: {
+    choices?: { message?: { content?: string | null }; finish_reason?: string }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
+    error?: { message?: string; code?: number };
   };
-  const text = json.choices?.[0]?.message?.content ?? "";
-  const parsed = opts.schema.safeParse(extractJSON(text));
-  if (!parsed.success) throw new AIError("The model returned output that did not match the expected format.");
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    throw new AIError("The AI provider sent an unreadable response. Please try again.", 502);
+  }
+  if (json.error) throw providerError(config, Number(json.error.code) || 502, JSON.stringify(json));
+  const choice = json.choices?.[0];
   return {
-    data: parsed.data,
-    usage: { inputTokens: json.usage?.prompt_tokens ?? 0, outputTokens: json.usage?.completion_tokens ?? 0 },
+    text: choice?.message?.content ?? "",
+    finishReason: choice?.finish_reason ?? "unknown",
+    inputTokens: json.usage?.prompt_tokens ?? 0,
+    outputTokens: json.usage?.completion_tokens ?? 0,
   };
+}
+
+type JSONSchemaNode = {
+  type?: string | string[];
+  properties?: Record<string, JSONSchemaNode>;
+  items?: JSONSchemaNode;
+  minimum?: number;
+  maximum?: number;
+  anyOf?: JSONSchemaNode[];
+};
+
+/** Nudges almost-valid model output toward the schema: fills missing fields, fixes nulls and number/string mix-ups. */
+function coerceToSchema(value: unknown, schema: JSONSchemaNode): unknown {
+  const type = Array.isArray(schema.type) ? schema.type.find((t) => t !== "null") : schema.type;
+  if (!type && schema.anyOf?.length) return coerceToSchema(value, schema.anyOf[0]);
+  switch (type) {
+    case "object": {
+      const obj = value && typeof value === "object" && !Array.isArray(value) ? { ...(value as Record<string, unknown>) } : {};
+      for (const [key, child] of Object.entries(schema.properties ?? {})) obj[key] = coerceToSchema(obj[key], child);
+      return obj;
+    }
+    case "array": {
+      const arr = value == null ? [] : Array.isArray(value) ? value : [value];
+      return schema.items ? arr.map((v) => coerceToSchema(v, schema.items!)) : arr;
+    }
+    case "string":
+      if (value == null) return "";
+      if (typeof value === "string") return value;
+      if (typeof value === "number" || typeof value === "boolean") return String(value);
+      if (Array.isArray(value)) return value.join(", ");
+      return JSON.stringify(value);
+    case "integer":
+    case "number": {
+      let n = typeof value === "number" ? value : parseFloat(String(value ?? ""));
+      if (!Number.isFinite(n)) n = schema.minimum ?? 0;
+      if (schema.minimum != null) n = Math.max(schema.minimum, n);
+      if (schema.maximum != null) n = Math.min(schema.maximum, n);
+      return type === "integer" ? Math.round(n) : n;
+    }
+    case "boolean":
+      if (typeof value === "boolean") return value;
+      return value === "true" || value === 1 || value === "yes";
+    default:
+      return value;
+  }
 }
 
 function extractJSON(text: string): unknown {
@@ -295,8 +423,42 @@ function isPrivateAddress(ip: string): boolean {
 }
 
 /** OpenRouter extras: automatic fallback between free models, and only providers that honor JSON mode. */
-function openRouterRouting(model: string) {
-  if (!model.endsWith(":free")) return { provider: { require_parameters: true } };
-  const fallbacks = FREE_OPENROUTER_MODELS.filter((m) => m !== model).slice(0, 2);
-  return { models: [model, ...fallbacks], provider: { require_parameters: true } };
+function openRouterRouting(model: string, attempt = 0) {
+  if (!isFreeModel(model)) return { provider: { require_parameters: true } };
+  const others = FREE_OPENROUTER_MODELS.filter((m) => m !== model);
+  const rotated = [...others.slice((attempt * 2) % others.length), ...others.slice(0, (attempt * 2) % others.length)];
+  const models = attempt === 0 ? [model, ...rotated.slice(0, 2)] : rotated.slice(0, 3);
+  return { model: models[0], models, provider: { require_parameters: true } };
+}
+
+/** Turns provider failures into messages a job seeker can act on. */
+function providerError(config: AIConfig, status: number, body: string): AIError {
+  const free = config.provider === "openrouter" && isFreeModel(config.model);
+  const daily = /free-models-per-day|per.day/i.test(body);
+  if (status === 401) return new AIError("Your API key was rejected. Reconnect in Settings.", 401);
+  if (status === 402) return new AIError("Your OpenRouter account is out of credits. Add credits or switch to a free model.", 402);
+  if (status === 429 && free && daily) {
+    return new AIError(
+      "You've used today's free AI requests on OpenRouter (50 a day, or 1,000 after a one-time $10 credit purchase). Try again tomorrow or pick a paid model.",
+      429,
+    );
+  }
+  if ((status === 429 || status === 502 || status === 503) && free) {
+    return new AIError("The free AI models are busy right now. Please try again in a minute — or pick a paid model in Settings for reliable speed.", status);
+  }
+  if (status === 429) return new AIError("The AI provider is rate-limiting requests. Please try again shortly.", 429);
+  return new AIError(`AI provider error ${status}: ${body.slice(0, 300)}`, status);
+}
+
+/** True when at least 40% of the schema's top-level fields came back with a real value. */
+function mostlyPresent(value: unknown, schema: JSONSchemaNode): boolean {
+  const keys = Object.keys(schema.properties ?? {});
+  if (!keys.length) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const obj = value as Record<string, unknown>;
+  const present = keys.filter((k) => {
+    const v = obj[k];
+    return v != null && v !== "" && !(Array.isArray(v) && v.length === 0);
+  }).length;
+  return present / keys.length >= 0.4;
 }
