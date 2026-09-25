@@ -11,7 +11,7 @@ export function DangerZone({ email }: { email: string }) {
 
   return (
     <Card className="p-5">
-      <h2 className="font-medium">Account</h2>
+      <h2 className="font-bold tracking-[-0.02em]">Account</h2>
       <p className="mt-1 text-sm text-muted">Signed in as {email}.</p>
       <form action="/auth/signout" method="post" className="mt-3">
         <Button type="submit" variant="secondary">

@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
 import { keywordMatch } from "@/lib/matching";
 import { Badge, Card } from "@/components/ui";
+import { CompanyLogo } from "@/components/company-logo";
 import { JobAIPanel } from "@/components/job-ai-panel";
 import { formatSalary, timeAgo } from "@/lib/format";
 import { SOURCE_META, sourceLabel } from "@/lib/jobs/labels";
@@ -43,9 +44,16 @@ export default async function JobPage(props: PageProps<"/jobs/[id]">) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="min-w-0">
-          <Card className="p-6">
-            <h1 className="text-2xl font-semibold tracking-tight">{j.title}</h1>
-            <p className="mt-1 text-muted">{j.company}</p>
+          <section className="bento pastel-lavender relative overflow-hidden p-6 md:p-7">
+            <div className="grid-dots pointer-events-none absolute inset-0" aria-hidden="true" />
+            <div className="relative flex items-start gap-4">
+              <CompanyLogo src={j.company_logo} company={j.company} size={56} />
+              <div className="min-w-0">
+                <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] md:text-[30px]">{j.title}</h1>
+                <p className="mt-1 font-medium text-fg/70">{j.company}</p>
+              </div>
+            </div>
+            <div className="relative">
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
               {j.location && (
                 <span className="inline-flex items-center gap-1">
@@ -86,7 +94,8 @@ export default async function JobPage(props: PageProps<"/jobs/[id]">) {
                 View on {sourceLabel(j.source)} <ExternalLink size={14} />
               </a>
             </div>
-          </Card>
+            </div>
+          </section>
 
           <Card className="mt-4 p-6">
             <h2 className="mb-3 font-medium">Job description</h2>

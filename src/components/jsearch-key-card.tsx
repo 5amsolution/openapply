@@ -36,8 +36,8 @@ export function JSearchKeyCard({ info, siteKeyAvailable }: { info: Info; siteKey
   return (
     <Card className="p-5" id="job-sources">
       <div className="mb-1 flex flex-wrap items-center gap-2">
-        <Globe size={16} className="text-accent" />
-        <h2 className="font-medium">LinkedIn, Indeed & Glassdoor jobs</h2>
+        <span className="chip-icon pastel-lavender"><Globe size={16} /></span>
+        <h2 className="font-bold tracking-[-0.02em]">LinkedIn, Indeed & Glassdoor jobs</h2>
         {info ? (
           <Badge tone="accent">
             <CheckCircle2 size={12} /> Your key is connected

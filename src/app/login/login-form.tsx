@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import { GithubIcon } from "@/components/icons";
+import { Spinner } from "@/components/progress";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, Input, Label, Notice } from "@/components/ui";
 
 type Mode = "signin" | "signup" | "magic";
+
+const t = (delay: number, d?: number) => ({ "--delay": `${delay}ms`, ...(d ? { "--d": `${d}ms` } : {}) }) as CSSProperties;
 
 export function LoginForm({
   initialMode,
@@ -42,13 +44,9 @@ export function LoginForm({
       if (mode === "magic") {
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
         if (error) throw error;
-        setMessage("Check your inbox for a sign-in link.");
+        setMessage("Check your inbox — we sent you a sign-in link.");
       } else if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: redirectTo() },
-        });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo() } });
         if (error) throw error;
         if (data.session) {
           router.replace("/profile?welcome=1");
@@ -75,83 +73,122 @@ export function LoginForm({
     if (error) setError(error.message);
   }
 
+  const heading = mode === "signup" ? "Start for free" : mode === "magic" ? "Magic link" : "Welcome Back!";
+  const sub =
+    mode === "signup" ? (
+      <>
+        <b>Create an account</b> — no card, free AI included.
+      </>
+    ) : mode === "magic" ? (
+      <>
+        <b>No password?</b> We&apos;ll email you a sign-in link.
+      </>
+    ) : (
+      <>
+        <b>Log in</b> to continue your job search.
+      </>
+    );
+
   return (
-    <Card className="w-full max-w-sm p-6">
-      <h1 className="text-lg font-semibold">
-        {mode === "signup" ? "Create your free account" : mode === "magic" ? "Email me a sign-in link" : "Welcome back"}
+    <div className="auth-card-in">
+      <h1 className="auth-h1 e" style={t(470, 620)}>
+        {heading}
       </h1>
-      <p className="mt-1 text-sm text-muted">
-        {mode === "signup" ? "No credit card. You bring your own AI key later." : "Sign in to continue."}
+      <p className="auth-sub e" style={t(570, 560)}>
+        {sub}
       </p>
 
-      {(googleEnabled || githubEnabled) && (
-        <div className="mt-5 grid gap-2">
-          {googleEnabled && (
-            <Button variant="secondary" type="button" onClick={() => oauth("google")}>
-              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
-                <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.7-4.9h-4v3.1A12 12 0 0 0 12 24z" />
-                <path fill="#FBBC05" d="M5.3 14.4a7.2 7.2 0 0 1 0-4.6V6.7h-4a12 12 0 0 0 0 10.8l4-3.1z" />
-                <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.7l4 3.1C6.3 6.9 8.9 4.8 12 4.8z" />
-              </svg>
-              Continue with Google
-            </Button>
-          )}
-          {githubEnabled && (
-            <Button variant="secondary" type="button" onClick={() => oauth("github")}>
-              <GithubIcon size={16} /> Continue with GitHub
-            </Button>
-          )}
-          <div className="my-2 flex items-center gap-3 text-xs text-muted">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={submit} className="mt-4 grid gap-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
+      <form onSubmit={submit} className="auth-form">
+        <input
+          id="email"
+          className="auth-field e e-soft"
+          style={t(720)}
+          type="email"
+          required
+          autoComplete="email"
+          aria-label="Email address"
+          placeholder="Eg. johndoe@gmail.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         {mode !== "magic" && (
-          <div>
-            <Label htmlFor="password" hint={mode === "signup" ? "at least 8 characters" : undefined}>
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              minLength={mode === "signup" ? 8 : undefined}
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          <input
+            id="password"
+            className="auth-field e e-soft"
+            style={t(790)}
+            type="password"
+            required
+            minLength={mode === "signup" ? 8 : undefined}
+            autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            aria-label="Password"
+            placeholder={mode === "signup" ? "Password (8+ characters)" : "Password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         )}
-        {error && <Notice tone="danger">{error}</Notice>}
-        {message && <Notice tone="accent">{message}</Notice>}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "magic" ? "Send link" : "Sign in"}
-        </Button>
+        <button type="submit" className="auth-primary e" style={t(930, 560)} disabled={busy}>
+          {busy && <Spinner />}
+          {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "magic" ? "Send link" : "Login"}
+          {!busy && (
+            <svg width="13" height="13" viewBox="0 0 22 22" aria-hidden="true">
+              <path d="M3 11h15.4M11 3.3l7.7 7.7-7.7 7.7" stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
       </form>
 
-      <div className="mt-5 grid gap-1.5 text-center text-sm text-muted">
-        {mode !== "magic" && (
-          <button type="button" className="inline-flex items-center justify-center gap-1.5 hover:text-fg" onClick={() => setMode("magic")}>
-            <Mail size={14} /> Use a magic link instead
+      {error && <p className="auth-msg err">{error}</p>}
+      {message && <p className="auth-msg ok">{message}</p>}
+
+      <div className="auth-divider e e-soft" style={t(1060, 440)}>
+        <i /> OR <i />
+      </div>
+
+      <div className="e" style={t(1150, 540)}>
+        {googleEnabled && (
+          <button type="button" className="auth-alt" onClick={() => oauth("google")}>
+            <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
+              <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.1z" />
+              <path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.7 10.7l7.8-6.1z" />
+              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+            </svg>
+            Sign in with Google
           </button>
         )}
-        {mode === "signup" ? (
-          <button type="button" className="hover:text-fg" onClick={() => setMode("signin")}>
-            Already have an account? Sign in
+        {githubEnabled && (
+          <button type="button" className="auth-alt" onClick={() => oauth("github")}>
+            <GithubIcon size={19} /> Sign in with GitHub
+          </button>
+        )}
+        {mode !== "magic" ? (
+          <button type="button" className="auth-alt" onClick={() => setMode("magic")}>
+            <Mail size={18} /> Email me a sign-in link
           </button>
         ) : (
-          <button type="button" className="hover:text-fg" onClick={() => setMode("signup")}>
-            New here? Create a free account
+          <button type="button" className="auth-alt" onClick={() => setMode("signin")}>
+            Use my password instead
           </button>
         )}
       </div>
-    </Card>
+
+      <p className="auth-bottom e e-soft" style={t(1260, 500)}>
+        {mode === "signup" ? (
+          <>
+            Already have an account?{" "}
+            <button type="button" onClick={() => setMode("signin")}>
+              Log in
+            </button>
+          </>
+        ) : (
+          <>
+            Don&#8217;t have an account?{" "}
+            <button type="button" onClick={() => setMode("signup")}>
+              Start Free
+            </button>
+          </>
+        )}
+      </p>
+    </div>
   );
 }

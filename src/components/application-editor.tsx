@@ -13,6 +13,7 @@ import {
 } from "@/app/(app)/actions";
 import { Badge, Button, Card, Notice, ScoreBadge, Textarea } from "@/components/ui";
 import { StatusSelect } from "@/components/status-select";
+import { CompanyLogo } from "@/components/company-logo";
 import { ProgressSteps, STEPS, friendlyError } from "@/components/progress";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Application, Job } from "@/lib/types";
@@ -125,10 +126,13 @@ export function ApplicationEditor({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="grid min-w-0 gap-4">
-        <Card className="p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="bento pastel-peach relative overflow-hidden p-6">
+          <div className="grid-dots pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="relative flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+            <CompanyLogo src={job.company_logo} company={job.company} size={48} />
             <div className="min-w-0">
-              <Link href={`/jobs/${job.id}`} className="text-xl font-semibold tracking-tight hover:text-accent">
+              <Link href={`/jobs/${job.id}`} className="text-[22px] font-extrabold leading-tight tracking-[-0.03em] hover:text-accent md:text-[26px]">
                 {job.title}
               </Link>
               <p className="text-muted">
@@ -136,13 +140,14 @@ export function ApplicationEditor({
                 {job.location ? ` · ${job.location}` : ""}
               </p>
             </div>
+            </div>
             <div className="flex items-center gap-2">
               {app.origin === "autopilot" && <Badge tone="info">Autopilot</Badge>}
               <ScoreBadge score={app.match_score} />
             </div>
           </div>
-          {app.match_summary && <p className="mt-3 text-sm text-muted">{app.match_summary}</p>}
-        </Card>
+          {app.match_summary && <p className="relative mt-4 text-sm text-fg/75">{app.match_summary}</p>}
+        </section>
 
         {!hasDraft ? (
           <Card className="p-6 text-center">
@@ -299,7 +304,7 @@ function Section({ title, hint, copyText, children }: { title: string; hint?: st
     <Card className="p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <h2 className="font-medium">{title}</h2>
+          <h2 className="font-bold tracking-[-0.02em]">{title}</h2>
           {hint && <p className="text-xs text-muted">{hint}</p>}
         </div>
         {copyText != null && <CopyButton text={copyText} label />}

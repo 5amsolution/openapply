@@ -20,6 +20,8 @@ export default async function ProfilePage(props: PageProps<"/profile">) {
   return (
     <>
       <PageHeader
+        tint="pink"
+        eyebrow={<>✦ The AI writes from this</>}
         title="Profile & resume"
         description="Everything the AI knows about you comes from here. It never adds experience you don't have."
       />

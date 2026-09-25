@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BarChart3 } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAISettingsPublic } from "@/lib/ai/settings";
@@ -48,7 +49,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
 
   return (
     <>
-      <PageHeader title="Settings" />
+      <PageHeader tint="cool" title="Settings" description="Your AI, job sources, autofill extension and account." />
 
       <div className="grid gap-6">
         <OpenRouterConnect
@@ -73,7 +74,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
         </details>
 
         <Card className="p-5">
-          <h2 className="font-medium">AI usage this month</h2>
+          <div className="mb-1 flex items-center gap-2"><span className="chip-icon pastel-peach"><BarChart3 size={16} /></span><h2 className="font-bold tracking-[-0.02em]">AI usage this month</h2></div>
           <p className="mb-4 text-sm text-muted">
             Billed by your provider, not by us. {ai?.monthly_token_limit ? `Your cap: ${ai.monthly_token_limit.toLocaleString()} tokens.` : ""}
           </p>

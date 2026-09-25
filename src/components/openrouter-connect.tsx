@@ -57,8 +57,8 @@ export function OpenRouterConnect({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-xl">
             <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-accent" />
-              <h2 className="font-medium">Turn on AI — free</h2>
+              <span className="chip-icon pastel-lime"><Sparkles size={16} /></span>
+              <h2 className="font-bold tracking-[-0.02em]">Turn on AI — free</h2>
               <Badge tone="accent">Recommended</Badge>
             </div>
             <p className="mt-2 text-sm text-muted">
@@ -87,8 +87,8 @@ export function OpenRouterConnect({
     <Card className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <CheckCircle2 size={18} className="text-accent" />
-          <h2 className="font-medium">Connected to OpenRouter</h2>
+          <span className="chip-icon pastel-lime"><CheckCircle2 size={18} className="text-accent" /></span>
+          <h2 className="font-bold tracking-[-0.02em]">Connected to OpenRouter</h2>
         </div>
         <a
           href="https://openrouter.ai/settings/keys"

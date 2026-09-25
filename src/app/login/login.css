@@ -1,0 +1,191 @@
+/* Sign-in page — layout and choreography from the MotionSites "Real-Time Alerts"
+   template (split stage: brand panel left, floating form card right). The
+   template's falcon video is replaced by a Task Engine pastel panel, and its
+   Eloquia/FreeSans type by Plus Jakarta Sans. */
+
+.auth {
+  --auth-ink: #15201a;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 57.1%) minmax(0, 1fr);
+  background: var(--bg);
+}
+
+/* ---- brand panel ---------------------------------------------------------- */
+.auth-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 70% at 6% 0%, rgba(226, 236, 200, 0.95) 0%, rgba(226, 236, 200, 0) 70%),
+    linear-gradient(168deg, #e2ebc9 0%, #e9f0c4 48%, #f0f4b8 78%, #f3f5b0 100%);
+}
+.auth-logo { position: absolute; top: 28px; left: 34px; z-index: 3; color: var(--auth-ink); }
+.auth-art { position: absolute; inset: 0; pointer-events: none; }
+.auth-toast {
+  position: absolute;
+  top: 16%;
+  left: 12%;
+  width: min(360px, 62%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(105deg, #ffffff 34%, #fdeee5 78%, #fce8dd 100%);
+  box-shadow: 0 10px 28px rgba(64, 74, 44, 0.14);
+  transform: rotate(-3deg);
+  color: #0d0d0d;
+}
+.auth-toast b { display: block; font-size: 14px; font-weight: 800; letter-spacing: -0.01em; }
+.auth-toast span { font-size: 12.5px; color: #3b3b3b; }
+.auth-card-float {
+  position: absolute;
+  top: 34%;
+  right: 10%;
+  width: min(250px, 42%);
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbf1e6 0%, #f7efe6 100%);
+  box-shadow: 0 10px 28px rgba(64, 74, 44, 0.12);
+  transform: rotate(4deg);
+  color: #0b0b0b;
+}
+.auth-card-float .n { font-size: 30px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+.auth-card-float .l { margin-top: 4px; font-size: 12px; color: #444; }
+.auth-bars { display: flex; align-items: flex-end; gap: 6px; height: 70px; margin-top: 12px; }
+.auth-bars i { flex: 1; border-radius: 5px; background: #e9e3da; }
+.auth-bars i:last-child { background: linear-gradient(180deg, #f2b705 0%, #a8a422 52%, #3d7a3e 100%); }
+.auth-chips { position: absolute; left: 12%; top: 50%; display: flex; flex-wrap: wrap; gap: 8px; max-width: 46%; }
+.auth-chips span {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+  font-weight: 600;
+  color: #131313;
+}
+.auth-hero { position: absolute; left: 34px; right: 34px; bottom: 44px; z-index: 2; color: var(--auth-ink); }
+.auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 16px 0 14px;
+  border-radius: 999px;
+  background: #2f2a27;
+  color: #fff;
+  font-size: 13.5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+.auth-hl { margin-top: 22px; font-size: clamp(40px, 4.7vw, 69px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; }
+
+/* ---- form pane ------------------------------------------------------------ */
+.auth-pane { position: relative; display: flex; padding: 14px 14px 13px 1px; }
+.auth-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 1px 10px 14px rgba(10, 14, 20, 0.08), 0 1px 3px rgba(10, 14, 20, 0.05);
+}
+.auth-card-in { width: 100%; max-width: 489px; margin: 0 auto; padding: 40px 28px; }
+.auth-h1 { text-align: center; font-size: clamp(32px, 3vw, 42px); font-weight: 700; letter-spacing: -0.05em; color: var(--fg); }
+.auth-sub { margin-top: 10px; text-align: center; font-size: 18px; letter-spacing: -0.012em; color: var(--muted); }
+.auth-sub b { color: var(--fg); font-weight: 700; }
+.auth-form { margin-top: 36px; display: grid; gap: 12px; }
+.auth-field {
+  width: 100%;
+  height: 60px;
+  padding: 0 19px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--fg);
+  background: var(--surface-2);
+  border: 1.5px solid transparent;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.auth-field:first-child { border-color: var(--border); }
+.auth-field:focus { border-color: #5f8b3e; background: var(--surface); }
+.auth-field::placeholder { color: #8a8a8a; }
+.auth-primary {
+  margin-top: 20px;
+  height: 64px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #283139 0%, #15201a 100%);
+  color: #fff;
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 20px rgba(18, 26, 34, 0.16), 0 2px 5px rgba(18, 26, 34, 0.1);
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), filter 0.18s ease;
+  cursor: pointer;
+}
+.auth-primary:hover { filter: brightness(1.12); }
+.auth-primary:active { transform: translateY(1px); }
+.auth-primary:disabled { opacity: 0.7; cursor: default; }
+.auth-divider { margin: 26px 0 22px; display: flex; align-items: center; gap: 16px; color: var(--muted); font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; }
+.auth-divider i { flex: 1; height: 1.5px; background: var(--border); }
+.auth-alt {
+  width: 100%;
+  height: 58px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 17px;
+  color: var(--fg);
+  transition: box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  cursor: pointer;
+}
+.auth-alt + .auth-alt { margin-top: 10px; }
+.auth-alt:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07); }
+.auth-alt:active { transform: translateY(1px); }
+.auth-bottom { margin-top: 26px; text-align: center; font-size: 16px; color: var(--fg); }
+.auth-bottom button { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; cursor: pointer; }
+.auth-msg { margin-top: 14px; padding: 12px 16px; border-radius: 14px; font-size: 14px; }
+.auth-msg.err { background: var(--danger-soft); color: var(--danger); }
+.auth-msg.ok { background: var(--accent-soft); color: var(--accent); }
+.auth :focus-visible { outline: 2px solid #5f8b3e; outline-offset: 2px; }
+
+/* ---- tablet / phone: brand band on top, card underneath -------------------- */
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-panel { height: clamp(244px, 34svh, 320px); }
+  .auth-toast { top: 22%; left: 6%; width: min(300px, 70%); padding: 12px 14px; }
+  .auth-card-float, .auth-chips { display: none; }
+  .auth-hero { left: 22px; bottom: 44px; }
+  .auth-hl { font-size: clamp(30px, 8.8vw, 40px); margin-top: 14px; }
+  .auth-badge { height: 31px; font-size: 11.5px; }
+  .auth-pane { padding: 0; margin-top: -28px; }
+  .auth-card { border-radius: 28px 28px 0 0; background: var(--surface); box-shadow: 0 -10px 28px rgba(20, 28, 36, 0.1); }
+  .auth-card-in { padding: 34px clamp(22px, 7vw, 38px) max(30px, env(safe-area-inset-bottom)); }
+  .auth-field { height: 56px; }
+  .auth-primary { height: 58px; }
+  .auth-alt { height: 56px; font-size: 16px; }
+}
+
+/* ---- entrance: surface → brand promise → form resolves ---------------------- */
+@keyframes auth-rise { from { opacity: 0; transform: translateY(var(--from, 8px)); } to { opacity: 1; transform: none; } }
+@keyframes auth-unmask {
+  from { opacity: 0; transform: translateY(16px); clip-path: inset(100% 0 0 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .auth .e { animation: auth-rise var(--d, 0.52s) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0s) backwards; }
+  .auth .e-soft { animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+  .auth .e-hl { animation: auth-unmask 0.76s cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0s) backwards; }
+}

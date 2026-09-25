@@ -1,31 +1,34 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { saveJobAction } from "@/app/(app)/actions";
 import { Button } from "@/components/ui";
+import { friendlyError } from "@/components/progress";
+import { toast } from "@/components/toast";
 
 export function SaveJobButton({ jobId }: { jobId: string }) {
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-  const [pending, start] = useTransition();
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      const res = await saveJobAction(jobId);
+      if (!res.ok) throw new Error(res.error);
+      setSaved(true);
+      toast("Saved to your applications", { href: `/applications/${res.data.id}`, action: "Open" });
+    } catch (e) {
+      toast(friendlyError(e), { tone: "error" });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <Button
-      variant="secondary"
-      className="px-2.5 py-1 text-xs"
-      disabled={pending || saved}
-      title={error || undefined}
-      onClick={() =>
-        start(async () => {
-          const res = await saveJobAction(jobId);
-          if (res.ok) setSaved(true);
-          else setError(res.error);
-        })
-      }
-    >
-      {saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-      {saved ? "Saved" : error ? "Retry" : "Save"}
+    <Button variant="secondary" className="px-3 py-1 text-xs" disabled={saved} loading={busy} onClick={save}>
+      {!busy && (saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />)}
+      {saved ? "Saved" : "Save"}
     </Button>
   );
 }

@@ -65,8 +65,8 @@ export function AISettingsForm({
   return (
     <div className="p-5">
       <div className="mb-1 flex items-center gap-2">
-        <KeyRound size={16} className="text-accent" />
-        <h2 className="font-medium">Your AI provider</h2>
+        <span className="chip-icon pastel-cool"><KeyRound size={16} /></span>
+        <h2 className="font-bold tracking-[-0.02em]">Your AI provider</h2>
       </div>
       <p className="mb-4 text-sm text-muted">
         OpenApply is free — AI calls go to your own account with your provider. Your key is encrypted (AES-256-GCM) and only

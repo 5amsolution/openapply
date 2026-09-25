@@ -7,8 +7,9 @@ import { allow } from "@/lib/rate-limit";
 import { enabledSources } from "@/lib/jobs/sources";
 import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { keywordMatch } from "@/lib/matching";
-import { Button, Card, EmptyState, Input, Notice, PageHeader } from "@/components/ui";
-import { JobCard } from "@/components/job-card";
+import { Button, Card, EmptyState, Notice, PageHeader } from "@/components/ui";
+import { MapPin, Search } from "lucide-react";
+import { JobResults, type ResultItem } from "@/components/job-results";
 import { SourceFilter } from "@/components/source-filter";
 import { ProgressSteps } from "@/components/progress";
 import type { Profile } from "@/lib/types";
@@ -38,48 +39,72 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
 
   return (
     <>
-      <PageHeader title="Find jobs" description={`Searching ${sources.length} job sources at once.`} />
+      <PageHeader tint="lavender" eyebrow={<>🔎 {sources.length} job sources, searched live</>} title="Find jobs" description="One search across remote boards and top company career pages — every job scored against your resume." />
 
-      <Card className="mb-6 p-4">
-        <form className="grid gap-3 md:grid-cols-[1fr_16rem_auto_auto]" action="/jobs">
-          <Input name="q" defaultValue={q} placeholder="Job title, skill or company — e.g. product designer" required aria-label="Keywords" />
-          <Input
-            name="loc"
-            defaultValue={loc || (q ? "" : profile?.desired_locations?.[0] ?? "")}
-            placeholder="Location (optional)"
-            aria-label="Location"
-          />
-          <label className="flex items-center gap-2 px-1 text-sm">
-            <input
-              type="checkbox"
-              name="remote"
-              value="1"
-              defaultChecked={remote || (!q && profile?.remote_preference === "remote")}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-            Remote only
-          </label>
-          <Button type="submit">Search</Button>
-          <details className="md:col-span-4">
-            <summary className="cursor-pointer text-sm text-muted">Sources ({src.length ? src.length : "all"})</summary>
-            <SourceFilter sources={sources} selected={src} />
-          </details>
-        </form>
-        {!q && suggestions.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-muted">Try:</span>
-            {suggestions.slice(0, 5).map((t) => (
-              <Link
-                key={t}
-                href={`/jobs?q=${encodeURIComponent(t)}${profile?.remote_preference === "remote" ? "&remote=1" : ""}`}
-                className="rounded-md bg-surface-2 px-2 py-1 hover:text-accent"
-              >
-                {t}
-              </Link>
-            ))}
+      <section className="bento pastel-lavender mb-6 p-4 md:p-5">
+        <form className="grid gap-3" action="/jobs" role="search">
+          <div className="flex flex-col gap-3 lg:flex-row">
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-full bg-surface py-1.5 pl-1.5 pr-4 shadow-[0_4px_14px_rgba(70,66,120,0.1)] transition focus-within:shadow-[0_0_0_3px_rgba(95,139,62,0.35),0_4px_14px_rgba(70,66,120,0.1)]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2" aria-hidden="true">
+                <Search size={17} />
+              </span>
+              <input
+                name="q"
+                defaultValue={q}
+                required
+                aria-label="Keywords"
+                placeholder="Job title, skill or company — e.g. product designer"
+                className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-muted/80"
+              />
+            </div>
+            <div className="flex items-center gap-3 rounded-full bg-surface py-1.5 pl-1.5 pr-4 shadow-[0_4px_14px_rgba(70,66,120,0.1)] transition focus-within:shadow-[0_0_0_3px_rgba(95,139,62,0.35),0_4px_14px_rgba(70,66,120,0.1)] lg:w-64">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-2" aria-hidden="true">
+                <MapPin size={17} />
+              </span>
+              <input
+                name="loc"
+                defaultValue={loc || (q ? "" : profile?.desired_locations?.[0] ?? "")}
+                aria-label="Location"
+                placeholder="Location (optional)"
+                className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-muted/80"
+              />
+            </div>
+            <Button type="submit" className="h-[52px] px-7 text-[15px]">
+              Search
+            </Button>
           </div>
-        )}
-      </Card>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 font-medium">
+              <input
+                type="checkbox"
+                name="remote"
+                value="1"
+                defaultChecked={remote || (!q && profile?.remote_preference === "remote")}
+                className="h-4 w-4 accent-[var(--accent)]"
+              />
+              Remote only
+            </label>
+            <details className="group/src">
+              <summary className="cursor-pointer list-none font-medium text-fg/70 hover:text-fg">Sources ({src.length ? src.length : "all"}) ▾</summary>
+              <SourceFilter sources={sources} selected={src} />
+            </details>
+            {!q && suggestions.length > 0 && (
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="text-fg/60">Try:</span>
+                {suggestions.slice(0, 4).map((t) => (
+                  <Link
+                    key={t}
+                    href={`/jobs?q=${encodeURIComponent(t)}${profile?.remote_preference === "remote" ? "&remote=1" : ""}`}
+                    className="lift rounded-full bg-surface px-3 py-1 text-xs font-semibold"
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </span>
+            )}
+          </div>
+        </form>
+      </section>
 
       {q ? (
         <Suspense key={`${q}|${loc}|${remote}|${src.join(",")}`} fallback={<ResultsSkeleton />}>
@@ -115,26 +140,41 @@ async function Results({ userId, q, loc, remote, src }: { userId: string; q: str
     );
   }
 
+  const items: ResultItem[] = jobs.map((job, rank) => {
+    const app = appByJob.get(job.id);
+    const score = app?.match_score ?? (profile ? keywordMatch(profile as unknown as Profile, job).score : null);
+    // Send only what a result card shows — descriptions stay on the server.
+    const { id, title, company, company_logo, location, remote, salary_min, salary_max, salary_currency, salary_period, source, posted_at, tags } = job;
+    return {
+      job: { id, title, company, company_logo, location, remote, salary_min, salary_max, salary_currency, salary_period, source, posted_at, tags },
+      score,
+      applicationId: app?.id,
+      status: app?.status,
+      rank,
+    };
+  });
+
   return (
-    <div className="grid gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
-        <span>
-          {jobs.length} jobs · sorted by relevance
-        </span>
-        {failed.length > 0 && <span>Unavailable right now: {failed.map((f) => f.id).join(", ")}</span>}
-      </div>
-      {!live && <Notice tone="warn">You searched a lot in the last few minutes, so these results come from our cache.</Notice>}
-      {!profile?.skills?.length && (
-        <Notice>
-          Fit scores are rough until you <Link href="/profile" className="underline">add your resume</Link>.
-        </Notice>
-      )}
-      {jobs.map((job) => {
-        const app = appByJob.get(job.id);
-        const estimate = app?.match_score ?? (profile ? keywordMatch(profile as unknown as Profile, job).score : null);
-        return <JobCard key={job.id} job={job} score={estimate} applicationId={app?.id} status={app?.status} />;
-      })}
-    </div>
+    <JobResults
+      items={items}
+      header={
+        <>
+          {failed.length > 0 && (
+            <p className="text-xs text-muted">Unavailable right now: {failed.map((f) => f.id).join(", ")}</p>
+          )}
+          {!live && <Notice tone="warn">You searched a lot in the last few minutes, so these results come from our cache.</Notice>}
+          {!profile?.skills?.length && (
+            <Notice>
+              Fit scores are rough until you{" "}
+              <Link href="/profile" className="underline">
+                add your resume
+              </Link>
+              .
+            </Notice>
+          )}
+        </>
+      }
+    />
   );
 }
 

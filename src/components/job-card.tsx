@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { Building2, MapPin, Wallet } from "lucide-react";
+import { MapPin, Wallet } from "lucide-react";
 import { Badge, Card, ScoreBadge } from "@/components/ui";
+import { CompanyLogo } from "@/components/company-logo";
 import { SaveJobButton } from "@/components/save-job-button";
 import { formatSalary, STATUS_LABELS, timeAgo } from "@/lib/format";
 import { sourceLabel } from "@/lib/jobs/labels";
 import type { Job } from "@/lib/types";
+
+/** What a result card needs — no description, so result lists stay light. */
+export type JobSummary = Pick<
+  Job,
+  "id" | "title" | "company" | "company_logo" | "location" | "remote" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "source" | "posted_at" | "tags"
+>;
 
 export function JobCard({
   job,
@@ -12,31 +19,25 @@ export function JobCard({
   applicationId,
   status,
 }: {
-  job: Job;
+  job: JobSummary;
   score: number | null | undefined;
   applicationId?: string;
   status?: string;
 }) {
   const salary = formatSalary(job);
+  const via = job.tags.find((t) => t.startsWith("via "));
   return (
-    <Card className="flex gap-4 p-4 transition hover:border-accent/40">
-      <div className="hidden h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 sm:flex">
-        {job.company_logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={job.company_logo} alt="" className="h-full w-full object-contain" loading="lazy" referrerPolicy="no-referrer" />
-        ) : (
-          <Building2 size={18} className="text-muted" />
-        )}
-      </div>
+    <Card interactive className="group relative flex gap-4 p-4">
+      <CompanyLogo src={job.company_logo} company={job.company} />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <Link href={`/jobs/${job.id}`} className="font-medium hover:text-accent">
+            <Link href={`/jobs/${job.id}`} className="font-semibold leading-snug after:absolute after:inset-0 after:content-[''] group-hover:text-accent">
               {job.title}
             </Link>
-            <p className="text-sm text-muted">{job.company}</p>
+            <p className="truncate text-sm text-muted">{job.company}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="relative z-10 flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
             <ScoreBadge score={score} />
             {status ? (
               <Link href={`/applications/${applicationId}`}>
@@ -47,20 +48,20 @@ export function JobCard({
             )}
           </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:text-sm">
           {job.location && (
-            <span className="inline-flex items-center gap-1">
-              <MapPin size={14} /> {job.location.length > 60 ? job.location.slice(0, 60) + "…" : job.location}
+            <span className="inline-flex max-w-full items-center gap-1 truncate">
+              <MapPin size={13} /> {job.location.length > 48 ? job.location.slice(0, 48) + "…" : job.location}
             </span>
           )}
           {job.remote && <Badge tone="info">Remote</Badge>}
           {salary && (
-            <span className="inline-flex items-center gap-1">
-              <Wallet size={14} /> {salary}
+            <span className="inline-flex items-center gap-1 font-medium text-fg">
+              <Wallet size={13} /> {salary}
             </span>
           )}
           <span>
-            {sourceLabel(job.source)}
+            {via ? via.replace("via ", "") : sourceLabel(job.source)}
             {job.posted_at ? ` · ${timeAgo(job.posted_at)}` : ""}
           </span>
         </div>

@@ -1,32 +1,41 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateApplicationAction } from "@/app/(app)/actions";
 import { Select, cn } from "@/components/ui";
+import { friendlyError } from "@/components/progress";
+import { toast } from "@/components/toast";
 import { STATUS_LABELS } from "@/lib/format";
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/lib/types";
 
 export function StatusSelect({ id, status, compact }: { id: string; status: ApplicationStatus; compact?: boolean }) {
   const router = useRouter();
   const [value, setValue] = useState(status);
-  const [pending, start] = useTransition();
+  const [busy, setBusy] = useState(false);
 
   return (
     <Select
       aria-label="Status"
       value={value}
-      disabled={pending}
+      disabled={busy}
       className={cn(compact && "py-1 text-xs")}
-      onChange={(e) => {
+      onChange={async (e) => {
         const next = e.target.value as ApplicationStatus;
         const prev = value;
         setValue(next);
-        start(async () => {
+        setBusy(true);
+        try {
           const res = await updateApplicationAction(id, { status: next });
-          if (!res.ok) setValue(prev);
+          if (!res.ok) throw new Error(res.error);
+          toast(`Moved to ${STATUS_LABELS[next]}`);
           router.refresh();
-        });
+        } catch (err) {
+          setValue(prev);
+          toast(friendlyError(err), { tone: "error" });
+        } finally {
+          setBusy(false);
+        }
       }}
     >
       {APPLICATION_STATUSES.map((s) => (

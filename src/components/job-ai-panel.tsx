@@ -62,7 +62,7 @@ export function JobAIPanel({
     <Card className="p-5">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-medium">
-          <Target size={16} className="text-accent" /> Your fit
+          <span className="chip-icon pastel-lime"><Target size={16} /></span> Your fit
         </h2>
         <ScoreBadge score={score} />
       </div>

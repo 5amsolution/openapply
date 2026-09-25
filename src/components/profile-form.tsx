@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Briefcase, GraduationCap, MessageSquareText, Plus, Target, Trash2, UserRound } from "lucide-react";
 import { updateProfileAction } from "@/app/(app)/actions";
-import { Button, Card, Input, Label, Notice, Select, Textarea } from "@/components/ui";
+import { toast } from "@/components/toast";
+import { Button, Card, Input, Label, Select, Textarea } from "@/components/ui";
 import type { EducationItem, ExperienceItem, Profile } from "@/lib/types";
 
 const SUGGESTED_QUESTIONS = [
@@ -20,6 +21,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const [education, setEducation] = useState<EducationItem[]>(profile.education ?? []);
   const [answers, setAnswers] = useState<[string, string][]>(Object.entries(profile.standard_answers ?? {}));
   const [pending, start] = useTransition();
+  const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<{ tone: "accent" | "danger"; text: string } | null>(null);
 
   // The resume upload refreshes the page with new server data; remount-free sync:
@@ -29,6 +31,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     setExperience(profile.experience ?? []);
     setEducation(profile.education ?? []);
     setAnswers(Object.entries(profile.standard_answers ?? {}));
+    setDirty(false);
   }
 
   const submit = (formData: FormData) =>
@@ -41,16 +44,23 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         JSON.stringify(Object.fromEntries(answers.filter(([q, a]) => q.trim() && a.trim()).map(([q, a]) => [q.trim(), a.trim()]))),
       );
       const res = await updateProfileAction(formData);
-      setMessage(res.ok ? { tone: "accent", text: "Profile saved." } : { tone: "danger", text: res.error });
-      if (res.ok) router.refresh();
+      setMessage(res.ok ? null : { tone: "danger", text: res.error });
+      if (res.ok) {
+        setDirty(false);
+        toast("Profile saved.");
+        router.refresh();
+      }
     });
 
   const links = profile.links ?? {};
 
   return (
-    <form action={submit} key={profile.updated_at} className="grid gap-6">
+    <form action={submit} key={profile.updated_at} className="grid gap-6" onChange={() => setDirty(true)} onClick={(e) => {
+      // Adding/removing roles, schools or answers also counts as an edit.
+      if ((e.target as HTMLElement).closest("button[type=button]")) setDirty(true);
+    }}>
       <Card className="grid gap-4 p-5 md:grid-cols-2">
-        <h2 className="font-medium md:col-span-2">Basics</h2>
+        <h2 className="md:col-span-2"><span className="flex items-center gap-3"><span className="chip-icon pastel-pink"><UserRound size={16} /></span><span className="font-bold tracking-[-0.02em]">Basics</span></span></h2>
         <Field name="full_name" label="Full name" defaultValue={profile.full_name} autoComplete="name" />
         <Field name="headline" label="Headline" defaultValue={profile.headline} placeholder="e.g. Senior Product Designer" />
         <Field name="email" label="Email for applications" defaultValue={profile.email} type="email" />
@@ -72,7 +82,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </Card>
 
       <Card className="grid gap-4 p-5 md:grid-cols-2">
-        <h2 className="font-medium md:col-span-2">What you&apos;re looking for</h2>
+        <h2 className="md:col-span-2"><span className="flex items-center gap-3"><span className="chip-icon pastel-lime"><Target size={16} /></span><span className="font-bold tracking-[-0.02em]">What you&apos;re looking for</span></span></h2>
         <div>
           <Label htmlFor="desired_titles" hint="comma separated">
             Target job titles
@@ -113,7 +123,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
       <Card className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-medium">Experience</h2>
+          <h2><span className="flex items-center gap-3"><span className="chip-icon pastel-lavender"><Briefcase size={16} /></span><span className="font-bold tracking-[-0.02em]">Experience</span></span></h2>
           <Button type="button" variant="secondary" onClick={() => setExperience([...experience, { title: "", company: "", bullets: [] }])}>
             <Plus size={14} /> Add role
           </Button>
@@ -150,7 +160,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
       <Card className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-medium">Education</h2>
+          <h2><span className="flex items-center gap-3"><span className="chip-icon pastel-peach"><GraduationCap size={16} /></span><span className="font-bold tracking-[-0.02em]">Education</span></span></h2>
           <Button type="button" variant="secondary" onClick={() => setEducation([...education, { school: "" }])}>
             <Plus size={14} /> Add
           </Button>
@@ -174,7 +184,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </Card>
 
       <Card className="p-5">
-        <h2 className="font-medium">Standard answers</h2>
+        <h2><span className="flex items-center gap-3"><span className="chip-icon pastel-cool"><MessageSquareText size={16} /></span><span className="font-bold tracking-[-0.02em]">Standard answers</span></span></h2>
         <p className="mb-3 text-sm text-muted">Answers you give on every form. The AI and the extension reuse them word for word.</p>
         <div className="grid gap-3">
           {answers.map(([q, a], i) => (
@@ -199,11 +209,23 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         </div>
       </Card>
 
-      <div className="sticky bottom-4 z-10 flex items-center gap-3">
-        <Button type="submit" disabled={pending} className="shadow-lg">
-          {pending ? "Saving…" : "Save profile"}
-        </Button>
-        {message && <Notice tone={message.tone}>{message.text}</Notice>}
+      <div className="sticky bottom-20 z-20 md:bottom-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface/95 px-4 py-3 shadow-[0_12px_32px_rgba(24,30,45,0.12)] backdrop-blur">
+          <p className="text-sm">
+            {message ? (
+              <span className="text-danger">{message.text}</span>
+            ) : dirty ? (
+              <span className="inline-flex items-center gap-2 font-medium">
+                <span className="h-2 w-2 rounded-full bg-warn" /> You have unsaved changes
+              </span>
+            ) : (
+              <span className="text-muted">All changes saved</span>
+            )}
+          </p>
+          <Button type="submit" loading={pending} disabled={!dirty && !pending}>
+            {pending ? "Saving…" : "Save profile"}
+          </Button>
+        </div>
       </div>
     </form>
   );

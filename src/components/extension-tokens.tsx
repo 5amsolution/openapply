@@ -24,8 +24,8 @@ export function ExtensionTokens({
   return (
     <Card className="p-5" id="extension">
       <div className="mb-1 flex items-center gap-2">
-        <Puzzle size={16} className="text-accent" />
-        <h2 className="font-medium">Autofill browser extension</h2>
+        <span className="chip-icon pastel-peach"><Puzzle size={16} /></span>
+        <h2 className="font-bold tracking-[-0.02em]">Autofill browser extension</h2>
       </div>
       <p className="mb-4 text-sm text-muted">
         The extension fills application forms (Greenhouse, Lever, Ashby, Workday, SmartRecruiters and most others) with your

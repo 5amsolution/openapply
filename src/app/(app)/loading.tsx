@@ -8,7 +8,7 @@ export default function Loading() {
         <div className="h-full w-1/3 animate-[oa-slide_1.1s_ease-in-out_infinite] bg-accent" />
       </div>
       <span className="sr-only">Loading…</span>
-      <div className="mb-6 h-8 w-56 animate-pulse rounded-lg bg-surface-2" />
+      <div className="bento pastel-lime mb-6 h-[150px] animate-pulse" />
       <div className="grid gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="h-24 animate-pulse bg-surface-2/60" />

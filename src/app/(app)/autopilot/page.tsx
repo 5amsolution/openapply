@@ -26,6 +26,8 @@ export default async function AutopilotPage() {
   return (
     <>
       <PageHeader
+        tint="lime"
+        eyebrow={<>⚡ Runs every day</>}
         title="Autopilot"
         description="Saved searches that run every day. New matches above your score threshold get a full application written and land in “Ready to apply”."
       />

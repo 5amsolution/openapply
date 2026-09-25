@@ -102,3 +102,88 @@ body {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(300%); }
 }
+
+@keyframes oa-toast {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- App motion & surfaces (shared with the landing mosaic) -------------- */
+.bento {
+  border-radius: 22px;
+  border: 1.6px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 16px rgba(24, 30, 45, 0.05);
+}
+@media (prefers-color-scheme: dark) {
+  .bento { border-color: rgba(255, 255, 255, 0.06); }
+}
+
+/* Hover lift for anything clickable that looks like a card */
+.lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -12px rgba(24, 30, 45, 0.18), 0 2px 8px rgba(24, 30, 45, 0.05);
+}
+.lift:active { transform: translateY(-1px); }
+
+/* Primary button sheen */
+.sheen { position: relative; overflow: hidden; isolation: isolate; }
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheen:hover::after { transform: translateX(120%); }
+
+/* Icon chip */
+.chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .chip-icon { transform: rotate(-6deg) scale(1.06); }
+
+/* Page entrance: direct children rise in sequence */
+@keyframes oa-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stagger > * { animation: oa-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+  .stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.08s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.14s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.26s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.32s; }
+  .stagger > *:nth-child(n + 7) { animation-delay: 0.38s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift, .lift:hover, .chip-icon, .sheen::after { transition: none; transform: none; }
+}
+
+/* Dotted grid used on hero panels (like the landing "tracker" card) */
+.grid-dots {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(circle at 85% 0%, black 0%, transparent 70%);
+}
+@media (prefers-color-scheme: dark) {
+  .grid-dots {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  }
+}
