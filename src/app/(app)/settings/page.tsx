@@ -9,7 +9,7 @@ import { Card, IconTile, PageHeader, SectionTitle } from "@/components/ui";
 import { AISettingsForm } from "@/components/ai-settings-form";
 import { ExtensionSetup } from "@/components/extension-setup";
 import { DangerZone } from "@/components/danger-zone";
-import { JSearchKeyCard } from "@/components/jsearch-key-card";
+import { SourceKeyCard } from "@/components/source-key-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getUserSourceKeyInfo } from "@/lib/source-keys";
 import { serverEnv } from "@/lib/env";
@@ -39,7 +39,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [ai, { data: usage }, { data: tokens }, jsearchInfo] = await Promise.all([
+  const [ai, { data: usage }, { data: tokens }, jsearchInfo, rocketshipInfo] = await Promise.all([
     getAISettingsPublic(user.id),
     supabase.from("ai_usage").select("feature, input_tokens, output_tokens").gte("created_at", monthStart.toISOString()),
     createAdminClient()
@@ -48,6 +48,7 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
       .eq("user_id", user.id)
       .order("created_at"),
     getUserSourceKeyInfo(user.id, "jsearch"),
+    getUserSourceKeyInfo(user.id, "remoterocketship"),
   ]);
 
   const byFeature = new Map<string, { calls: number; tokens: number }>();
@@ -160,8 +161,11 @@ export default async function SettingsPage(props: PageProps<"/settings">) {
           </Card>
         </SettingsSection>
 
-        <SettingsSection id="job-sources" title="Job sources" description="Add LinkedIn, Indeed and Glassdoor listings to every search.">
-          <JSearchKeyCard info={jsearchInfo} siteKeyAvailable={!!serverEnv.jsearchKey()} />
+        <SettingsSection id="job-sources" title="Job sources" description="Add LinkedIn, Indeed, Glassdoor and Remote Rocketship listings to every search.">
+          <div className="grid gap-4">
+            <SourceKeyCard source="jsearch" info={jsearchInfo} siteKeyAvailable={!!serverEnv.jsearchKey()} />
+            <SourceKeyCard source="remoterocketship" info={rocketshipInfo} siteKeyAvailable={!!serverEnv.rocketshipKey()} />
+          </div>
         </SettingsSection>
 
         <SettingsSection id="extension" title="Autofill extension" description="Fill application forms on any site in one click.">

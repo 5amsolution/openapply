@@ -15,7 +15,7 @@ import { extractResumeText, heuristicProfile } from "@/lib/resume";
 import { APPLICATION_STATUSES, type Application, type AutopilotRule } from "@/lib/types";
 import { consumeQuota } from "@/lib/api-cache";
 import { serverEnv } from "@/lib/env";
-import { userQuotaSource } from "@/lib/source-keys";
+import { SOURCE_KEY_IDS, userQuotaSource, type SourceKeyId } from "@/lib/source-keys";
 import type { TablesUpdate } from "@/lib/database.types";
 
 export type ActionResult<T = null> = { ok: true; data: T } | { ok: false; error: string };
@@ -521,17 +521,52 @@ export async function deleteAccountAction(confirmation: string): Promise<ActionR
 }
 
 // ---------------------------------------------------------------------------
-// Job source keys (JSearch: LinkedIn, Indeed, Glassdoor)
+// Job source keys (JSearch: LinkedIn, Indeed, Glassdoor; Remote Rocketship)
 // ---------------------------------------------------------------------------
 
 const SourceKeyInput = z.object({
   key: z.string().trim().max(200).optional(),
   monthlyLimit: z.number().int().min(1).max(100_000),
 });
+const SourceKeyName = z.enum(SOURCE_KEY_IDS);
 
-export async function saveJSearchKeyAction(input: z.infer<typeof SourceKeyInput>): Promise<ActionResult<string>> {
+const SOURCE_KEY_NAMES: Record<SourceKeyId, string> = { jsearch: "JSearch", remoterocketship: "Remote Rocketship" };
+
+/** One real request proves the key works; throws a message the user can act on. */
+async function testSourceKey(source: SourceKeyId, key: string) {
+  if (source === "jsearch") {
+    const res = await fetch(`${serverEnv.jsearchBaseUrl()}/search?query=software%20developer&page=1&num_pages=1`, {
+      headers: { "x-rapidapi-key": key, "x-rapidapi-host": "jsearch.p.rapidapi.com" },
+      signal: AbortSignal.timeout(20_000),
+    }).catch(() => null);
+    if (!res) throw new Error("Couldn't reach JSearch. Please try again.");
+    if (res.status === 401) throw new Error("RapidAPI rejected that key. Copy the X-RapidAPI-Key value again.");
+    if (res.status === 403) throw new Error("This key isn't subscribed to JSearch yet. On RapidAPI, open JSearch, then Pricing, and subscribe to the free Basic plan.");
+    if (res.status === 429) throw new Error("This key has hit JSearch's rate limit. Wait a minute, or check your plan's monthly quota on RapidAPI.");
+    if (!res.ok) throw new Error(`JSearch responded ${res.status}. Please try again.`);
+    return "Connected. LinkedIn, Indeed and Glassdoor listings will now appear in your searches.";
+  }
+  const res = await fetch(`${serverEnv.rocketshipBaseUrl()}/jobs/`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "rr-api-version": "1", "content-type": "application/json" },
+    body: JSON.stringify({ filters: { page: 1, itemsPerPage: 1 } }),
+    signal: AbortSignal.timeout(20_000),
+  }).catch(() => null);
+  if (!res) throw new Error("Couldn't reach Remote Rocketship. Please try again.");
+  if (res.status === 401) throw new Error("Remote Rocketship rejected that key. Generate a new one under Advanced, API access, and paste it again.");
+  if (res.status === 403) throw new Error("This key needs an active Remote Rocketship subscription.");
+  if (res.status === 429) throw new Error("This key has used its 500 requests for today. Try again tomorrow.");
+  if (!res.ok) throw new Error(`Remote Rocketship responded ${res.status}. Please try again.`);
+  return "Connected. Remote Rocketship jobs will now appear in your searches.";
+}
+
+export async function saveSourceKeyAction(
+  source: SourceKeyId,
+  input: z.infer<typeof SourceKeyInput>,
+): Promise<ActionResult<string>> {
   return attempt(async () => {
     const { user } = await requireUser();
+    const id = SourceKeyName.parse(source);
     const v = SourceKeyInput.parse(input);
     const admin = createAdminClient();
 
@@ -540,30 +575,21 @@ export async function saveJSearchKeyAction(input: z.infer<typeof SourceKeyInput>
         .from("source_keys")
         .update({ monthly_limit: v.monthlyLimit }, { count: "exact" })
         .eq("user_id", user.id)
-        .eq("source", "jsearch");
+        .eq("source", id);
       if (error) throw new Error(error.message);
-      if (!count) throw new Error("Paste your JSearch key.");
+      if (!count) throw new Error(`Paste your ${SOURCE_KEY_NAMES[id]} key.`);
       revalidatePath("/settings");
       return "Monthly limit updated.";
     }
 
-    // One real request proves the key works and the free plan is subscribed.
-    const res = await fetch(`${serverEnv.jsearchBaseUrl()}/search?query=software%20developer&page=1&num_pages=1`, {
-      headers: { "x-rapidapi-key": v.key, "x-rapidapi-host": "jsearch.p.rapidapi.com" },
-      signal: AbortSignal.timeout(20_000),
-    }).catch(() => null);
-    if (!res) throw new Error("Couldn't reach JSearch. Please try again.");
-    if (res.status === 401) throw new Error("RapidAPI rejected that key. Copy the X-RapidAPI-Key value again.");
-    if (res.status === 403) throw new Error("This key isn't subscribed to JSearch yet. On RapidAPI, open JSearch → Pricing and subscribe to the free Basic plan.");
-    if (res.status === 429) throw new Error("This key has hit JSearch's rate limit. Wait a minute, or check your plan's monthly quota on RapidAPI.");
-    if (!res.ok) throw new Error(`JSearch responded ${res.status}. Please try again.`);
+    const done = await testSourceKey(id, v.key);
     // Only a request that reached a working key counts against the user's monthly cap.
-    await consumeQuota(userQuotaSource("jsearch", user.id), 2_000_000_000); // fits Postgres int4
+    await consumeQuota(userQuotaSource(id, user.id), 2_000_000_000); // fits Postgres int4
 
     const { error } = await admin.from("source_keys").upsert(
       {
         user_id: user.id,
-        source: "jsearch",
+        source: id,
         key_enc: encrypt(v.key),
         key_hint: keyHint(v.key),
         monthly_limit: v.monthlyLimit,
@@ -573,14 +599,15 @@ export async function saveJSearchKeyAction(input: z.infer<typeof SourceKeyInput>
     if (error) throw new Error(error.message);
     revalidatePath("/settings");
     revalidatePath("/jobs");
-    return "Connected. LinkedIn, Indeed and Glassdoor listings will now appear in your searches.";
+    return done;
   });
 }
 
-export async function removeJSearchKeyAction(): Promise<ActionResult> {
+export async function removeSourceKeyAction(source: SourceKeyId): Promise<ActionResult> {
   return attempt(async () => {
     const { user } = await requireUser();
-    await createAdminClient().from("source_keys").delete().eq("user_id", user.id).eq("source", "jsearch");
+    const id = SourceKeyName.parse(source);
+    await createAdminClient().from("source_keys").delete().eq("user_id", user.id).eq("source", id);
     revalidatePath("/settings");
     revalidatePath("/jobs");
     return null;

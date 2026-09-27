@@ -25,8 +25,8 @@ export interface SearchQuery {
   cacheOnly?: boolean;
   /** Signed-in user; lets metered sources use that user's own API key. */
   userId?: string;
-  /** The user's own JSearch key, if they added one in Settings. */
-  jsearchUserKey?: { key: string; monthlyLimit: number } | null;
+  /** The user's own keys for metered sources (JSearch, Remote Rocketship), if they added any in Settings. */
+  userKeys?: Partial<Record<string, { key: string; monthlyLimit: number }>>;
 }
 
 export interface JobSource {
@@ -623,7 +623,7 @@ const jsearch: JobSource = {
   async search(q) {
     // A user's own key: their quota, their cache, and results only they can see.
     // Otherwise the site-wide key: shared cache and a deployment-wide monthly cap.
-    const own = q.jsearchUserKey && q.userId ? q.jsearchUserKey : null;
+    const own = q.userKeys?.jsearch && q.userId ? q.userKeys.jsearch : null;
     const apiKey = own ? own.key : serverEnv.jsearchKey();
     if (!apiKey) return [];
     const bucket = own ? `jsearch:u:${q.userId}` : "jsearch";
@@ -693,8 +693,98 @@ const jsearch: JobSource = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Remote Rocketship, remote jobs (paid subscription; site key or the user's own)
+// ---------------------------------------------------------------------------
+const remoterocketship: JobSource = {
+  id: "remoterocketship",
+  label: "Remote Rocketship",
+  homepage: "https://www.remoterocketship.com",
+  remoteOnly: true,
+  enabled: () => !!serverEnv.rocketshipKey(),
+  async search(q) {
+    const own = q.userKeys?.remoterocketship && q.userId ? q.userKeys.remoterocketship : null;
+    const apiKey = own ? own.key : serverEnv.rocketshipKey();
+    if (!apiKey) return [];
+    const bucket = own ? `remoterocketship:u:${q.userId}` : "remoterocketship";
+    const monthlyLimit = own ? own.monthlyLimit : serverEnv.rocketshipMonthlyLimit();
+    type R = {
+      jobOpenings: {
+        id: number | string;
+        roleTitle: string;
+        url: string;
+        slug?: string;
+        created_at?: string;
+        employmentType?: string | null;
+        roleDescription?: string | null;
+        roleRequirements?: string | null;
+        benefits?: string | null;
+        salaryRange?: string | null;
+        techStack?: string[] | null;
+        company?: { name?: string; profilePicURL?: string | null } | null;
+      }[];
+    };
+    // The API allows 500 requests a day, so each query is cached for 12 hours.
+    const cacheKey = `${bucket}:${q.keywords.toLowerCase().replace(/\s+/g, " ").trim()}`;
+    let data = await cacheGet<R>(cacheKey);
+    if (!data) {
+      if (q.cacheOnly) return [];
+      if (!(await consumeQuota(bucket, monthlyLimit))) {
+        throw new Error(own ? "your Remote Rocketship key's monthly limit is used up" : "monthly Remote Rocketship quota used up");
+      }
+      data = await fetchJSON<R>(
+        `${serverEnv.rocketshipBaseUrl()}/jobs/`,
+        {
+          method: "POST",
+          headers: { authorization: `Bearer ${apiKey}`, "rr-api-version": "1", "content-type": "application/json" },
+          body: JSON.stringify({
+            filters: { page: 1, itemsPerPage: 50, jobTitleFilters: [q.keywords], showRemoteJobs: true, sortBy: "DateAdded" },
+            includeJobDescription: true,
+          }),
+        },
+        20_000,
+      );
+      await cacheSet(cacheKey, data, 12 * 3_600_000);
+    }
+    return (data.jobOpenings ?? []).map((j) => {
+      const pay = parseSalaryRange(j.salaryRange);
+      return {
+        ...base,
+        source: "remoterocketship",
+        external_id: String(j.id),
+        title: j.roleTitle,
+        company: j.company?.name || "Unknown company",
+        company_logo: j.company?.profilePicURL || null,
+        location: "Remote",
+        remote: true,
+        employment_type: j.employmentType?.replace(/-/g, " ") || null,
+        ...pay,
+        description: [j.roleDescription, j.roleRequirements && `Requirements\n${j.roleRequirements}`, j.benefits && `Benefits\n${j.benefits}`]
+          .filter(Boolean)
+          .map((s) => htmlToText(s as string))
+          .join("\n\n"),
+        url: j.url,
+        tags: j.techStack ?? [],
+        posted_at: toISO(j.created_at),
+        owner_id: own ? q.userId! : null,
+      };
+    });
+  },
+};
+
+/** "$120k-$150k" / "€50,000 - €60,000" → numbers (yearly unless it says hour). */
+function parseSalaryRange(s: string | null | undefined): Pick<JobInput, "salary_min" | "salary_max" | "salary_currency" | "salary_period"> {
+  const none = { salary_min: null, salary_max: null, salary_currency: null, salary_period: null };
+  if (!s) return none;
+  const nums = [...s.matchAll(/(\d[\d,.]*)\s*(k)?/gi)].map((m) => Number(m[1].replace(/,/g, "")) * (m[2] ? 1000 : 1)).filter((n) => n > 0);
+  if (!nums.length) return none;
+  const currency = s.includes("€") ? "EUR" : s.includes("£") ? "GBP" : s.includes("$") ? "USD" : null;
+  return { salary_min: nums[0], salary_max: nums[1] ?? null, salary_currency: currency, salary_period: /hour|hr/i.test(s) ? "hour" : "year" };
+}
+
 export const SOURCES: JobSource[] = [
   jsearch,
+  remoterocketship,
   adzuna,
   usajobs,
   remotive,
@@ -707,8 +797,8 @@ export const SOURCES: JobSource[] = [
   ashby,
 ];
 
-/** Sources available for this search (JSearch also turns on when the user has their own key). */
-export function enabledSources(q?: Pick<SearchQuery, "jsearchUserKey">): JobSource[] {
-  return SOURCES.filter((s) => s.enabled() || (s.id === "jsearch" && !!q?.jsearchUserKey));
+/** Sources available for this search (keyed sources also turn on when the user has their own key). */
+export function enabledSources(q?: Pick<SearchQuery, "userKeys">): JobSource[] {
+  return SOURCES.filter((s) => s.enabled() || !!q?.userKeys?.[s.id]);
 }
 

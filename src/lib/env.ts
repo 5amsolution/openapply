@@ -26,6 +26,10 @@ export const serverEnv = {
   // Free RapidAPI plan is ~200 requests/month; leave headroom for tests.
   jsearchMonthlyLimit: () => Number(process.env.JSEARCH_MONTHLY_LIMIT) || 180,
   jsearchBaseUrl: () => (process.env.JSEARCH_BASE_URL || "https://jsearch.p.rapidapi.com").replace(/\/$/, ""),
+  // Remote Rocketship (paid, https://www.remoterocketship.com/api-docs): 500 requests a day
+  rocketshipKey: () => process.env.REMOTEROCKETSHIP_API_KEY || "",
+  rocketshipMonthlyLimit: () => Number(process.env.REMOTEROCKETSHIP_MONTHLY_LIMIT) || 3000,
+  rocketshipBaseUrl: () => (process.env.REMOTEROCKETSHIP_BASE_URL || "https://www.remoterocketship.com/api/openclaw").replace(/\/$/, ""),
   // Company career boards scanned by the Greenhouse / Lever / Ashby sources
   greenhouseBoards: () => list(process.env.GREENHOUSE_BOARDS),
   leverCompanies: () => list(process.env.LEVER_COMPANIES),

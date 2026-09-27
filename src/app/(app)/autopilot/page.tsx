@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { hasAIConfig } from "@/lib/ai/settings";
 import { closeInterruptedRuns } from "@/lib/autopilot";
 import { enabledSources } from "@/lib/jobs/sources";
-import { getUserSourceKeyInfo } from "@/lib/source-keys";
+import { getUserSourceKeyIds } from "@/lib/source-keys";
 import { Card, IconTile, Notice, PageHeader, SectionTitle, type Tone } from "@/components/ui";
 import { AutopilotManager } from "@/components/autopilot-manager";
 import { timeAgo } from "@/lib/format";
@@ -23,7 +23,7 @@ const HOW: { icon: React.ReactNode; tone: Tone; title: string; body: string }[] 
 export default async function AutopilotPage() {
   const { supabase, user } = await requireUser();
   await closeInterruptedRuns({ userId: user.id });
-  const hasOwnJSearch = !!(await getUserSourceKeyInfo(user.id, "jsearch"));
+  const ownKeys = Object.fromEntries((await getUserSourceKeyIds(user.id)).map((id) => [id, { key: "", monthlyLimit: 0 }]));
   const [{ data: rules }, { data: runs }, aiReady, { data: profile }] = await Promise.all([
     supabase.from("autopilot_rules").select("*").order("created_at"),
     supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(15),
@@ -85,7 +85,7 @@ export default async function AutopilotPage() {
 
       <AutopilotManager
         rules={(rules ?? []) as AutopilotRule[]}
-        sources={enabledSources({ jsearchUserKey: hasOwnJSearch ? { key: "", monthlyLimit: 0 } : null }).map((s) => ({ id: s.id, label: s.label }))}
+        sources={enabledSources({ userKeys: ownKeys }).map((s) => ({ id: s.id, label: s.label }))}
         defaults={{
           keywords: profile?.desired_titles?.[0] ?? "",
           location: profile?.desired_locations?.[0] ?? "",

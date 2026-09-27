@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { searchCachedJobs, searchJobs } from "@/lib/jobs/search";
 import { allow } from "@/lib/rate-limit";
 import { enabledSources } from "@/lib/jobs/sources";
-import { getUserSourceKeyInfo } from "@/lib/source-keys";
+import { getUserSourceKeyIds } from "@/lib/source-keys";
 import { keywordMatch } from "@/lib/matching";
 import { Button, Card, EmptyState, Input, Notice, PageHeader, Switch } from "@/components/ui";
 import { ChevronDown, Layers, MapPin, Radar, Search, SearchX, Sparkles } from "lucide-react";
@@ -30,8 +30,8 @@ export default async function JobsPage(props: PageProps<"/jobs">) {
     .eq("id", user.id)
     .single();
 
-  const hasOwnJSearch = !!(await getUserSourceKeyInfo(user.id, "jsearch"));
-  const sources = enabledSources({ jsearchUserKey: hasOwnJSearch ? { key: "", monthlyLimit: 0 } : null }).map((s) => ({
+  const ownKeys = Object.fromEntries((await getUserSourceKeyIds(user.id)).map((id) => [id, { key: "", monthlyLimit: 0 }]));
+  const sources = enabledSources({ userKeys: ownKeys }).map((s) => ({
     id: s.id,
     label: s.label,
   }));

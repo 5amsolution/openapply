@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enabledSources, type SearchQuery } from "@/lib/jobs/sources";
 import { matchesLocation, tokens } from "@/lib/jobs/util";
-import { getUserSourceKey } from "@/lib/source-keys";
+import { getUserSourceKeys } from "@/lib/source-keys";
 import type { Job, JobInput } from "@/lib/types";
 import type { TablesInsert } from "@/lib/database.types";
 
@@ -22,8 +22,8 @@ export async function searchJobs(q: SearchQuery & { sources?: string[] }, limit 
   const keywords = q.keywords.trim();
   if (!keywords) return { jobs: [], sources: [] };
 
-  // A signed-in user's own JSearch key (if any) switches that source on just for them.
-  if (q.userId && q.jsearchUserKey === undefined) q = { ...q, jsearchUserKey: await getUserSourceKey(q.userId, "jsearch") };
+  // A signed-in user's own keys (if any) switch those sources on just for them.
+  if (q.userId && q.userKeys === undefined) q = { ...q, userKeys: await getUserSourceKeys(q.userId) };
   const sources = enabledSources(q).filter((s) => !q.sources?.length || q.sources.includes(s.id));
   // The shared cache is queried while the live sources are still answering.
   const t0 = Date.now();

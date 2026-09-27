@@ -2,6 +2,7 @@
 
 export const SOURCE_META: Record<string, { label: string; homepage: string }> = {
   jsearch: { label: "JSearch", homepage: "https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch" },
+  remoterocketship: { label: "Remote Rocketship", homepage: "https://www.remoterocketship.com" },
   adzuna: { label: "Adzuna", homepage: "https://www.adzuna.com" },
   usajobs: { label: "USAJOBS", homepage: "https://www.usajobs.gov" },
   remotive: { label: "Remotive", homepage: "https://remotive.com" },
