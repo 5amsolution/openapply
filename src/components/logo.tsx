@@ -30,11 +30,22 @@ export function LogoMark({ size = 32, tile = true, className }: { size?: number;
 }
 
 /** Mark + "5AM APPLY" wordmark, coloured like the logo (orange "5AM", light/dark "APPLY"). */
-export function Logo({ href = "/", className, size = 32 }: { href?: string; className?: string; size?: number }) {
+export function Logo({
+  href = "/",
+  className,
+  size = 32,
+  compact,
+}: {
+  href?: string;
+  className?: string;
+  size?: number;
+  /** Only the mark on very narrow phones (the wordmark returns from 400px). */
+  compact?: boolean;
+}) {
   return (
-    <Link href={href} className={cn("inline-flex items-center gap-2.5 rounded-lg", className)}>
+    <Link href={href} className={cn("inline-flex shrink-0 items-center gap-2.5 rounded-lg", className)} aria-label={compact ? "5AM Apply home" : undefined}>
       <LogoMark size={size} />
-      <span className="whitespace-nowrap text-[16px] font-extrabold uppercase leading-none tracking-[0.02em]">
+      <span className={cn("whitespace-nowrap text-[16px] font-extrabold uppercase leading-none tracking-[0.02em]", compact && "hidden min-[400px]:inline")}>
         <span className="text-primary-text">5AM</span> <span className="text-fg">Apply</span>
       </span>
     </Link>

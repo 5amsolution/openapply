@@ -22,12 +22,15 @@ export function LoginForm({
   error: initialError,
   googleEnabled,
   githubEnabled,
+  emailLinks,
 }: {
   initialMode: "signin" | "signup";
   next: string;
   error?: string;
   googleEnabled: boolean;
   githubEnabled: boolean;
+  /** Email sign-in links need an email service (SMTP) set up in Supabase. */
+  emailLinks: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -160,7 +163,7 @@ export function LoginForm({
               <label htmlFor="password" className="text-sm font-semibold text-fg">
                 Password
               </label>
-              {mode === "signin" && (
+              {mode === "signin" && emailLinks && (
                 <button type="button" className="text-[13px] font-semibold text-primary-text hover:underline" onClick={() => switchTo("magic")}>
                   Forgot it? Get a link
                 </button>
@@ -188,7 +191,7 @@ export function LoginForm({
                 {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
               </button>
             </div>
-            {mode === "signup" && <FieldHint>Use 8 or more characters. You can also sign in with an email link later.</FieldHint>}
+            {mode === "signup" && <FieldHint>Use 8 or more characters.</FieldHint>}
           </div>
         )}
 
@@ -207,6 +210,7 @@ export function LoginForm({
         )}
       </div>
 
+      {emailLinks && (
       <div className="mt-6 text-center text-sm text-muted">
         {mode === "magic" ? (
           <button type="button" className="inline-flex items-center gap-1.5 font-semibold text-primary-text hover:underline" onClick={() => switchTo("signin")}>
@@ -218,6 +222,7 @@ export function LoginForm({
           </button>
         )}
       </div>
+      )}
 
       <p className="mt-8 border-t border-border pt-6 text-center text-[13px] leading-relaxed text-muted">
         Free and open source. We never sell your data.{" "}

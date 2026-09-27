@@ -81,6 +81,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
             error={typeof params.error === "string" ? params.error : undefined}
             googleEnabled={process.env.NEXT_PUBLIC_GOOGLE_AUTH === "true"}
             githubEnabled={process.env.NEXT_PUBLIC_GITHUB_AUTH === "true"}
+            emailLinks={process.env.NEXT_PUBLIC_EMAIL_LINKS === "true"}
           />
         </div>
       </main>

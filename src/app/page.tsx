@@ -77,8 +77,8 @@ export default async function Home() {
     <div className="flex min-h-dvh flex-col">
       {/* Header: always dark, like the logo */}
       <header className="sticky top-0 z-40 border-b border-border bg-bg text-fg scheme-dark">
-        <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center justify-between gap-4 px-5 lg:px-10">
-          <Logo />
+        <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center justify-between gap-3 px-4 sm:px-5 lg:px-10">
+          <Logo compact />
           <nav aria-label="Main" className="hidden items-center gap-1 text-sm font-semibold text-muted md:flex">
             {[
               ["#features", "Features"],
@@ -113,7 +113,7 @@ export default async function Home() {
             className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgb(255_255_255/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.035)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_70%_at_30%_0%,black,transparent)]"
             aria-hidden="true"
           />
-          <div className="mx-auto grid max-w-[1360px] items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 lg:px-10 lg:pb-20 lg:pt-16">
+          <div className="mx-auto grid max-w-[1360px] grid-cols-[minmax(0,1fr)] items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 lg:px-10 lg:pb-20 lg:pt-16">
             <div className="animate-[oa-rise_600ms_var(--ease-out)]">
               <div className="flex items-center gap-3">
                 <LogoMark size={56} tile={false} className="drop-shadow-[0_0_24px_rgb(255_122_0/0.5)]" />
