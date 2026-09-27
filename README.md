@@ -121,4 +121,12 @@ aggregators.
 
 ## License
 
-MIT
+Copyright (C) 2026 Muhammad Abdullah and contributors.
+
+[GNU AGPL v3](LICENSE). You can use, change and self-host 5AM Apply for free. If you run a modified version as a
+public service, you must publish your changes under the same license. Code released before this change stays
+available under MIT.
+
+The name "5AM Apply" and the logo are not covered by the license: forks must use their own name and branding.
+
+For a commercial license without the AGPL terms, contact the copyright holder.

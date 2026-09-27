@@ -55,7 +55,7 @@ const PROMISES = [
   { icon: Sparkles, title: "Free AI", body: "Runs on your own free OpenRouter account." },
   { icon: Hand, title: "You submit", body: "Nothing is ever sent without you." },
   { icon: Lock, title: "Private", body: "Keys and resumes are encrypted." },
-  { icon: EyeOff, title: "No ads, no tracking", body: "Open source (MIT). Nothing is sold." },
+  { icon: EyeOff, title: "No ads, no tracking", body: "Open source (AGPL). Nothing is sold." },
 ];
 
 const FAQ = [

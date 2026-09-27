@@ -42,7 +42,7 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "description": "Free, open-source AI job search and application assistant. Bring your own AI key.",
   "engines": {
     "node": ">=20.9"
