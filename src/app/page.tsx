@@ -26,10 +26,23 @@ import { createClient } from "@/lib/supabase/server";
 
 const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/MuhammadAbdullah80/openapply";
 
-const SOURCES = ["Remotive", "Himalayas", "Jobicy", "Remote OK", "Arbeitnow", "Greenhouse", "Lever", "Ashby", "LinkedIn", "Indeed", "Glassdoor"];
+const SOURCES = [
+  "Remotive",
+  "Himalayas",
+  "Jobicy",
+  "Remote OK",
+  "Arbeitnow",
+  "Remote Rocketship",
+  "Greenhouse",
+  "Lever",
+  "Ashby",
+  "LinkedIn",
+  "Indeed",
+  "Glassdoor",
+];
 
 const STATS = [
-  ["11", "job sources"],
+  [String(SOURCES.length), "job sources"],
   ["1 min", "per application"],
   ["$0", "to use, forever"],
 ];
@@ -279,24 +292,77 @@ export default async function Home() {
         </section>
       </main>
 
-      {/* Footer: always dark, like the logo */}
-      <footer className="border-t border-border bg-bg text-fg scheme-dark">
-        <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-4 px-5 py-6 lg:px-10">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Logo />
-            <span className="text-sm font-semibold text-primary-text">Find. Tailor. Apply.</span>
+      {/* Footer: always dark, matching 5amsolution.com and agents.5amsolution.com */}
+      <footer className="scheme-dark border-t border-white/[0.12] bg-black pb-7 pt-12 text-fg">
+        <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-8 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]">
+            <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+              <Logo size={38} />
+              <p className="mt-3.5 max-w-[36ch] text-[15px] text-muted">
+                Free, open-source job search that finds roles, tailors your applications and fills the forms. You always press submit.
+              </p>
+            </div>
+            <FooterColumn title="Site" nav>
+              <FooterLink href="#features">Features</FooterLink>
+              <FooterLink href="#how">How it works</FooterLink>
+              <FooterLink href="#faq">FAQ</FooterLink>
+              <FooterLink href="/login">Sign in</FooterLink>
+              <FooterLink href={REPO_URL} external>
+                Source code on GitHub
+              </FooterLink>
+            </FooterColumn>
+            <FooterColumn title="Contact">
+              <FooterLink href="https://calendly.com/5amsolution-co/30min" external>
+                Book a call on Calendly
+              </FooterLink>
+              <FooterLink href="https://wa.me/923558161168" external>
+                WhatsApp
+              </FooterLink>
+              <FooterLink href="mailto:abdullah@5amsolution.org">abdullah@5amsolution.org</FooterLink>
+              <FooterLink href="https://5amsolution.com" external>
+                5amsolution.com
+              </FooterLink>
+            </FooterColumn>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-            <Link href="/privacy" className="rounded-lg px-3 py-2 text-muted hover:bg-surface-2 hover:text-fg">
-              Privacy
-            </Link>
-            <a href={REPO_URL} className="rounded-lg px-3 py-2 text-muted hover:bg-surface-2 hover:text-fg">
-              GitHub
-            </a>
-            <ThemeToggle />
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-white/[0.12] pt-5 text-[13px] text-muted">
+            <span>&copy; {new Date().getFullYear()} 5 AM Solution. All rights reserved.</span>
+            <span className="flex flex-wrap items-center gap-x-[18px] gap-y-1.5">
+              <Link href="/privacy" className="text-muted hover:text-fg">
+                Privacy
+              </Link>
+              <span>Up before the competition.</span>
+              <ThemeToggle />
+            </span>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+function FooterColumn({ title, nav, children }: { title: string; nav?: boolean; children: React.ReactNode }) {
+  const Tag = nav ? "nav" : "div";
+  return (
+    <Tag aria-label={nav ? title : undefined} className="min-w-0">
+      <h2 className="mb-2.5 font-mono text-[12px] font-medium uppercase leading-none tracking-[0.12em] text-muted">{title}</h2>
+      <ul>{children}</ul>
+    </Tag>
+  );
+}
+
+function FooterLink({ href, external, children }: { href: string; external?: boolean; children: React.ReactNode }) {
+  const cls = "inline-block rounded-md py-1.5 text-[15px] text-muted hover:text-fg";
+  return (
+    <li>
+      {href.startsWith("/") ? (
+        <Link href={href} className={cls}>
+          {children}
+        </Link>
+      ) : (
+        <a href={href} className={cls} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+          {children}
+        </a>
+      )}
+    </li>
   );
 }
