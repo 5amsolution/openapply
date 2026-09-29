@@ -330,6 +330,9 @@ export default async function Home() {
               <Link href="/privacy" className="text-muted hover:text-fg">
                 Privacy
               </Link>
+              <Link href="/terms" className="text-muted hover:text-fg">
+                Terms
+              </Link>
               <span>Up before the competition.</span>
               <ThemeToggle />
             </span>

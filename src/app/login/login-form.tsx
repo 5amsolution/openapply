@@ -225,9 +225,13 @@ export function LoginForm({
       )}
 
       <p className="mt-8 border-t border-border pt-6 text-center text-[13px] leading-relaxed text-muted">
-        Free and open source. We never sell your data.{" "}
+        Free and open source. We never sell your data. By continuing you agree to our{" "}
+        <Link href="/terms" className="font-semibold text-fg underline underline-offset-2">
+          Terms
+        </Link>{" "}
+        and{" "}
         <Link href="/privacy" className="font-semibold text-fg underline underline-offset-2">
-          read our privacy notes
+          Privacy notes
         </Link>
         .
       </p>
