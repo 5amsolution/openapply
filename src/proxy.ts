@@ -6,6 +6,14 @@ const APP_PREFIXES = ["/dashboard", "/jobs", "/applications", "/autopilot", "/pr
 // Refreshes the Supabase session cookie on every request and sends
 // signed-out visitors of app pages to /login.
 export async function proxy(request: NextRequest) {
+  // Pages opened on the old Railway address move to the site's own domain.
+  // (API routes are not matched, so older extension installs keep working there.)
+  const site = process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : null;
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+  if (site && host.endsWith(".up.railway.app") && host !== site.host) {
+    return NextResponse.redirect(new URL(request.nextUrl.pathname + request.nextUrl.search, site.origin), 308);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

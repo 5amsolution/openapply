@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "5AM Apply Autofill",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Fill job application forms with your 5AM Apply profile and the answers written for that job. You always review and submit.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlM25a6yoakXEcuYTsN0eya9UDPXWXnAkDPKV1+r08mc4reKeHQCJ/p8mq8AMZ9z58ezMgTOq0G8NN5SX2CyrtwXhd0+NZ7pi41iVAKmPdAViWGpgAlN/sztYXob+KEV7KPBHXozN5aQBtoDHow1CNcanRdHonPmnNbIH0jSvFybjDRtwpLzFbP4dCTvSgNHwDj3c5UeALGUFQmA49w7W/Au2XLI9ChsPOsXYE0VVjOuhbpIg1RuiHRCpZvUxil4wrHNDnFuQXA2F6pWeofIrXMQUo1SV4rEuNGUiSYskNZyBdgpaWxDVeOz18y3hPw0nDNAMkBkjROz6Sb+KnqSR+wIDAQAB",
   "icons": {
@@ -24,6 +24,7 @@
   },
   "externally_connectable": {
     "matches": [
+      "https://apply.5amsolution.com/*",
       "https://openapply-production.up.railway.app/*",
       "http://localhost/*",
       "http://127.0.0.1/*"
